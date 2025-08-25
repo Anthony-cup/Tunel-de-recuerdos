@@ -61,7 +61,7 @@
   <div id="canvas-container"></div>
   <div id="romOverlay"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Puerta v2</h3>
+    <h3>Sala Romántica — Vórtice de Anillos Giratorios v2</h3>
     <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
     <div class="controls">
       <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
@@ -104,7 +104,7 @@
     let imageUrls = [];
     async function fetchImages() {
       const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id');
+      const userId = urlParams.get('id')?.trim();
       const errorMessage = document.getElementById('errorMessage');
       const defaultImages = [
         'https://picsum.photos/id/1015/900/600', 'https://picsum.photos/id/1025/900/600',
@@ -115,6 +115,7 @@
 
       if (!userId) {
         console.error("No se encontró 'id' en la URL.");
+        errorMessage.textContent = 'No creaste tu proyecto. Por favor, proporciona un ID válido.';
         errorMessage.style.display = 'block';
         return defaultImages;
       }
@@ -129,11 +130,13 @@
           return [...validFotos, ...defaultImages.slice(validFotos.length, 7)];
         } else {
           console.error(`No se encontraron datos para el usuario ${userId}.`);
+          errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
           errorMessage.style.display = 'block';
           return defaultImages;
         }
       } catch (error) {
         console.error("Error al obtener imágenes de Firebase:", error);
+        errorMessage.textContent = 'Error al cargar las imágenes. Intenta de nuevo.';
         errorMessage.style.display = 'block';
         return defaultImages;
       }
@@ -259,7 +262,7 @@
         glow.position.set(0,6 * scaleFactor,-4); frame.position.set(0,0,-6 * scaleFactor); img.position.set(0,0,4 * scaleFactor);
         group.add(glow); group.add(frame); group.add(img);
         group.position.copy(pos); group.userData={idx,url};
-        loader.load(url, tex=>{ imgMat.map = tex; imgMat.needsUpdate = true; }, undefined, err => console.error(`Error cargando imagen ${url}:`, err));
+        loader.load(url, tex => { imgMat.map = tex; imgMat.needsUpdate = true; }, undefined, err => console.error(`Error cargando imagen ${url}:`, err));
         imagesGroup.add(group); return group;
       }
 
@@ -481,7 +484,14 @@
           setTimeout(() => uploadMessage.style.display = 'none', 3000);
           return;
         }
-        const userId = new URLSearchParams(window.location.search).get('id');
+        const userId = new URLSearchParams(window.location.search).get('id')?.trim();
+        if (!userId) {
+          const uploadMessage = document.getElementById('uploadMessage');
+          uploadMessage.textContent = 'ID no válido. Regresa a la página principal.';
+          uploadMessage.style.display = 'block';
+          setTimeout(() => uploadMessage.style.display = 'none', 3000);
+          return;
+        }
         const newUrl = await uploadImage(file, userId);
         if (newUrl) {
           imageUrls = await fetchImages();
@@ -489,7 +499,7 @@
         }
       });
 
-      document.getElementById('returnBtn').addEventListener('click', (e)=>{ createRipple(e.currentTarget, e.clientX, e.clientY); window.parent.postMessage({ type: 'doorClosed' }, '*'); });
+      document.getElementById('returnBtn').addEventListener('click', (e)=>{ createRipple(e.currentTarget, e.clientX, e.clientY); window.location.href = 'index.html'; });
 
       window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePreview(); });
 
@@ -566,4 +576,3 @@
   </script>
 </body>
 </html>
-
