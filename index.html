@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Vórtice de Anillos Giratorios v3</title>
+  <title>Vórtice de Anillos Giratorios v1</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
@@ -241,7 +241,7 @@
       const gifOverlay = document.getElementById('gifOverlay');
       const gifImage = document.getElementById('gifImage');
       const gifText = document.getElementById('gifText');
-      let gifState = localStorage.getItem('gifShown_' + userId) ? 'done' : 'initial';
+      let gifState = sessionStorage.getItem('gifShown_' + userId) ? 'done' : 'initial';
       const renderer = new THREE.WebGLRenderer({ canvas: tunnelCanvas, alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -331,7 +331,7 @@
       scene.add(points);
       const doorPosition = -(15 * ringSpacing) - 200;
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5];
-      const emojiList = ['🩷', '🥰', '💌'];
+      const emojiList = ['🩷', '�0', '💌'];
       const rainCount = 50;
       const rainParticles = [];
       const heartShape = new THREE.Shape();
@@ -532,19 +532,22 @@
           lastHoveredButton = null;
         }
       });
-      window.addEventListener('click', (event) => {
+      gifText.addEventListener('click', () => {
         if (gifState === 'initial' && currentDoorIndex === 0) {
           gifState = 'second';
           gifImage.src = 'https://media.tenor.com/CNJSyzMIkskAAAAj/bubu-dudu-sseeyall.gif';
           gifText.textContent = `Esto te lo dedico para ti ${name2}, aquí va nuestra vida que vivimos.`;
           console.log('Clic en primer texto, mostrando segundo GIF y texto');
-          return;
         } else if (gifState === 'second' && currentDoorIndex === 0) {
           gifState = 'done';
           gifOverlay.style.display = 'none';
-          localStorage.setItem('gifShown_' + userId, 'true');
+          sessionStorage.setItem('gifShown_' + userId, 'true');
           console.log('Clic en segundo texto, ocultando GIF y texto');
-          return;
+        }
+      });
+      window.addEventListener('click', (event) => {
+        if (gifState !== 'done' && currentDoorIndex === 0) {
+          return; // Prevent door clicks while GIF sequence is active
         }
         console.log(`Clic detectado en coordenadas: x=${event.clientX}, y=${event.clientY}`);
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
