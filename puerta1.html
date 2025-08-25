@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica 3D — Puerta v3</title>
+  <title>Sala Romántica 3D — Vórtice de Anillos Giratorios</title>
   <style>
     :root{ --rose-1:#ff7aa0; --rose-2:#ffc1d3; --glass: rgba(255,255,255,0.04); --btn-bg: linear-gradient(180deg,#ff9fb6,#ffd6e3); }
     html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 20% 10%, rgba(255,100,140,0.06), transparent 8%, #000 60%), #000;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
@@ -37,45 +37,33 @@
     #romOverlay{position:absolute;inset:0;pointer-events:none;z-index:30;background:radial-gradient(60% 60% at 50% 40%, rgba(255,120,160,0.06), transparent 25%), linear-gradient(180deg, rgba(255,240,245,0.02), transparent 40%);}
     #tooltip{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:60;color:#fff;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:12px}
     #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;text-align:center;color:#ff7aa0;text-shadow:0 0 10px #ff7aa0, 0 0 20px #ff7aa0;z-index:130;display:none}
-    #uploadForm{position:absolute;left:18px;bottom:18px;color:#111;z-index:80;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));backdrop-filter:blur(6px);box-shadow:0 8px 30px rgba(0,0,0,0.6);display:none}
-    #uploadForm p{margin:0 0 8px;font-size:13px;color:rgba(255,255,255,0.9)}
-    input[type="file"]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#fff;font-size:14px}
-    #uploadMessage{color:#ffc1d3;font-size:14px;margin-top:8px;text-shadow:0 0 10px #ffc1d3;display:none}
     @media (max-width:900px){
-      #overlay, #uploadForm{left:12px;padding:10px}
+      #overlay{left:12px;padding:10px}
       .btn, .btn-ghost{padding:8px 12px;font-size:13px}
       .controls{gap:8px}
     }
     @media (max-width:480px){
-      #overlay, #uploadForm{left:8px;padding:8px}
+      #overlay{left:8px;padding:8px}
       .controls{gap:6px}
-      #overlay p, #uploadForm p{display:none}
+      #overlay p{display:none}
       #hint{display:none}
       .btn, .btn-ghost{padding:10px 14px;border-radius:14px;font-size:15px}
-      input[type="file"]{font-size:12px}
     }
   </style>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, proporciona un ID válido v3.</div>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v4.</div>
   <div id="canvas-container"></div>
   <div id="romOverlay"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Vórtice de Anillos Giratorios v3</h3>
+    <h3>Sala Romántica — Vórtice de Anillos Giratorios v4</h3>
     <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
     <div class="controls">
       <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
       <button id="heartBtn" class="btn-ghost">Cambiar forma</button>
       <button id="shuffleBtn" class="btn-ghost">Aleatorizar</button>
-      <button id="uploadBtn" class="btn-ghost">Subir Foto</button>
       <button id="returnBtn" class="btn-ghost">Regresar</button>
     </div>
-  </div>
-  <div id="uploadForm">
-    <p>Sube una foto para tu galería (máximo 5):</p>
-    <input type="file" id="photoInput" accept="image/*">
-    <button id="savePhoto" class="btn">Guardar</button>
-    <div id="uploadMessage"></div>
   </div>
   <div id="credits">Diseño romántico • Imágenes personalizadas o de ejemplo: picsum.photos</div>
   <div id="hint">Toca una imagen para abrirla • Pellizca para acercar</div>
@@ -84,8 +72,7 @@
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js';
+    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
@@ -99,7 +86,6 @@
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-    const storage = getStorage(app);
 
     let imageUrls = [];
     async function fetchImages() {
@@ -113,9 +99,9 @@
         'https://picsum.photos/id/1074/900/600'
       ];
 
-      if (!userId) {
-        console.error("No se encontró 'id' en la URL.");
-        errorMessage.textContent = 'No creaste tu proyecto. Por favor, proporciona un ID válido.';
+      if (!userId || userId === '') {
+        console.error("No se encontró 'id' en la URL o es inválido.");
+        errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
         errorMessage.style.display = 'block';
         return defaultImages;
       }
@@ -127,6 +113,10 @@
           const puertaFotos = data.puerta1Fotos || [];
           const validFotos = puertaFotos.slice(0, 5).filter(url => typeof url === 'string' && url.trim() !== '');
           console.log("Imágenes obtenidas de Firebase para puerta1:", validFotos);
+          if (validFotos.length === 0) {
+            console.warn(`No hay imágenes en puerta1Fotos para el usuario ${userId}. Usando imágenes predeterminadas.`);
+            return defaultImages;
+          }
           return [...validFotos, ...defaultImages.slice(validFotos.length, 7)];
         } else {
           console.error(`No se encontraron datos para el usuario ${userId}.`);
@@ -136,49 +126,17 @@
         }
       } catch (error) {
         console.error("Error al obtener imágenes de Firebase:", error);
-        errorMessage.textContent = 'Error al cargar las imágenes. Intenta de nuevo.';
+        errorMessage.textContent = 'Error al cargar las imágenes. Por favor, intenta de nuevo.';
         errorMessage.style.display = 'block';
         return defaultImages;
       }
     }
 
-    async function uploadImage(file, userId) {
-      const uploadMessage = document.getElementById('uploadMessage');
-      try {
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
-        if (!snapshot.exists()) {
-          uploadMessage.textContent = 'ID no válido. Crea tu proyecto primero.';
-          uploadMessage.style.display = 'block';
-          return false;
-        }
-        const puertaFotos = snapshot.val().puerta1Fotos || [];
-        if (puertaFotos.length >= 5) {
-          uploadMessage.textContent = 'Límite de 5 fotos alcanzado.';
-          uploadMessage.style.display = 'block';
-          return false;
-        }
-        const fileRef = storageRef(storage, `images/${userId}/${Date.now()}_${file.name}`);
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-        puertaFotos.push(url);
-        await set(ref(database, `usuarios/${userId}/puerta1Fotos`), puertaFotos);
-        uploadMessage.textContent = '¡Foto subida con éxito!';
-        uploadMessage.style.display = 'block';
-        setTimeout(() => uploadMessage.style.display = 'none', 3000);
-        return url;
-      } catch (error) {
-        console.error('Error al subir imagen:', error);
-        uploadMessage.textContent = 'Error al subir la foto. Intenta de nuevo.';
-        uploadMessage.style.display = 'block';
-        return false;
-      }
-    }
-
     (async function(){
       imageUrls = await fetchImages();
-      if (document.getElementById('errorMessage').style.display === 'block') {
-        console.error("No se puede continuar sin un ID válido o datos en Firebase.");
-        return;
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage.style.display === 'block') {
+        console.warn("Continuando con imágenes predeterminadas debido a error en ID o datos.");
       }
 
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
@@ -466,39 +424,6 @@
       const heartBtn = document.getElementById('heartBtn'); heartBtn.addEventListener('click', (e)=>{ createRipple(heartBtn, e.clientX, e.clientY); mode = (mode==='heart')? 'spiral':'heart'; arrangeImages(mode); });
       const shuffleBtn = document.getElementById('shuffleBtn'); shuffleBtn.addEventListener('click', (e)=>{ createRipple(shuffleBtn, e.clientX, e.clientY); imagesGroup.children.forEach((g)=>{ g.position.x += (Math.random()-0.5)*120 * getScaleFactor(); g.position.z += (Math.random()-0.5)*120 * getScaleFactor(); }); });
 
-      const uploadBtn = document.getElementById('uploadBtn');
-      const uploadForm = document.getElementById('uploadForm');
-      const savePhotoBtn = document.getElementById('savePhoto');
-      const photoInput = document.getElementById('photoInput');
-      uploadBtn.addEventListener('click', (e) => {
-        createRipple(uploadBtn, e.clientX, e.clientY);
-        uploadForm.style.display = uploadForm.style.display === 'block' ? 'none' : 'block';
-      });
-      savePhotoBtn.addEventListener('click', async (e) => {
-        createRipple(savePhotoBtn, e.clientX, e.clientY);
-        const file = photoInput.files[0];
-        if (!file) {
-          const uploadMessage = document.getElementById('uploadMessage');
-          uploadMessage.textContent = 'Por favor, selecciona una imagen.';
-          uploadMessage.style.display = 'block';
-          setTimeout(() => uploadMessage.style.display = 'none', 3000);
-          return;
-        }
-        const userId = new URLSearchParams(window.location.search).get('id')?.trim();
-        if (!userId) {
-          const uploadMessage = document.getElementById('uploadMessage');
-          uploadMessage.textContent = 'ID no válido. Regresa a la página principal.';
-          uploadMessage.style.display = 'block';
-          setTimeout(() => uploadMessage.style.display = 'none', 3000);
-          return;
-        }
-        const newUrl = await uploadImage(file, userId);
-        if (newUrl) {
-          imageUrls = await fetchImages();
-          arrangeImages(mode);
-        }
-      });
-
       document.getElementById('returnBtn').addEventListener('click', (e)=>{ createRipple(e.currentTarget, e.clientX, e.clientY); window.location.href = 'index.html'; });
 
       window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePreview(); });
@@ -576,5 +501,3 @@
   </script>
 </body>
 </html>
-
-
