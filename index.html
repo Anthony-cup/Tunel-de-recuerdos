@@ -331,7 +331,7 @@
       scene.add(points);
       const doorPosition = -(15 * ringSpacing) - 200;
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5];
-      const emojiList = ['🩷', '�0', '💌'];
+      const emojiList = ['🩷', '🥰', '💌'];
       const rainCount = 50;
       const rainParticles = [];
       const heartShape = new THREE.Shape();
@@ -492,7 +492,9 @@
         const buttonTextGeo = new THREE.PlaneGeometry(tunnelRadius * 0.2, tunnelRadius * 0.1);
         const buttonTextMesh = new THREE.Mesh(buttonTextGeo, buttonTextMat);
         buttonTextMesh.position.set(0, -tunnelRadius * 0.25, doorPosition - 0.05);
-        buttonTextMesh.rotation.z = Math.PI;
+        buttonTextMesh.rotation.z = Math
+
+.PI;
         buttonTextMesh.visible = false;
         buttonTextMesh.userData = { doorIndex: i };
         scene.add(buttonTextMesh);
