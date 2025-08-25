@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vórtice de Anillos Giratorios v77</title>
+  <title>Vórtice de Anillos Giratorios</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
@@ -274,9 +274,9 @@
       scene.add(points);
 
       const doorPosition = -(15 * ringSpacing) - 200;
-      const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5];
+      const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5]; // Turquesa neón, Rosa chicle, Verde esmeralda, Púrpura brillante, Naranja neón, Azul cobalto
 
-      const emojiList = ['🩷', '�0', '💌'];
+      const emojiList = ['🩷', '🥰', '💌'];
       const rainCount = 50;
       const rainParticles = [];
       const heartShape = new THREE.Shape();
@@ -290,7 +290,7 @@
 
       for (let i = 0; i < rainCount; i++) {
         let particle;
-        const type = Math.floor(Math.random() * 4);
+        const type = Math.floor(Math.random() * 4); // 0-2: emojis, 3: corazón
         if (type < 3) {
           const emojiCanvas = document.createElement('canvas');
           emojiCanvas.width = 128;
@@ -315,8 +315,8 @@
           doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5
         );
         particle.userData = {
-          velocity: -tunnelRadius * (0.4 + Math.random() * 0.2),
-          startTime: Math.random() * 2,
+          velocity: -tunnelRadius * (0.4 + Math.random() * 0.2), // Velocidad variable
+          startTime: Math.random() * 2, // Retraso inicial aleatorio
           type: type
         };
         particle.visible = false;
@@ -362,7 +362,7 @@
         labelCanvas.width = 1024;
         labelCanvas.height = 512;
         const labelCtx = labelCanvas.getContext('2d');
-        labelCtx.clearRect(0, 0, 1024, 512);
+        labelCtx.clearRect(0, 0, 1024, 512); // Sin fondo
         labelCtx.fillStyle = '#ffffff';
         labelCtx.font = 'bold 150px Orbitron';
         labelCtx.textAlign = 'center';
@@ -403,14 +403,14 @@
         });
         const buttonMesh = new THREE.Mesh(buttonGeo, buttonMat);
         buttonMesh.position.set(0, -tunnelRadius * 0.15, doorPosition - 0.1);
-        buttonMesh.rotation.z = Math.PI;
+        buttonMesh.rotation.z = Math.PI; // Corazón parado
         buttonMesh.visible = i === 0;
         buttonMesh.userData = { doorIndex: i, baseColor: doorColors[i] };
         scene.add(buttonMesh);
 
         const buttonEdgeGeo = new THREE.EdgesGeometry(buttonGeo);
         const buttonEdgeMat = new THREE.LineBasicMaterial({
-          color: 0x000000,
+          color: 0x000000, // Bordes negros
           transparent: true,
           opacity: 1.0
         });
@@ -448,8 +448,8 @@
         const buttonTextGeo = new THREE.PlaneGeometry(tunnelRadius * 0.2, tunnelRadius * 0.1);
         const buttonTextMesh = new THREE.Mesh(buttonTextGeo, buttonTextMat);
         buttonTextMesh.position.set(0, -tunnelRadius * 0.25, doorPosition - 0.05);
-        buttonTextMesh.rotation.z = Math.PI;
-        buttonTextMesh.visible = false;
+        buttonTextMesh.rotation.z = Math.PI; // Texto parado
+        buttonTextMesh.visible = false; // Solo visible en hover
         buttonTextMesh.userData = { doorIndex: i };
         scene.add(buttonTextMesh);
         buttonMeshes.push(buttonMesh);
@@ -730,9 +730,9 @@
               p.position.y = tunnelRadius * 1.2;
               p.position.x = (Math.random() - 0.5) * tunnelRadius * 1.8;
               p.position.z = doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5;
-              p.userData.startTime = timeElapsed + Math.random() * 2;
+              p.userData.startTime = timeElapsed + Math.random() * 2; // Nuevo retraso
             }
-            p.rotation.z += 0.5 * dt;
+            p.rotation.z += 0.5 * dt; // Rotación para dinamismo
           }
         });
 
