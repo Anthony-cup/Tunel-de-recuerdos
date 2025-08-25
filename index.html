@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Vórtice de Anillos Giratorios</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -11,12 +11,13 @@
       overflow: hidden;
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
     }
     canvas {
       display: block;
-      filter: brightness(1.3) contrast(1.4) saturate(1.6);
       width: 100%;
-      height: 100%;
+      height: 100vh;
+      filter: brightness(1.4) contrast(1.5) saturate(1.7);
     }
     #blackHoleFrame, #doorFrame {
       position: absolute;
@@ -25,7 +26,8 @@
       width: 100%;
       height: 100%;
       border: none;
-      transition: opacity 0.4s ease-in-out;
+      transition: opacity 0.5s ease-in-out, filter 0.2s;
+      object-fit: contain;
     }
     #blackHoleFrame {
       z-index: 2;
@@ -34,21 +36,37 @@
       z-index: 3;
       display: none;
     }
+    #doorFrame.show {
+      filter: url(#glitch);
+    }
     svg {
       position: absolute;
       width: 0;
       height: 0;
     }
+    #errorMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      text-align: center;
+      color: #ff4081;
+      text-shadow: 0 0 8px #ff4081, 0 0 16px #ff4081;
+      z-index: 10;
+      display: none;
+      padding: 10px;
+      max-width: 90%;
+    }
     @media (max-width: 768px) {
       canvas {
         filter: brightness(1.2) contrast(1.3) saturate(1.5);
       }
-      #blackHoleFrame, #doorFrame {
-        transform: scale(0.95);
+      #errorMessage {
+        font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+        text-shadow: 0 0 6px #ff4081, 0 0 12px #ff4081;
       }
-    }
-    @media (max-aspect-ratio: 1/1) {
-      canvas {
+      #blackHoleFrame, #doorFrame {
         height: 100vh;
       }
     }
@@ -56,30 +74,92 @@
   <svg>
     <filter id="glitch">
       <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
-      <feOffset dx="1" dy="0" result="offset"/>
+      <feOffset dx="2" dy="0" result="offset"/>
+      <feColorMatrix type="matrix" in="offset" values="1 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
       <feBlend mode="screen"/>
     </filter>
   </svg>
 </head>
 <body>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, proporciona un ID válido.</div>
   <canvas id="tunnelCanvas"></canvas>
   <iframe id="blackHoleFrame" src="negro.html"></iframe>
   <iframe id="doorFrame" src=""></iframe>
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script>
-    (function(){
-      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
+      authDomain: "tunel-de-recuerdos.firebaseapp.com",
+      projectId: "tunel-de-recuerdos",
+      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
+      messagingSenderId: "630660710506",
+      appId: "1:630660710506:web:90d34150c9f21f668eca13",
+      measurementId: "G-ETFDVEHML1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    async function validateAndFetchDoorTitles() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id');
+      const errorMessage = document.getElementById('errorMessage');
+      const defaultTitles = ["2000", "2001", "2002", "2003", "2004", "2005"];
+
+      if (!userId) {
+        console.error("No se encontró 'id' en la URL.");
+        errorMessage.style.display = 'block';
+        return null;
+      }
+
+      try {
+        const snapshot = await get(ref(database, `usuarios/${userId}`));
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const titles = [
+            data.puerta1Anio || defaultTitles[0],
+            data.puerta2Anio || defaultTitles[1],
+            data.puerta3Anio || defaultTitles[2],
+            data.puerta4Anio || defaultTitles[3],
+            data.puerta5Anio || defaultTitles[4],
+            data.puerta6Anio || defaultTitles[5]
+          ];
+          console.log("Títulos obtenidos de Firebase:", titles);
+          return titles;
+        } else {
+          console.error(`No se encontraron datos para el usuario ${userId}.`);
+          errorMessage.style.display = 'block';
+          return null;
+        }
+      } catch (error) {
+        console.error("Error al obtener datos de Firebase:", error);
+        errorMessage.style.display = 'block';
+        return null;
+      }
+    }
+
+    (async function(){
+      const doorTitles = await validateAndFetchDoorTitles();
+      if (!doorTitles) {
+        console.error("No se puede continuar sin un ID válido o datos en Firebase.");
+        return;
+      }
+
       const tunnelCanvas = document.getElementById('tunnelCanvas');
       const blackHoleFrame = document.getElementById('blackHoleFrame');
       const doorFrame = document.getElementById('doorFrame');
       const renderer = new THREE.WebGLRenderer({ canvas: tunnelCanvas, alpha: true, antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 0);
 
       const scene = new THREE.Scene();
+      const isMobile = window.innerWidth <= 768;
       const camera = new THREE.PerspectiveCamera(isMobile ? 80 : 70, window.innerWidth/window.innerHeight, 0.1, 20000);
-      camera.position.set(0, 0, isMobile ? 20 : 30);
+      camera.position.set(0, 0, 30);
 
       const tunnelRadius = isMobile ? 200 : 250;
       const tunnelLength = 20000;
@@ -169,7 +249,6 @@
       scene.add(points);
 
       const doorPosition = -(15 * ringSpacing) - 200;
-      const doorTitles = ["2000", "2001", "2002", "2003", "2004", "2005"];
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5];
 
       const emojiList = ['🩷', '🥰', '💌'];
@@ -189,29 +268,29 @@
         const type = Math.floor(Math.random() * 4);
         if (type < 3) {
           const emojiCanvas = document.createElement('canvas');
-          emojiCanvas.width = isMobile ? 64 : 128;
-          emojiCanvas.height = isMobile ? 64 : 128;
+          emojiCanvas.width = isMobile ? 96 : 128;
+          emojiCanvas.height = isMobile ? 96 : 128;
           const ctx = emojiCanvas.getContext('2d');
           ctx.fillStyle = '#' + doorColors[0].toString(16).padStart(6, '0');
-          ctx.font = isMobile ? '32px sans-serif' : '64px sans-serif';
+          ctx.font = isMobile ? '48px sans-serif' : '64px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(emojiList[type], isMobile ? 32 : 64, isMobile ? 32 : 64);
+          ctx.fillText(emojiList[type], isMobile ? 48 : 64, isMobile ? 48 : 64);
           const texture = new THREE.CanvasTexture(emojiCanvas);
           const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
-          const geo = new THREE.PlaneGeometry(tunnelRadius * 0.08, tunnelRadius * 0.08);
+          const geo = new THREE.PlaneGeometry(tunnelRadius * 0.1, tunnelRadius * 0.1);
           particle = new THREE.Mesh(geo, material);
         } else {
           const material = new THREE.MeshBasicMaterial({ color: doorColors[0], transparent: true });
           particle = new THREE.Mesh(heartGeo, material);
         }
         particle.position.set(
-          (Math.random() - 0.5) * tunnelRadius * 1.6,
-          tunnelRadius * 1.1,
-          doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.4
+          (Math.random() - 0.5) * tunnelRadius * 1.8,
+          tunnelRadius * 1.2,
+          doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5
         );
         particle.userData = {
-          velocity: -tunnelRadius * (0.3 + Math.random() * 0.15),
+          velocity: -tunnelRadius * (0.4 + Math.random() * 0.2),
           startTime: Math.random() * 2,
           type: type
         };
@@ -255,16 +334,16 @@
         scene.add(edge);
 
         const labelCanvas = document.createElement('canvas');
-        labelCanvas.width = isMobile ? 512 : 1024;
-        labelCanvas.height = isMobile ? 256 : 512;
+        labelCanvas.width = isMobile ? 768 : 1024;
+        labelCanvas.height = isMobile ? 384 : 512;
         const labelCtx = labelCanvas.getContext('2d');
         labelCtx.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
         labelCtx.fillStyle = '#ffffff';
-        labelCtx.font = `bold ${isMobile ? '100px' : '150px'} Orbitron`;
+        labelCtx.font = isMobile ? 'bold 120px Orbitron' : 'bold 150px Orbitron';
         labelCtx.textAlign = 'center';
         labelCtx.textBaseline = 'middle';
         labelCtx.shadowColor = '#' + doorColors[i].toString(16).padStart(6, '0');
-        labelCtx.shadowBlur = isMobile ? 30 : 50;
+        labelCtx.shadowBlur = isMobile ? 40 : 50;
         labelCtx.fillText(doorTitles[i], labelCanvas.width / 2, labelCanvas.height / 2);
 
         const labelTexture = new THREE.CanvasTexture(labelCanvas);
@@ -273,9 +352,9 @@
           transparent: true,
           side: THREE.DoubleSide
         });
-        const labelGeometry = new THREE.PlaneGeometry(tunnelRadius * 0.4, tunnelRadius * 0.2);
+        const labelGeometry = new THREE.PlaneGeometry(tunnelRadius * 0.5, tunnelRadius * 0.25);
         const labelMesh = new THREE.Mesh(labelGeometry, labelMaterial);
-        labelMesh.position.set(0, tunnelRadius * 0.12, doorPosition - 1);
+        labelMesh.position.set(0, tunnelRadius * 0.15, doorPosition - 1);
         labelMesh.visible = i === 0;
         labelMesh.userData = { baseOpacity: 1.0 };
         scene.add(labelMesh);
@@ -289,7 +368,7 @@
         heartShape.bezierCurveTo(0.7, -0.6, 0, -0.4, 0, 0);
         const extrudeSettings = { depth: 0.3, bevelEnabled: true, bevelSegments: 8, steps: 2, bevelSize: 0.15, bevelThickness: 0.15 };
         const buttonGeo = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
-        buttonGeo.scale(tunnelRadius * 0.07, tunnelRadius * 0.07, tunnelRadius * 0.07);
+        buttonGeo.scale(tunnelRadius * 0.09, tunnelRadius * 0.09, tunnelRadius * 0.09);
         const buttonMat = new THREE.MeshStandardMaterial({
           color: doorColors[i],
           emissive: doorColors[i],
@@ -298,7 +377,7 @@
           roughness: 0.1
         });
         const buttonMesh = new THREE.Mesh(buttonGeo, buttonMat);
-        buttonMesh.position.set(0, -tunnelRadius * 0.12, doorPosition - 0.1);
+        buttonMesh.position.set(0, -tunnelRadius * 0.15, doorPosition - 0.1);
         buttonMesh.rotation.z = Math.PI;
         buttonMesh.visible = i === 0;
         buttonMesh.userData = { doorIndex: i, baseColor: doorColors[i] };
@@ -316,23 +395,23 @@
         buttonEdge.visible = i === 0;
         scene.add(buttonEdge);
 
-        const buttonLight = new THREE.PointLight(doorColors[i], 1.5, tunnelRadius * 0.4);
-        buttonLight.position.set(0, -tunnelRadius * 0.12, doorPosition - 0.1);
+        const buttonLight = new THREE.PointLight(doorColors[i], isMobile ? 1.2 : 1.5, tunnelRadius * 0.5);
+        buttonLight.position.set(0, -tunnelRadius * 0.15, doorPosition - 0.1);
         buttonLight.visible = i === 0;
         scene.add(buttonLight);
 
         const buttonTextCanvas = document.createElement('canvas');
-        buttonTextCanvas.width = isMobile ? 128 : 256;
-        buttonTextCanvas.height = isMobile ? 64 : 128;
+        buttonTextCanvas.width = isMobile ? 192 : 256;
+        buttonTextCanvas.height = isMobile ? 96 : 128;
         const btnCtx = buttonTextCanvas.getContext('2d');
         btnCtx.fillStyle = '#' + doorColors[i].toString(16).padStart(6, '0');
         btnCtx.fillRect(0, 0, buttonTextCanvas.width, buttonTextCanvas.height);
         btnCtx.fillStyle = '#ffffff';
-        btnCtx.font = `bold ${isMobile ? '24px' : '48px'} Orbitron`;
+        btnCtx.font = isMobile ? 'bold 36px Orbitron' : 'bold 48px Orbitron';
         btnCtx.textAlign = 'center';
         btnCtx.textBaseline = 'middle';
         btnCtx.shadowColor = '#ffffff';
-        btnCtx.shadowBlur = isMobile ? 10 : 20;
+        btnCtx.shadowBlur = isMobile ? 15 : 20;
         btnCtx.fillText('Iniciar', buttonTextCanvas.width / 2, buttonTextCanvas.height / 2);
 
         const buttonTextTexture = new THREE.CanvasTexture(buttonTextCanvas);
@@ -341,9 +420,9 @@
           transparent: true,
           side: THREE.DoubleSide
         });
-        const buttonTextGeo = new THREE.PlaneGeometry(tunnelRadius * 0.15, tunnelRadius * 0.08);
+        const buttonTextGeo = new THREE.PlaneGeometry(tunnelRadius * 0.2, tunnelRadius * 0.1);
         const buttonTextMesh = new THREE.Mesh(buttonTextGeo, buttonTextMat);
-        buttonTextMesh.position.set(0, -tunnelRadius * 0.2, doorPosition - 0.05);
+        buttonTextMesh.position.set(0, -tunnelRadius * 0.25, doorPosition - 0.05);
         buttonTextMesh.rotation.z = Math.PI;
         buttonTextMesh.visible = false;
         buttonTextMesh.userData = { doorIndex: i };
@@ -354,9 +433,9 @@
         buttonEdges.push(buttonEdge);
       }
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      const ambientLight = new THREE.AmbientLight(0xffffff, isMobile ? 0.6 : 0.7);
       scene.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, isMobile ? 0.8 : 0.9);
       directionalLight.position.set(0, 100, doorPosition - 50);
       scene.add(directionalLight);
 
@@ -364,7 +443,7 @@
       const mouse = new THREE.Vector2();
       let lastHoveredButton = null;
 
-      function handleInteraction(event, isTouch = false) {
+      function updateMouseOrTouch(event, isTouch = false) {
         const clientX = isTouch ? event.touches[0].clientX : event.clientX;
         const clientY = isTouch ? event.touches[0].clientY : event.clientY;
         mouse.x = (clientX / window.innerWidth) * 2 - 1;
@@ -376,7 +455,7 @@
           buttonMeshes[idx].material.emissiveIntensity = 0.8;
           buttonTextMeshes[idx].visible = false;
           doors[idx].material.emissiveIntensity = 0.7;
-          buttonLights[idx].intensity = 1.5;
+          buttonLights[idx].intensity = isMobile ? 1.2 : 1.5;
         }
         if (intersects.length > 0 && intersects[0].object.visible) {
           lastHoveredButton = intersects[0].object;
@@ -384,52 +463,48 @@
           buttonMeshes[idx].material.emissiveIntensity = 1.3;
           buttonTextMeshes[idx].visible = true;
           doors[idx].material.emissiveIntensity = 1.0;
-          buttonLights[idx].intensity = 2.0;
+          buttonLights[idx].intensity = isMobile ? 1.8 : 2.0;
         } else {
           lastHoveredButton = null;
         }
-        if (isTouch && intersects.length > 0 && intersects[0].object.visible) {
-          const doorIndex = intersects[0].object.userData.doorIndex;
-          try {
-            doorFrame.src = `puerta${doorIndex + 1}.html`;
-            doorFrame.style.display = 'block';
-            doorFrame.style.opacity = '1';
-            doors[doorIndex].visible = false;
-            labelMeshes[doorIndex].visible = false;
-            buttonMeshes[doorIndex].visible = false;
-            buttonTextMeshes[doorIndex].visible = false;
-            buttonLights[doorIndex].visible = false;
-            buttonEdges[doorIndex].visible = false;
-            rainParticles.forEach(p => p.visible = false);
-            doors[doorIndex].material.emissiveIntensity = 1.5;
-            setTimeout(() => {
-              doors[doorIndex].material.emissiveIntensity = 0.7;
-            }, 200);
-            doorStates[doorIndex].opened = true;
-            console.log(`Cargando panel: puerta${doorIndex + 1}.html`);
-          } catch (error) {
-            console.error(`Error al cargar puerta${doorIndex + 1}.html:`, error);
-          }
-        }
       }
 
-      window.addEventListener('mousemove', (event) => handleInteraction(event, false));
+      window.addEventListener('mousemove', (event) => updateMouseOrTouch(event));
       window.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        updateMouseOrTouch(event, true);
+      }, { passive: false });
+
+      window.addEventListener('click', (event) => handleInteraction(event));
+      window.addEventListener('touchend', (event) => {
         event.preventDefault();
         handleInteraction(event, true);
       }, { passive: false });
 
-      window.addEventListener('click', (event) => {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+      function handleInteraction(event, isTouch = false) {
+        const clientX = isTouch ? event.changedTouches[0].clientX : event.clientX;
+        const clientY = isTouch ? event.changedTouches[0].clientY : event.clientY;
+        console.log(`Interacción detectada en: x=${clientX}, y=${clientY}`);
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (clientY / window.innerHeight) * 2 + 1;
+        console.log(`Coordenadas normalizadas: x=${mouse.x}, y=${mouse.y}`);
+        console.log(`Puerta actual: ${doorTitles[currentDoorIndex]}, visible: ${doors[currentDoorIndex].visible}, botón visible: ${buttonMeshes[currentDoorIndex].visible}`);
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObject(buttonMeshes[currentDoorIndex], true);
+        console.log(`Intersecciones con botón de ${doorTitles[currentDoorIndex]}: ${intersects.length}`, intersects.map(i => ({
+          doorIndex: i.object.userData.doorIndex,
+          door: doorTitles[i.object.userData.doorIndex],
+          visible: i.object.visible
+        })));
         if (intersects.length > 0 && intersects[0].object.visible) {
           const doorIndex = intersects[0].object.userData.doorIndex;
+          console.log(`Botón clicado para puerta: ${doorTitles[doorIndex]}`);
           try {
             doorFrame.src = `puerta${doorIndex + 1}.html`;
             doorFrame.style.display = 'block';
             doorFrame.style.opacity = '1';
+            doorFrame.classList.add('show');
+            setTimeout(() => doorFrame.classList.remove('show'), 200);
             doors[doorIndex].visible = false;
             labelMeshes[doorIndex].visible = false;
             buttonMeshes[doorIndex].visible = false;
@@ -446,8 +521,10 @@
           } catch (error) {
             console.error(`Error al cargar puerta${doorIndex + 1}.html:`, error);
           }
+        } else {
+          console.warn(`No se detectó el botón de ${doorTitles[currentDoorIndex]} o no está visible`);
         }
-      });
+      }
 
       doorFrame.onerror = () => {
         console.error(`Error al cargar el iframe: ${doorFrame.src}`);
@@ -461,22 +538,19 @@
       let currentDoorIndex = 0;
       const doorStates = doorTitles.map(() => ({ z: doorPosition, opened: false }));
 
-      window.addEventListener('resize', () => {
+      function updateRendererSize() {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
-      });
+      }
 
-      window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
-        }, 100);
-      });
+      window.addEventListener('resize', updateRendererSize);
+      window.addEventListener('orientationchange', updateRendererSize);
 
       window.addEventListener('message', (event) => {
+        console.log('Mensaje recibido:', event.data);
         if (event.data.type === 'zoomUpdate') {
+          console.log(`Mensaje zoomUpdate recibido: zoom=${event.data.zoom}`);
           const zoom = event.data.zoom;
           const entryZoom = 1.2;
           const maxZoom = 5.0;
@@ -498,7 +572,7 @@
                 const ctx = p.material.map.image.getContext('2d');
                 ctx.clearRect(0, 0, p.material.map.image.width, p.material.map.image.height);
                 ctx.fillStyle = '#' + doorColors[0].toString(16).padStart(6, '0');
-                ctx.font = isMobile ? '32px sans-serif' : '64px sans-serif';
+                ctx.font = isMobile ? '48px sans-serif' : '64px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(emojiList[p.userData.type], p.material.map.image.width / 2, p.material.map.image.height / 2);
@@ -509,11 +583,13 @@
             console.log(`Panel inicial oculto, mostrando puerta: ${doorTitles[0]}`);
           }
         } else if (event.data.type === 'doorClosed') {
+          console.log(`Mensaje doorClosed recibido, puerta actual: ${doorTitles[currentDoorIndex]}`);
           if (currentDoorIndex < doorTitles.length - 1) {
             isResetting = true;
             resetStartTime = timeElapsed;
             doorFrame.style.opacity = '1';
             currentDoorIndex = Math.min(currentDoorIndex + 1, doorTitles.length - 1);
+            console.log(`Preparando siguiente puerta: ${doorTitles[currentDoorIndex]}`);
             doors.forEach((door, i) => {
               door.visible = i === currentDoorIndex;
               labelMeshes[i].visible = i === currentDoorIndex;
@@ -526,16 +602,16 @@
             rainParticles.forEach((p, i) => {
               p.visible = i === currentDoorIndex;
               p.position.set(
-                (Math.random() - 0.5) * tunnelRadius * 1.6,
-                tunnelRadius * 1.1,
-                doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.4
+                (Math.random() - 0.5) * tunnelRadius * 1.8,
+                tunnelRadius * 1.2,
+                doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5
               );
               p.material.color.set(doorColors[currentDoorIndex]);
               if (p.userData.type < 3) {
                 const ctx = p.material.map.image.getContext('2d');
                 ctx.clearRect(0, 0, p.material.map.image.width, p.material.map.image.height);
                 ctx.fillStyle = '#' + doorColors[currentDoorIndex].toString(16).padStart(6, '0');
-                ctx.font = isMobile ? '32px sans-serif' : '64px sans-serif';
+                ctx.font = isMobile ? '48px sans-serif' : '64px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(emojiList[p.userData.type], p.material.map.image.width / 2, p.material.map.image.height / 2);
@@ -544,7 +620,7 @@
             });
             setTimeout(() => {
               labelMeshes[currentDoorIndex].material.opacity = 1.0;
-            }, 400);
+            }, 500);
           } else {
             doorFrame.style.opacity = '0';
             rainParticles.forEach(p => p.visible = false);
@@ -552,7 +628,7 @@
               doorFrame.style.display = 'none';
               doorFrame.src = '';
               console.log('Última puerta cerrada, ocultando panel');
-            }, 400);
+            }, 500);
           }
         }
       });
@@ -580,13 +656,13 @@
             rainParticles.forEach(p => p.visible = true);
             isStopped = false;
             console.log(`Mostrando puerta inicial: ${doorTitles[0]}`);
-          }, 400);
+          }, 500);
         }
 
         if (isResetting) {
-          const resetDuration = 0.4;
+          const resetDuration = 0.5;
           const resetProgress = Math.min((timeElapsed - resetStartTime) / resetDuration, 1);
-          camera.position.z = (doorPosition + 200) + ((isMobile ? 20 : 30) - (doorPosition + 200)) * resetProgress;
+          camera.position.z = (doorPosition + 200) + (30 - (doorPosition + 200)) * resetProgress;
           if (resetProgress >= 1) {
             isResetting = false;
             doorFrame.style.opacity = '0';
@@ -606,16 +682,16 @@
                 rainParticles.forEach((p, i) => {
                   p.visible = i === currentDoorIndex;
                   p.position.set(
-                    (Math.random() - 0.5) * tunnelRadius * 1.6,
-                    tunnelRadius * 1.1,
-                    doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.4
+                    (Math.random() - 0.5) * tunnelRadius * 1.8,
+                    tunnelRadius * 1.2,
+                    doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5
                   );
                   p.material.color.set(doorColors[currentDoorIndex]);
                   if (p.userData.type < 3) {
                     const ctx = p.material.map.image.getContext('2d');
                     ctx.clearRect(0, 0, p.material.map.image.width, p.material.map.image.height);
                     ctx.fillStyle = '#' + doorColors[currentDoorIndex].toString(16).padStart(6, '0');
-                    ctx.font = isMobile ? '32px sans-serif' : '64px sans-serif';
+                    ctx.font = isMobile ? '48px sans-serif' : '64px sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(emojiList[p.userData.type], p.material.map.image.width / 2, p.material.map.image.height / 2);
@@ -626,9 +702,9 @@
                 console.log(`Mostrando puerta: ${doorTitles[currentDoorIndex]}, posición z: ${camera.position.z}`);
                 setTimeout(() => {
                   labelMeshes[currentDoorIndex].material.opacity = 1.0;
-                }, 400);
+                }, 500);
               }
-            }, 400);
+            }, 500);
           }
         }
 
@@ -644,25 +720,25 @@
         rainParticles.forEach(p => {
           if (p.visible && timeElapsed > p.userData.startTime) {
             p.position.y += p.userData.velocity * dt;
-            if (p.position.y < -tunnelRadius * 1.1) {
-              p.position.y = tunnelRadius * 1.1;
-              p.position.x = (Math.random() - 0.5) * tunnelRadius * 1.6;
-              p.position.z = doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.4;
+            if (p.position.y < -tunnelRadius * 1.2) {
+              p.position.y = tunnelRadius * 1.2;
+              p.position.x = (Math.random() - 0.5) * tunnelRadius * 1.8;
+              p.position.z = doorPosition + (Math.random() - 0.5) * tunnelRadius * 0.5;
               p.userData.startTime = timeElapsed + Math.random() * 2;
             }
-            p.rotation.z += 0.4 * dt;
+            p.rotation.z += 0.5 * dt;
           }
         });
 
         pointsMat.uniforms.uTime.value = now * 0.001;
 
         buttonMeshes.forEach((mesh, i) => {
-          mesh.position.y = -tunnelRadius * 0.12 + Math.sin(now * 0.001) * tunnelRadius * 0.012;
+          mesh.position.y = -tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.015;
           buttonLights[i].position.y = mesh.position.y;
           buttonEdges[i].position.y = mesh.position.y;
         });
         labelMeshes.forEach((mesh) => {
-          mesh.position.y = tunnelRadius * 0.12 + Math.sin(now * 0.001) * tunnelRadius * 0.015;
+          mesh.position.y = tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.02;
         });
 
         renderer.render(scene, camera);
