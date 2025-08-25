@@ -12,7 +12,6 @@
     }
     html,body{height:100%;margin:0;background:radial-gradient(1000px 700px at 15% 12%, rgba(170,220,255,0.02), transparent 8%), #040007;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#f7eef6}
     #canvas-container{width:100vw;height:100vh;position:relative;display:block;touch-action:none}
-    /* Overlay (inspirado en el romántico) */
     #overlay{
       position:absolute; left:18px; top:18px; z-index:120;
       background: linear-gradient(180deg, var(--panel), rgba(0,0,0,0.12));
@@ -23,8 +22,6 @@
     #overlay h3{ margin:0 0 8px 0; font-size:15px; color: var(--accent-b) }
     #overlay p{ margin:0; font-size:13px; opacity:0.95 }
     .controls{ display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; align-items:center }
-
-    /* Buttons (romántico, pero distinto) */
     .btn, .btn-ghost {
       position:relative; overflow:hidden;
       display:inline-flex; align-items:center; gap:8px;
@@ -36,19 +33,15 @@
     .btn-ghost{ background: transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:9px 12px }
     .btn-ghost:hover{ background: rgba(255,255,255,0.02); transform: translateY(-2px) }
     .btn:focus{ outline:3px solid rgba(166,240,255,0.10); outline-offset:3px }
-
-    /* ripple */
     .ripple{ position:absolute; border-radius:999px; transform:scale(0); animation:rip .6s ease-out; pointer-events:none; background:rgba(255,255,255,0.16) }
     @keyframes rip{ to{ transform:scale(2.6); opacity:0 } }
-
     #credits{ position:absolute; right:16px; bottom:18px; z-index:100; font-size:12px; color:#eedaef; padding:8px; border-radius:8px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.06)); }
     #hint{ position:absolute; left:50%; transform:translateX(-50%); bottom:20px; z-index:100; font-size:13px; padding:8px 14px; border-radius:999px; background: linear-gradient(90deg, rgba(166,240,255,0.04), rgba(255,179,200,0.03)); color:#ffdfe8 }
     #previewModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.95)); z-index:250 }
     #previewContent{ max-width:94vw; max-height:92vh; padding:16px; border-radius:14px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); display:flex; flex-direction:column; gap:12px; box-shadow: 0 30px 90px rgba(0,0,0,0.8) }
     #previewContent img{ max-width:100%; max-height:82vh; border-radius:10px; display:block; box-shadow: 0 18px 50px rgba(0,0,0,0.6) }
     #previewClose{ align-self:flex-end; padding:8px 12px; border-radius:10px; border:0; background: linear-gradient(180deg,#9ff3ff,#ffc8e0); color:#111; cursor:pointer }
-
-    /* responsive */
+    #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;text-align:center;color:#a6f0ff;text-shadow:0 0 10px #a6f0ff, 0 0 20px #a6f0ff;z-index:130;display:none}
     @media (max-width:900px){
       #overlay{ left:12px; top:12px; padding:10px; min-width:190px }
       .btn{ padding:9px 12px; font-size:14px }
@@ -59,13 +52,11 @@
       .btn{ padding:10px 12px; font-size:15px; border-radius:12px }
       #hint{ display:none }
     }
-    #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;text-align:center;color:#ff7aa0;text-shadow:0 0 10px #ff7aa0, 0 0 20px #ff7aa0;z-index:130;display:none}
   </style>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v5.</div>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero.</div>
   <div id="canvas-container"></div>
-
   <div id="overlay" role="region" aria-label="Controles">
     <h3>Puerta 2 — Sala Romántica (versión adaptada)</h3>
     <p>Mueve o toca para mirar. Pellizca para acercar/alejar en móvil.</p>
@@ -76,17 +67,14 @@
       <button id="returnBtn" class="btn-ghost">Regresar</button>
     </div>
   </div>
-
-  <div id="credits">Imágenes de ejemplo: picsum.photos • Interfaz al estilo romántico</div>
+  <div id="credits">Imágenes desde Firebase • Interfaz al estilo romántico</div>
   <div id="hint">Toca una imagen para agrandarla</div>
-
   <div id="previewModal" aria-hidden="true">
     <div id="previewContent">
       <button id="previewClose">Cerrar</button>
       <img id="previewImage" src="" alt="Vista previa" />
     </div>
   </div>
-
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
@@ -108,11 +96,7 @@
     let imageUrls = [];
     async function fetchImages() {
       const errorMessage = document.getElementById('errorMessage');
-      const rawSearch = window.location.search;
-      console.log("URL completa:", window.location.href);
-      console.log("Parámetros de búsqueda:", rawSearch);
-      
-      const urlParams = new URLSearchParams(rawSearch);
+      const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('id')?.trim();
       console.log("ID extraído de la URL:", userId);
 
@@ -124,7 +108,7 @@
       }
 
       try {
-        console.log(`Consultando Firebase para usuarios/${userId}`);
+        console.log(`Consultando Firebase para usuarios/${userId}/puerta2Fotos`);
         const snapshot = await get(ref(database, `usuarios/${userId}`));
         if (snapshot.exists()) {
           const data = snapshot.val();
@@ -155,14 +139,12 @@
       imageUrls = await fetchImages();
       console.log("Imágenes finales para la escena:", imageUrls);
 
-      // --- Settings ---
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
       const TOTAL_IMAGES = isMobile ? 10 : 20;
       const FRAME_W = isMobile ? 220 : 340;
       const FRAME_H = isMobile ? 150 : 220;
       let cameraDistance = isMobile ? 950 : 820;
 
-      // --- Renderer & Scene ---
       const container = document.getElementById('canvas-container');
       const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
@@ -178,20 +160,17 @@
       const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 12000);
       camera.position.set(0, 60, cameraDistance);
 
-      // lighting
       const hemi = new THREE.HemisphereLight(0xfff8fb, 0x0b0b14, 0.55); scene.add(hemi);
       const ambient = new THREE.AmbientLight(0xffeaf4, 0.18); scene.add(ambient);
       const point = new THREE.PointLight(0xffc8e8, 0.9, 2000); point.position.set(700, 300, 300); scene.add(point);
 
-      // floor + soft ring
       const roomSize = 2600;
       const floorMat = new THREE.MeshStandardMaterial({ color:0x06050a, roughness:0.18, metalness:0.12 });
       const floor = new THREE.Mesh(new THREE.PlaneGeometry(roomSize, roomSize), floorMat);
       floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(900, 16, 48, 300), new THREE.MeshStandardMaterial({ color:0xa6f0ff, emissive:0xffc2dd, emissiveIntensity:0.12, roughness:0.5, metalness:0.3 }));
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(920, 16, 48, 300), new THREE.MeshStandardMaterial({ color:0xa6f0ff, emissive:0xffc2dd, emissiveIntensity:0.12, roughness:0.5, metalness:0.3 }));
       ring.rotation.x = Math.PI/2; ring.position.y = -80; scene.add(ring);
 
-      // stars / background dots
       const starsCount = isMobile ? 300 : 700;
       const starsGeo = new THREE.BufferGeometry(), starsPos = new Float32Array(starsCount*3);
       for(let i=0;i<starsCount;i++){
@@ -203,27 +182,23 @@
         starsPos[i*3+2] = Math.cos(phi)*r;
       }
       starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
-      const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: isMobile?2.0:3.0, color: 0xffffff, opacity:0.95, transparent:true }));
+      const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: isMobile ? 2.0 : 3.2, color: 0xffffff, opacity:0.95, transparent:true }));
       scene.add(stars);
 
-      // group for images
       const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
       const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
 
-      // heart param func (used for shape variety)
       function heartPoint(t, scale=1){
         const x = 16*Math.pow(Math.sin(t),3);
         const y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-        return new THREE.Vector3(x*scale, y*scale, Math.sin(t*3.3)*40*scale);
+        return new THREE.Vector3(x*scale, y*scale, Math.sin(t*3.1)*40*scale);
       }
 
-      // create framed image (glow + frame + image plane)
       function createFramedImage(url, pos, idx){
         const glow = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W*1.14, FRAME_H*1.14), new THREE.MeshBasicMaterial({ color:0xa6f0ff, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
         const frame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W*1.04, FRAME_H*1.06, 10), new THREE.MeshStandardMaterial({ color:0x2b1b1f, roughness:0.2, metalness:0.6 }));
         const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
         const imgPlane = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W-14, FRAME_H-14), imgMat);
-
         const group = new THREE.Group();
         glow.position.set(0, 8, -6);
         frame.position.set(0,0,-8);
@@ -232,21 +207,18 @@
         group.position.copy(pos);
         group.userData = { url, idx };
         loader.load(url, (tex)=>{ imgMat.map = tex; imgMat.needsUpdate = true; });
-
-        // subtle hover scale property
         group.scale.set(1,1,1);
         imagesGroup.add(group);
         return group;
       }
 
-      // arrange images with two possible styles (heart-like or spiral)
-      let layoutMode = 'heart'; // 'heart' or 'spiral'
+      let layoutMode = 'heart';
       function arrangeImages(mode='heart'){
         while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
         const total = TOTAL_IMAGES;
         const placed = [];
         for(let i=0;i<total;i++){
-          const t = (i/total)*Math.PI*2;
+          const t = (i/total) * Math.PI*2;
           let pos;
           if(mode === 'heart'){
             const base = heartPoint(t, 30);
@@ -256,10 +228,9 @@
             pos.z += (Math.random()-0.5)*28;
           } else {
             const radius = 420 + i*18;
-            const ang = i * 0.35;
+            const ang = i * 0.38;
             pos = new THREE.Vector3(Math.cos(ang)*radius + (Math.random()-0.5)*40, -30 + Math.sin(i*0.36)*14, Math.sin(ang)*radius + (Math.random()-0.5)*40);
           }
-          // mild collision avoidance
           let attempts = 0;
           while(placed.some(p => p.distanceTo(pos) < 160) && attempts < 40){
             pos.x += (Math.random()-0.5) * 36;
@@ -267,13 +238,13 @@
             attempts++;
           }
           placed.push(pos.clone());
+          pos.y = Math.max(-300, Math.min(160, pos.y));
           const url = imageUrls[i % imageUrls.length];
           createFramedImage(url, pos, i);
         }
       }
       arrangeImages(layoutMode);
 
-      // petals as Points
       const petalsCount = isMobile ? 60 : 120;
       const petalsGeo = new THREE.BufferGeometry();
       const petPos = new Float32Array(petalsCount*3);
@@ -283,7 +254,6 @@
         petPos[i*3+2] = (Math.random()-0.5)*2200;
       }
       petalsGeo.setAttribute('position', new THREE.BufferAttribute(petPos,3));
-      // simple heart canvas texture for petals
       function createHeartTexture(){
         const s = 128;
         const c = document.createElement('canvas'); c.width = s; c.height = s;
@@ -307,8 +277,8 @@
       const petals = new THREE.Points(petalsGeo, petalsMat);
       scene.add(petals);
 
-      // lanterns and orbs
-      const lanterns = new THREE.Group(); scene.add(lanterns);
+      const lanterns = new THREE.Group(), orbs = new THREE.Group();
+      scene.add(lanterns); scene.add(orbs);
       function addLantern(pos, color=0xffd0e6){
         const geo = new THREE.SphereGeometry(18, 12, 12);
         const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.84, roughness:0.4, metalness:0.05 });
@@ -318,11 +288,9 @@
         lanterns.add(m); lanterns.add(light);
       }
       for(let i=0;i<12;i++){ const a = i/12*Math.PI*2; const r=900; addLantern(new THREE.Vector3(Math.cos(a)*r, -120, Math.sin(a)*r)); }
-      const orbs = new THREE.Group(); scene.add(orbs);
       function addOrb(pos){ const geo = new THREE.SphereGeometry(28, 20, 20); const mat = new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0.0, roughness:0.04, transmission:0.82, transparent:true, opacity:0.95, clearcoat:0.5 }); const m = new THREE.Mesh(geo, mat); m.position.copy(pos); orbs.add(m); }
-      for(let i=0;i<8;i++){ const a=Math.random()*Math.PI*2; const r=900+Math.random()*900; addOrb(new THREE.Vector3(Math.cos(a)*r, -40 + Math.random()*200, Math.sin(a)*r)); }
+      for(let i=0;i<8;i++){ const a=Math.random()*Math.PI*2; const r=400+Math.random()*900; addOrb(new THREE.Vector3(Math.cos(a)*r, -40 + Math.random()*200, Math.sin(a)*r)); }
 
-      // --- Interaction: camera control (desktop: move to look; mobile: touch drag; pinch zoom) ---
       let mouse = new THREE.Vector2(0,0);
       const raycaster = new THREE.Raycaster();
       let hovered = null;
@@ -331,7 +299,6 @@
       let cameraYaw = 0, cameraPitch = 0;
       let isPointerDown = false, pointerStart = null;
 
-      // get pointer coords helper
       function getClientPoint(e){
         if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
         if(e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
@@ -351,83 +318,86 @@
           if(isPointerDown && pointerStart){
             const dx = (p.x - pointerStart.x) / window.innerWidth;
             const dy = (p.y - pointerStart.y) / window.innerHeight;
-            targetYaw = -dx * Math.PI * 1.05;
-            targetPitch = -dy * Math.PI * 0.95;
+            targetYaw = -dx * Math.PI * 1.1;
+            targetPitch = -dy * Math.PI * 0.9;
             targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
           }
         }
       }
+
       renderer.domElement.addEventListener('pointermove', onPointerMove, { passive:true });
       renderer.domElement.addEventListener('pointerdown', (e)=>{ isPointerDown = true; pointerStart = getClientPoint(e); }, { passive:true });
       window.addEventListener('pointerup', ()=>{ isPointerDown = false; pointerStart = null; }, { passive:true });
 
-      // pinch zoom support
       let pinchStartDist = 0, pinchStartCam = cameraDistance;
+      renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length === 2){ pinchStartDist = getTouchDist(e); pinchStartCam = cameraDistance; } }, { passive:true });
+      renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length ===2 && pinchStartDist>0){ const d = getTouchDist(e); const factor = pinchStartDist / d; cameraDistance = pinchStartCam * factor; cameraDistance = Math.max(300, Math.min(1800, cameraDistance)); } }, { passive:true });
       function getTouchDist(e){ if(!e.touches || e.touches.length<2) return 0; const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
-      renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length===2){ pinchStartDist = getTouchDist(e); pinchStartCam = cameraDistance; } }, { passive:true });
-      renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length===2 && pinchStartDist>0){ const d = getTouchDist(e); const f = pinchStartDist / d; cameraDistance = pinchStartCam * f; cameraDistance = Math.max(300, Math.min(1800, cameraDistance)); } }, { passive:true });
 
-      // wheel zoom
       renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraDistance += e.deltaY * 0.6; cameraDistance = Math.max(300, Math.min(1800, cameraDistance)); }, { passive:false });
 
-      // click to preview images & ripple
-      const raycaster = new THREE.Raycaster();
       function onClick(e){
         const p = getClientPoint(e);
         const rect = renderer.domElement.getBoundingClientRect();
-        const cx = p.x - rect.left, cy = p.y - rect.top;
-        const mx = (cx/rect.width)*2 - 1, my = -((cy/rect.height)*2 - 1);
+        const cx = p.x - rect.left;
+        const cy = p.y - rect.top;
+        const mx = (cx / rect.width)*2 - 1;
+        const my = -((cy / rect.height)*2 - 1);
         raycaster.setFromCamera({ x: mx, y: my }, camera);
         const ints = raycaster.intersectObjects(imagesGroup.children, true);
         if(ints.length>0){
           let obj = ints[0].object;
           while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
-          if(obj && obj.userData && obj.userData.url) openPreview(obj.userData.url);
-          obj && (obj.scale.setScalar(1.06), setTimeout(()=>obj.scale.setScalar(1.0), 220));
+          if(obj && obj.userData && obj.userData.url){
+            openPreview(obj.userData.url);
+            obj.scale.setScalar(1.06);
+            setTimeout(()=> obj.scale.setScalar(1.0), 260);
+          }
         }
-        // ripple for UI buttons
         const btn = (e.target || e.srcElement).closest && (e.target || e.srcElement).closest('.btn, .btn-ghost');
         if(btn) createRipple(btn, p.x, p.y);
       }
       renderer.domElement.addEventListener('click', onClick, { passive:true });
-      renderer.domElement.addEventListener('touchend', (e)=>{ if(e.changedTouches && e.changedTouches.length) onClick({ changedTouches: e.changedTouches }); }, { passive:true });
+      renderer.domElement.addEventListener('touchend', (e)=>{ if(e.changedTouches && e.changedTouches.length) onClick({ touches: e.touches, changedTouches: e.changedTouches }); }, { passive:true });
 
-      // preview modal
       const previewModal = document.getElementById('previewModal'), previewImage = document.getElementById('previewImage'), previewClose = document.getElementById('previewClose');
       function openPreview(url){ previewImage.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden','false'); }
       function closePreview(){ previewModal.style.display = 'none'; previewImage.src = ''; previewModal.setAttribute('aria-hidden','true'); }
       previewClose.addEventListener('click', closePreview);
       previewModal.addEventListener('click', (ev)=>{ if(ev.target === previewModal) closePreview(); });
 
-      // ripple creation
       function createRipple(button, clientX, clientY){
         if(!button) return;
         const rect = button.getBoundingClientRect();
-        const x = clientX - rect.left, y = clientY - rect.top;
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
         const r = Math.max(rect.width, rect.height);
-        const el = document.createElement('span'); el.className = 'ripple';
-        el.style.width = el.style.height = (r * 1.6) + 'px';
-        el.style.left = (x - r*0.8) + 'px'; el.style.top = (y - r*0.8) + 'px';
-        button.appendChild(el); setTimeout(()=> el.remove(), 700);
+        const el = document.createElement('span');
+        el.className = 'ripple';
+        el.style.width = el.style.height = (r*1.6) + 'px';
+        el.style.left = (x - r*0.8) + 'px';
+        el.style.top = (y - r*0.8) + 'px';
+        button.appendChild(el);
+        setTimeout(()=> el.remove(), 700);
       }
 
-      // UI buttons
-      const toggleAuto = document.getElementById('toggleAuto');
-      const shapeBtn = document.getElementById('shapeBtn');
-      const surpriseBtn = document.getElementById('surpriseBtn');
-      const returnBtn = document.getElementById('returnBtn');
-      let auto = false;
-      toggleAuto.addEventListener('click', (e)=>{ createRipple(toggleAuto, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); auto = !auto; toggleAuto.textContent = auto ? 'Detener' : 'Auto-rotar'; toggleAuto.setAttribute('aria-pressed', String(auto)); });
+      const toggleBtn = document.getElementById('toggleAuto');
+      let autoRotate = false;
+      function toggleAuto(){ autoRotate = !autoRotate; toggleBtn.textContent = autoRotate ? 'Detener' : 'Auto-rotar'; toggleBtn.setAttribute('aria-pressed', String(autoRotate)); }
+      toggleBtn.addEventListener('click', (e)=>{ createRipple(toggleBtn, e.clientX || (window.innerWidth/2), e.clientY || (window.innerHeight/2)); toggleAuto(); });
 
-      shapeBtn.addEventListener('click', (e)=>{ createRipple(shapeBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); layoutMode = (layoutMode==='heart'?'spiral':'heart'); arrangeImages(layoutMode); });
-      surpriseBtn.addEventListener('click', (e)=>{ createRipple(surpriseBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2);
-        imagesGroup.children.forEach((g,i)=>{ g.position.x += (Math.random()-0.5)*120; g.position.z += (Math.random()-0.5)*120; });
+      const styleBtn = document.getElementById('styleBtn');
+      styleBtn.addEventListener('click', (e)=>{ createRipple(styleBtn, e.clientX || (window.innerWidth/2), e.clientY || (window.innerHeight/2)); imagesGroup.children.forEach((g, i)=> g.rotation.y += (i%2 ? 0.18 : -0.18)); });
+
+      const shuffleBtn = document.getElementById('shuffleBtn');
+      shuffleBtn.addEventListener('click', (e)=>{ createRipple(shuffleBtn, e.clientX || (window.innerWidth/2), e.clientY || (window.innerHeight/2)); imagesGroup.children.forEach(g=>{ g.position.x += (Math.random()-0.5)*120; g.position.z += (Math.random()-0.5)*120; }); });
+
+      const returnBtn = document.getElementById('returnBtn');
+      returnBtn.addEventListener('click', (e)=>{
+        createRipple(returnBtn, e.clientX || (window.innerWidth/2), e.clientY || (window.innerHeight/2));
+        window.parent.postMessage({ type: 'doorClosed' }, '*');
       });
 
-      // RETURN behavior: keep exactly the same message you used before
-      returnBtn.addEventListener('click', (e)=>{ createRipple(returnBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); window.parent.postMessage({ type: 'doorClosed' }, '*'); });
-
-      // ---------- Animation ----------
       let last = performance.now();
       function animate(){
         requestAnimationFrame(animate);
@@ -435,24 +405,23 @@
         const dt = Math.max(0.001, (now - last)/1000);
         last = now;
 
-        // camera lerp
         const lerp = 1 - Math.pow(0.001, dt * 60);
         cameraYaw += (targetYaw - cameraYaw) * lerp;
         cameraPitch += (targetPitch - cameraPitch) * lerp;
-        if(auto) cameraYaw -= dt * 0.02;
-        const cp = Math.max(-maxPitch, Math.min(maxPitch, cameraPitch));
+        cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, cameraPitch));
+        if(autoRotate) cameraYaw -= dt * 0.02;
 
-        // spherical camera
         const r = cameraDistance;
-        const cx = Math.sin(cameraYaw) * r, cz = Math.cos(cameraYaw) * r, cy = -cp * 220 + 60;
+        const cx = Math.sin(cameraYaw) * r;
+        const cz = Math.cos(cameraYaw) * r;
+        const cy = -cameraPitch * 220 + 60;
         camera.position.set(cx, cy, cz);
-        camera.lookAt(0, 0, 0);
+        camera.lookAt(0,0,0);
 
-        // petals drift
         const posAttr = petals.geometry.getAttribute('position');
         for(let i=0;i<petalsCount;i++){
           let idx = i*3;
-          posAttr.array[idx+1] += (1.2 + Math.sin(i*0.18 + now*0.001) * 0.5) * dt * 12;
+          posAttr.array[idx+1] += (1.2 + Math.sin(i*0.18 + now*0.001) * 0.55) * dt * 12;
           if(posAttr.array[idx+1] > 1200){
             posAttr.array[idx+1] = -200 - Math.random()*400;
             posAttr.array[idx] = (Math.random()-0.5)*2200;
@@ -461,556 +430,21 @@
         }
         posAttr.needsUpdate = true;
 
-        // images face camera and bob
-        imagesGroup.children.forEach((g, idx)=>{
-          g.lookAt(camera.position);
-          g.position.y += Math.sin(idx*0.6 + now*0.0008) * 0.0018;
-        });
+        imagesGroup.children.forEach((g, idx)=>{ g.position.y += Math.sin(idx*0.6 + now*0.0008) * 0.0025; g.lookAt(camera.position); });
 
-        // orbiting lights
-        lanterns.rotation.y += 0.0003;
-        orbs.rotation.y -= 0.00015;
-        stars.rotation.y += 0.00012;
-
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      // ---------- Resize ----------
-      function onResize(){ renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); arrangeImages(layoutMode); }
-      window.addEventListener('resize', onResize);
-
-      // keyboard: close preview on Esc
-      window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') { closePreview(); } });
-
-      // Expose helper for debug
-      window._puerta2rom = { arrangeImages, createFramedImage, imagesGroup };
-
-    })();
-  </script>
-</body>
-</html>
-
-```html
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Puerta 4 — Romántico (Espiral-Flor sorpresa)</title>
-  <style>
-    :root{
-      --accent1:#ffd6ea;
-      --accent2:#ffd9a6;
-      --panel: rgba(255,255,255,0.03);
-    }
-    html,body{height:100%;margin:0;background:
-      radial-gradient(900px 600px at 20% 12%, rgba(255,150,200,0.02), transparent 8%),
-      linear-gradient(180deg,#050018,#04000b);overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
-    #canvas-container{width:100vw;height:100vh;position:relative;display:block;touch-action:none}
-    /* top panel */
-    #overlay{
-      position:absolute; left:18px; top:18px; z-index:220;
-      padding:12px;border-radius:14px; background: linear-gradient(180deg,var(--panel), rgba(0,0,0,0.12));
-      backdrop-filter: blur(6px); box-shadow: 0 16px 50px rgba(0,0,0,0.6); color:#fff; min-width:220px;
-    }
-    #overlay h3{margin:0 0 8px 0;font-size:15px;color:var(--accent1)}
-    #overlay p{margin:0;font-size:13px;opacity:0.95}
-    .controls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-    .btn, .btn-ghost {
-      position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;border:0;cursor:pointer;font-weight:700;font-size:14px;
-      -webkit-tap-highlight-color: transparent; transition: transform .12s ease, box-shadow .12s ease;
-    }
-    .btn { background: linear-gradient(180deg,#ffd6ea,#ffd9a6); color:#111; box-shadow: 0 10px 30px rgba(255,160,190,0.08) }
-    .btn:hover{ transform: translateY(-3px) }
-    .btn-ghost{ background:transparent;border:1px solid rgba(255,255,255,0.06); color:#fff; padding:8px 10px }
-    .btn-ghost:hover{ background: rgba(255,255,255,0.02); transform: translateY(-2px) }
-
-    .ripple{ position:absolute;border-radius:999px;transform:scale(0);animation:rip .6s ease-out;pointer-events:none;background:rgba(255,255,255,0.14) }
-    @keyframes rip{ to{ transform:scale(2.6); opacity:0 } }
-
-    #credits{position:absolute;right:16px;bottom:18px;color:#f8e1ea;font-size:12px;z-index:200;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.06))}
-    #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;color:#ffdfe8;z-index:200;font-size:13px;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg, rgba(255,166,200,0.04), rgba(255,220,170,0.03));backdrop-filter:blur(2px)}
-    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.95));z-index:350}
-    #previewContent{max-width:94vw;max-height:92vh;padding:16px;border-radius:14px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 90px rgba(0,0,0,0.8)}
-    #previewContent img{max-width:100%;max-height:82vh;border-radius:10px;display:block;box-shadow:0 18px 50px rgba(0,0,0,0.6)}
-    #previewClose{align-self:flex-end;padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,#ffd6ea,#ffd9a6);color:#111;cursor:pointer}
-
-    @media (max-width:720px){
-      #overlay{left:12px;top:12px;padding:10px}
-      .btn{padding:9px 10px;font-size:14px}
-      #hint{display:none}
-    }
-    #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;text-align:center;color:#ff7aa0;text-shadow:0 0 10px #ff7aa0, 0 0 20px #ff7aa0;z-index:130;display:none}
-  </style>
-</head>
-<body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v5.</div>
-  <div id="canvas-container" aria-hidden="false"></div>
-
-  <div id="overlay" role="region" aria-label="Controles">
-    <h3>Puerta 4 — Espiral-Flor romántica</h3>
-    <p>Toca/arrastra para mirar. Pellizca para acercar/alejar.</p>
-    <div class="controls">
-      <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
-      <button id="shapeBtn" class="btn-ghost">Cambiar forma</button>
-      <button id="surpriseBtn" class="btn-ghost">Sorpresa</button>
-      <button id="returnBtn" class="btn-ghost">Regresar</button>
-    </div>
-  </div>
-
-  <div id="credits">Diseño romántico • Imágenes: picsum.photos (ejemplos)</div>
-  <div id="hint">Pulsa una imagen para ampliar</div>
-
-  <div id="previewModal" aria-hidden="true">
-    <div id="previewContent"><button id="previewClose">Cerrar</button><img id="previewImage" src="" alt="Vista previa"></div>
-  </div>
-
-  <!-- three.js -->
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
-      authDomain: "tunel-de-recuerdos.firebaseapp.com",
-      projectId: "tunel-de-recuerdos",
-      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
-      messagingSenderId: "630660710506",
-      appId: "1:630660710506:web:90d34150c9f21f668eca13",
-      measurementId: "G-ETFDVEHML1"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
-    let imageUrls = [];
-    async function fetchImages() {
-      const errorMessage = document.getElementById('errorMessage');
-      const rawSearch = window.location.search;
-      console.log("URL completa:", window.location.href);
-      console.log("Parámetros de búsqueda:", rawSearch);
-      
-      const urlParams = new URLSearchParams(rawSearch);
-      const userId = urlParams.get('id')?.trim();
-      console.log("ID extraído de la URL:", userId);
-
-      if (!userId || userId === '') {
-        console.error("No se encontró 'id' en la URL o es inválido.");
-        errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
-        errorMessage.style.display = 'block';
-        return [];
-      }
-
-      try {
-        console.log(`Consultando Firebase para usuarios/${userId}`);
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const puertaFotos = data.puerta4Fotos || [];
-          const validFotos = puertaFotos.slice(0, 5).filter(url => typeof url === 'string' && url.trim() !== '');
-          console.log("Imágenes obtenidas de puerta4Fotos:", validFotos);
-          if (validFotos.length === 0) {
-            console.warn(`No hay imágenes en puerta4Fotos para el usuario ${userId}.`);
-            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega imágenes primero.';
-            errorMessage.style.display = 'block';
-          }
-          return validFotos;
-        } else {
-          console.error(`No se encontraron datos para el usuario ${userId}.`);
-          errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
-          errorMessage.style.display = 'block';
-          return [];
-        }
-      } catch (error) {
-        console.error("Error al consultar Firebase:", error);
-        errorMessage.textContent = 'Error al cargar las imágenes. Por favor, intenta de nuevo.';
-        errorMessage.style.display = 'block';
-        return [];
-      }
-    }
-
-    (async function(){
-      imageUrls = await fetchImages();
-      console.log("Imágenes finales para la escena:", imageUrls);
-
-      // ---------- Config ----------
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-      const TOTAL = isMobile ? 12 : 20;
-      const FRAME_W = isMobile ? 220 : 320;
-      const FRAME_H = isMobile ? 150 : 210;
-      let cameraRadius = isMobile ? 980 : 820;
-
-      // ---------- Renderer ----------
-      const container = document.getElementById('canvas-container');
-      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.domElement.style.display = 'block';
-      renderer.domElement.style.touchAction = 'none';
-      container.appendChild(renderer.domElement);
-
-      // ---------- Scene & Camera ----------
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x020012);
-      scene.fog = new THREE.FogExp2(0x020012, 0.00016);
-
-      const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 12000);
-      camera.position.set(0, 60, cameraRadius);
-
-      // lights
-      const hemi = new THREE.HemisphereLight(0xfff2fb, 0x07101b, 0.55); scene.add(hemi);
-      const amb = new THREE.AmbientLight(0xffeaf4, 0.18); scene.add(amb);
-      const key = new THREE.PointLight(0xffcbe6, 0.9, 2000); key.position.set(700, 300, 300); scene.add(key);
-
-      // floor + soft ring
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(2600,2600), new THREE.MeshStandardMaterial({ color:0x04020a, roughness:0.18 }));
-      floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(900, 16, 40, 300), new THREE.MeshStandardMaterial({ color:0xffb0d1, emissive:0xffe0c8, emissiveIntensity:0.08, roughness:0.45 }));
-      ring.rotation.x = Math.PI/2; ring.position.y = -80; scene.add(ring);
-
-      // ---------- Nice background dots ----------
-      const starsCount = isMobile ? 300 : 700;
-      const starsGeo = new THREE.BufferGeometry(), starsPos = new Float32Array(starsCount*3);
-      for(let i=0;i<starsCount;i++){
-        const r = 400 + Math.random()*2000;
-        const theta = Math.random()*Math.PI*2;
-        const phi = Math.acos(2*Math.random()-1);
-        starsPos[i*3] = Math.sin(phi)*Math.cos(theta)*r;
-        starsPos[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.55;
-        starsPos[i*3+2] = Math.cos(phi)*r;
-      }
-      starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
-      const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: isMobile?2.0:3.0, color:0xffffff, opacity:0.95, transparent:true }));
-      scene.add(stars);
-
-      // ---------- Group for images ----------
-      const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
-      const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
-
-      // ---------- Surprise ribbons: thin planes that wave ----------
-      const ribbons = new THREE.Group(); scene.add(ribbons);
-      function addRibbon(radius, height, twist, colorA, colorB){
-        const seg = 80;
-        const geo = new THREE.PlaneGeometry(radius*2, height, seg, 4);
-        // triangular UV warp will allow subtle gradient-like look with MeshStandardMaterial
-        const mat = new THREE.MeshStandardMaterial({ color: colorA, metalness:0.05, roughness:0.4, side: THREE.DoubleSide, transparent:true, opacity:0.85 });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.rotation.x = Math.PI/2;
-        mesh.position.y = -80;
-        mesh.userData = { twist };
-        ribbons.add(mesh);
-      }
-      for(let i=0;i<3;i++){
-        addRibbon(520 + i*60, 240 + i*60, (i%2?0.8:-0.8)*(0.6 + i*0.2), 0xffc2d9, 0xffe8b0);
-      }
-
-      // ---------- Heart canopy particles ----------
-      const heartParticles = new THREE.BufferGeometry();
-      const heartCount = isMobile ? 220 : 520;
-      const heartPos = new Float32Array(heartCount*3);
-      function sampleHeart(u){
-        // parametric heart shape roughly centered above (u 0..1)
-        const t = u * Math.PI * 2;
-        const x = 16*Math.pow(Math.sin(t),3);
-        const y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-        return new THREE.Vector3(x*18 + (Math.random()-0.5)*24, y*14 + 80 + (Math.random()-0.5)*26, Math.sin(t*3.1)*36 + (Math.random()-0.5)*40);
-      }
-      for(let i=0;i<heartCount;i++){
-        const v = sampleHeart(i/heartCount);
-        heartPos[i*3] = v.x; heartPos[i*3+1] = v.y; heartPos[i*3+2] = v.z;
-      }
-      heartParticles.setAttribute('position', new THREE.BufferAttribute(heartPos,3));
-      const heartMat = new THREE.PointsMaterial({ size: isMobile?6:8, map: (() => {
-        // create soft dot
-        const c = document.createElement('canvas'); c.width=64; c.height=64; const cx=c.getContext('2d');
-        const g = cx.createRadialGradient(32,32,2,32,32,32); g.addColorStop(0,'rgba(255,200,230,1)'); g.addColorStop(1,'rgba(255,200,230,0)');
-        cx.fillStyle=g; cx.fillRect(0,0,64,64);
-        return new THREE.CanvasTexture(c);
-      })(), transparent:true, depthWrite:false, opacity:0.9 });
-      const heartPts = new THREE.Points(heartParticles, heartMat);
-      scene.add(heartPts);
-
-      // ---------- Frames creation ----------
-      function createFrame(url, pos, idx){
-        const glow = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W*1.12, FRAME_H*1.12), new THREE.MeshBasicMaterial({ color:0xffd6ea, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
-        const frame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W*1.03, FRAME_H*1.04, 12), new THREE.MeshStandardMaterial({ color:0x201218, roughness:0.18, metalness:0.6 }));
-        const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
-        const img = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W-14, FRAME_H-14), imgMat);
-        const g = new THREE.Group();
-        glow.position.set(0,8,-6); frame.position.set(0,0,-8); img.position.set(0,0,6);
-        g.add(glow, frame, img);
-        g.position.copy(pos);
-        g.userData = { url, idx };
-        loader.load(url, tex => { imgMat.map = tex; imgMat.needsUpdate = true; });
-        imagesGroup.add(g);
-        return g;
-      }
-
-      // ---------- Arrangement: spiral-flower  (unique) ----------
-      let layout = 'spiral'; // options: 'spiral' (this version), 'doubleHelix'
-      function arrange(layoutMode='spiral'){
-        while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
-        const placed = [];
-        for(let i=0;i<TOTAL;i++){
-          const t = i / TOTAL;
-          let pos;
-          if(layoutMode === 'spiral'){
-            const turns = 3.2;
-            const angle = t * turns * Math.PI * 2;
-            const radius = 60 + Math.pow(t,0.6) * 560;
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
-            const y = -120 + Math.sin(t*Math.PI*6)*18 + (1 - t) * 160;
-            pos = new THREE.Vector3(x + (Math.random()-0.5)*24, y, z + (Math.random()-0.5)*24);
-          } else { // doubleHelix
-            const turns = 2.0;
-            const angle = t * turns * Math.PI * 2;
-            const radius = 180 + Math.sin(t*Math.PI*4) * 220;
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
-            const y = -180 + t*420;
-            pos = new THREE.Vector3(x + (Math.random()-0.5)*30, y + Math.sin(i)*10, z + (Math.random()-0.5)*30);
-          }
-          // mild collision avoidance
-          let attempts = 0;
-          while(placed.some(p=>p.distanceTo(pos) < 140) && attempts < 40){
-            pos.x += (Math.random()-0.5)*40; pos.z += (Math.random()-0.5)*40; attempts++;
-          }
-          placed.push(pos.clone());
-          const url = imageUrls[i % imageUrls.length];
-          createFrame(url, pos, i);
-        }
-      }
-      arrange(layout);
-
-      // petals as Points
-      const petalsCount = isMobile ? 60 : 120;
-      const petalsGeo = new THREE.BufferGeometry();
-      const petPos = new Float32Array(petalsCount*3);
-      for(let i=0;i<petalsCount;i++){
-        petPos[i*3] = (Math.random()-0.5)*2200;
-        petPos[i*3+1] = -200 + Math.random()*900;
-        petPos[i*3+2] = (Math.random()-0.5)*2200;
-      }
-      petalsGeo.setAttribute('position', new THREE.BufferAttribute(petPos,3));
-      // simple heart canvas texture for petals
-      function createHeartTexture(){
-        const s = 128;
-        const c = document.createElement('canvas'); c.width = s; c.height = s;
-        const cx = c.getContext('2d');
-        cx.clearRect(0,0,s,s);
-        cx.fillStyle = 'rgba(255,155,190,0.98)';
-        cx.beginPath();
-        const x = s/2, y=s/2, sc=s/26;
-        cx.moveTo(x, y+3*sc);
-        cx.bezierCurveTo(x+11*sc, y-9*sc, x+20*sc, y+9*sc, x, y+18*sc);
-        cx.bezierCurveTo(x-20*sc, y+9*sc, x-11*sc, y-9*sc, x, y+3*sc);
-        cx.closePath();
-        cx.fill();
-        cx.globalCompositeOperation = 'lighter';
-        cx.fillStyle = 'rgba(255,210,230,0.18)';
-        cx.beginPath(); cx.arc(x, y+2*sc, 30*sc, 0, Math.PI*2); cx.fill();
-        return new THREE.CanvasTexture(c);
-      }
-      const heartTex = createHeartTexture();
-      const petalsMat = new THREE.PointsMaterial({ size: 46, map: heartTex, transparent:true, alphaTest:0.01, depthWrite:false });
-      const petals = new THREE.Points(petalsGeo, petalsMat);
-      scene.add(petals);
-
-      // lanterns and orbs
-      const lanterns = new THREE.Group(); scene.add(lanterns);
-      function addLantern(pos, color=0xffd0e6){
-        const geo = new THREE.SphereGeometry(18, 12, 12);
-        const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.84, roughness:0.4, metalness:0.05 });
-        const m = new THREE.Mesh(geo, mat); m.position.copy(pos);
-        const light = new THREE.PointLight(color, 0.7, 600);
-        light.position.copy(pos);
-        lanterns.add(m); lanterns.add(light);
-      }
-      for(let i=0;i<12;i++){ const a = i/12*Math.PI*2; const r=900; addLantern(new THREE.Vector3(Math.cos(a)*r, -120, Math.sin(a)*r)); }
-      const orbs = new THREE.Group(); scene.add(orbs);
-      function addOrb(pos){ const geo = new THREE.SphereGeometry(28, 20, 20); const mat = new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0.0, roughness:0.04, transmission:0.82, transparent:true, opacity:0.95, clearcoat:0.5 }); const m = new THREE.Mesh(geo, mat); m.position.copy(pos); orbs.add(m); }
-      for(let i=0;i<8;i++){ const a=Math.random()*Math.PI*2; const r=900+Math.random()*900; addOrb(new THREE.Vector3(Math.cos(a)*r, -40 + Math.random()*200, Math.sin(a)*r)); }
-
-      // ---------- Simple animate / interaction ----------
-      let targetYaw = 0, targetPitch = 0, yaw = 0, pitch = 0;
-      const maxPitch = Math.PI/2 - 0.08;
-      let isPointerDown = false, pointerStart = null;
-      function clientPoint(e){
-        if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        if(e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-        return { x: e.clientX, y: e.clientY };
-      }
-      function onPointerMove(e){
-        const p = clientPoint(e);
-        const rect = renderer.domElement.getBoundingClientRect();
-        const mx = (p.x - rect.left)/rect.width;
-        const my = (p.y - rect.top)/rect.height;
-        if(e.pointerType === 'mouse' || (!e.touches && !e.pointerType)){
-          targetYaw = -(mx - 0.5) * Math.PI * 1.05;
-          targetPitch = -(my - 0.5) * Math.PI * 0.85;
-          targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
-        } else {
-          if(isPointerDown && pointerStart){
-            const dx = (p.x - pointerStart.x) / window.innerWidth;
-            const dy = (p.y - pointerStart.y) / window.innerHeight;
-            targetYaw = -dx * Math.PI * 1.05;
-            targetPitch = -dy * Math.PI * 0.95;
-            targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
-          }
-        }
-      }
-      renderer.domElement.addEventListener('pointermove', onPointerMove, { passive:true });
-      renderer.domElement.addEventListener('pointerdown', (e)=>{ isPointerDown = true; pointerStart = clientPoint(e); }, { passive:true });
-      window.addEventListener('pointerup', ()=>{ isPointerDown = false; pointerStart = null; }, { passive:true });
-
-      // pinch zoom support
-      let pinchStartDist = 0, pinchStartRadius = cameraRadius;
-      function getDist(e){ if(!e.touches || e.touches.length<2) return 0; const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
-      renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length===2){ pinchStartDist = getDist(e); pinchStartRadius = cameraRadius; } }, { passive:true });
-      renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length===2 && pinchStartDist>0){ const d = getDist(e); const f = pinchStartDist / Math.max(1,d); cameraRadius = pinchStartRadius * f; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); } }, { passive:true });
-
-      // wheel zoom
-      renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraRadius += e.deltaY * 0.6; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); }, { passive:false });
-
-      // click to preview images
-      const raycaster = new THREE.Raycaster();
-      function onClick(e){
-        const p = clientPoint(e);
-        const rect = renderer.domElement.getBoundingClientRect();
-        const cx = p.x - rect.left, cy = p.y - rect.top;
-        const mx = (cx/rect.width)*2 - 1, my = -((cy/rect.height)*2 - 1);
-        raycaster.setFromCamera({ x: mx, y: my }, camera);
-        const ints = raycaster.intersectObjects(imagesGroup.children, true);
-        if(ints.length>0){
-          let obj = ints[0].object;
-          while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
-          if(obj && obj.userData && obj.userData.url) openPreview(obj.userData.url);
-          obj && (obj.scale.setScalar(1.06), setTimeout(()=>obj.scale.setScalar(1.0), 220));
-        }
-        // ripple for UI buttons
-        const btn = (e.target || e.srcElement).closest && (e.target || e.srcElement).closest('.btn, .btn-ghost');
-        if(btn) createRipple(btn, p.x, p.y);
-      }
-      renderer.domElement.addEventListener('click', onClick, { passive:true });
-      renderer.domElement.addEventListener('touchend', (e)=>{ if(e.changedTouches && e.changedTouches.length) onClick({ changedTouches: e.changedTouches }); }, { passive:true });
-
-      // preview modal
-      const previewModal = document.getElementById('previewModal'), previewImage = document.getElementById('previewImage'), previewClose = document.getElementById('previewClose');
-      function openPreview(url){ previewImage.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden','false'); }
-      function closePreview(){ previewModal.style.display = 'none'; previewImage.src = ''; previewModal.setAttribute('aria-hidden','true'); }
-      previewClose.addEventListener('click', closePreview);
-      previewModal.addEventListener('click', (ev)=>{ if(ev.target === previewModal) closePreview(); });
-
-      // ripple creation
-      function createRipple(button, clientX, clientY){
-        if(!button) return;
-        const rect = button.getBoundingClientRect();
-        const x = clientX - rect.left, y = clientY - rect.top;
-        const r = Math.max(rect.width, rect.height);
-        const el = document.createElement('span'); el.className = 'ripple';
-        el.style.width = el.style.height = (r * 1.6) + 'px';
-        el.style.left = (x - r*0.8) + 'px'; el.style.top = (y - r*0.8) + 'px';
-        button.appendChild(el); setTimeout(()=> el.remove(), 700);
-      }
-
-      // UI buttons
-      const toggleAuto = document.getElementById('toggleAuto');
-      const shapeBtn = document.getElementById('shapeBtn');
-      const surpriseBtn = document.getElementById('surpriseBtn');
-      const returnBtn = document.getElementById('returnBtn');
-      let auto = false;
-      toggleAuto.addEventListener('click', (e)=>{ createRipple(toggleAuto, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); auto = !auto; toggleAuto.textContent = auto ? 'Detener' : 'Auto-rotar'; toggleAuto.setAttribute('aria-pressed', String(auto)); });
-
-      shapeBtn.addEventListener('click', (e)=>{ createRipple(shapeBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); layout = (layout==='spiral'?'doubleHelix':'spiral'); arrange(layout); });
-      surpriseBtn.addEventListener('click', (e)=>{ createRipple(surpriseBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2);
-        // surprise: fling ribbons and sparkle heart
-        ribbons.children.forEach((r,i)=> r.userData && (r.userData._pulse = 1.0));
-        // small burst of heart particles outward
-        const pos = heartParticles.attributes.position.array;
-        for(let i=0;i<heartCount;i++){
-          pos[i*3+1] += Math.random()*40 + 10;
-        }
-        heartParticles.attributes.position.needsUpdate = true;
-      });
-
-      // RETURN behavior: keep exactly the same message you used before
-      returnBtn.addEventListener('click', (e)=>{ createRipple(returnBtn, e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2); window.parent.postMessage({ type: 'doorClosed' }, '*'); });
-
-      // ---------- Animation ----------
-      let last = performance.now();
-      function animate(){
-        requestAnimationFrame(animate);
-        const now = performance.now();
-        const dt = Math.max(0.001, (now - last)/1000);
-        last = now;
-
-        // camera lerp
-        const lerp = 1 - Math.pow(0.001, dt * 60);
-        yaw += (targetYaw - yaw) * lerp;
-        pitch += (targetPitch - pitch) * lerp;
-        if(auto) yaw -= dt * 0.02;
-        const cp = Math.max(-maxPitch, Math.min(maxPitch, pitch));
-
-        // spherical camera
-        const r = cameraRadius;
-        const cx = Math.sin(yaw) * r, cz = Math.cos(yaw) * r, cy = -cp * 220 + 60;
-        camera.position.set(cx, cy, cz);
-        camera.lookAt(0, 0, 0);
-
-        // ribbons gentle wave and occasional pulse
-        ribbons.children.forEach((ribbon, i)=>{
-          const off = i * 0.15;
-          ribbon.geometry.verticesNeedUpdate = true;
-          // animate vertices for slight wave
-          const pos = ribbon.geometry.attributes.position;
-          const len = pos.count;
-          for(let vi=0; vi<len; vi++){
-            const idx = vi*3;
-            const x0 = ribbon.geometry.parameters.width ? 0 : pos.array[idx];
-            pos.array[idx+1] = Math.sin((vi*0.05 + now*0.002) + off) * 6 + (-80 + i*6);
-          }
-          pos.needsUpdate = true;
-          // pulse if set
-          if(ribbon.userData && ribbon.userData._pulse){
-            ribbon.material.opacity = Math.max(0.3, 0.85 * ribbon.userData._pulse);
-            ribbon.userData._pulse = Math.max(0, ribbon.userData._pulse - dt * 0.9);
-          } else ribbon.material.opacity = 0.85;
-        });
-
-        // heart particles subtle float
-        const ppos = heartParticles.attributes.position;
-        for(let i=0;i<heartCount;i++){
-          const baseY = ppos.array[i*3+1];
-          ppos.array[i*3+1] = baseY + Math.sin(now*0.001 + i)*0.02; // tiny float to keep GPU happy
-        }
-        ppos.needsUpdate = true;
-
-        // images face camera and bob
-        imagesGroup.children.forEach((g, idx)=>{
-          g.lookAt(camera.position);
-          g.position.y += Math.sin(idx*0.6 + now*0.0008) * 0.0018;
-        });
-
-        // subtle rotate extras
-        ring.rotation && (ring.rotation.z += 0.00006);
+        lanterns.rotation && (lanterns.rotation.y += 0.0003);
+        orbs.rotation && (orbs.rotation.y -= 0.00015);
         stars.rotation && (stars.rotation.y += 0.00012);
 
         renderer.render(scene, camera);
       }
       animate();
 
-      // ---------- Resize ----------
-      window.addEventListener('resize', ()=>{ renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); arrange(layout); });
+      window.addEventListener('resize', ()=>{ renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); arrangeImages(layoutMode); });
 
-      // keyboard: close preview on Esc
       window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') { closePreview(); } });
 
-      // Expose helper for debug
-      window._puerta4 = { arrange, imagesGroup, heartParticles };
-
+      window._puerta2rom = { arrangeImages, createFramedImage, imagesGroup };
     })();
   </script>
 </body>
