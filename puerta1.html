@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Sala Romántica 3D — Responsive (mejoras UI & mobile)</title>
+  <style>
+    :root{ --rose-1:#ff7aa0; --rose-2:#ffc1d3; --glass: rgba(255,255,255,0.04); --btn-bg: linear-gradient(180deg,#ff9fb6,#ffd6e3); }
+    html,body{height:100%;margin:0;background:radial-gradient(1200px 800px at 20% 10%, rgba(255,100,140,0.06), transparent 8%, #000 60%), #000;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
+    #canvas-container{width:100vw;height:100vh;display:block;position:relative;touch-action:none} /* touch-action none para controlar gestos */
+    #overlay{position:absolute;left:18px;top:18px;color:#111;z-index:80;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12));backdrop-filter: blur(6px);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    #overlay h3{margin:0 0 6px 0;font-size:15px;color:var(--rose-2)}
+    #overlay p{margin:0;font-size:13px;color:rgba(255,255,255,0.9)}
+    .controls{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:center}
+    .btn, .btn-ghost {
+      position:relative;
+      overflow:hidden;
+      display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:700;font-size:14px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      transition:transform .14s ease, box-shadow .14s ease;
+    }
+    .btn{background:var(--btn-bg); color:#111; box-shadow: 0 6px 20px rgba(255,120,160,0.09);}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(255,120,160,0.12);}
+    .btn:active{transform:translateY(0);}
+
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 12px}
+    .btn-ghost:hover{background:rgba(255,255,255,0.02);transform:translateY(-2px)}
+    .btn:focus{outline:2px solid rgba(255,120,160,0.14);outline-offset:3px}
+    /* ripple */
+    .ripple{ position:absolute;border-radius:999px; transform:scale(0); animation:rip .6s ease-out; pointer-events:none; background:rgba(255,255,255,0.18) }
+    @keyframes rip{ to { transform:scale(2.6); opacity:0 } }
+
+    #credits{position:absolute;right:16px;bottom:18px;color:#ffdfe8;font-size:12px;z-index:5;padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06))}
+    #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:22px;color:#ffdfe8;z-index:5;font-size:13px;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg, rgba(255,111,163,0.08), rgba(255,182,193,0.04));backdrop-filter: blur(4px)}
+    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.9));z-index:120}
+    #previewContent{max-width:92vw;max-height:92vh;padding:16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:12px}
+    #previewContent img{max-width:100%;max-height:82vh;border-radius:10px;display:block;box-shadow:0 18px 50px rgba(0,0,0,0.6)}
+    #previewClose{align-self:flex-end;padding:8px 12px;border-radius:10px;border:0;background:var(--btn-bg);color:#111;cursor:pointer}
+    #romOverlay{position:absolute;inset:0;pointer-events:none;z-index:30;background:radial-gradient(60% 60% at 50% 40%, rgba(255,120,160,0.06), transparent 25%), linear-gradient(180deg, rgba(255,240,245,0.02), transparent 40%);} 
+    #tooltip{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:60;color:#fff;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:12px}
+    @media (max-width:900px){
+      #overlay{left:12px;top:12px;padding:10px}
+      .btn{padding:8px 12px;font-size:13px}
+      .controls{gap:8px}
+    }
+    @media (max-width:480px){
+      #overlay{left:8px;top:8px;padding:8px}
+      .controls{gap:6px}
+      #overlay p{display:none}
+      #hint{display:none}
+      .btn, .btn-ghost{padding:10px 14px;border-radius:14px;font-size:15px}
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="romOverlay"></div>
+
+  <div id="overlay" role="region" aria-label="Controles">
+    <h3>Sala Romántica — Forma corazón</h3>
+    <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
+    <div class="controls">
+      <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
+      <button id="heartBtn" class="btn-ghost">Cambiar forma</button>
+      <button id="shuffleBtn" class="btn-ghost">Aleatorizar</button>
+      <button id="returnBtn" class="btn-ghost">Regresar</button>
+    </div>
+  </div>
+
+  <div id="credits">Diseño romántico • Imágenes de ejemplo: picsum.photos</div>
+  <div id="hint">Toca una imagen para abrirla • Pellizca para acercar</div>
+  <div id="tooltip">Sugerencia: prueba "Cambiar forma"</div>
+
+  <div id="previewModal" aria-hidden="true"><div id="previewContent"><button id="previewClose">Cerrar</button><img id="previewImage" src="" alt="Vista previa"></div></div>
+
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+  <script>
+  (function(){
+    // ----------------- SETTINGS -----------------
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
+    const IMAGE_COUNT_DESKTOP = 20;
+    const IMAGE_COUNT_MOBILE = 8;
+    const TOTAL_IMAGES = isMobile ? IMAGE_COUNT_MOBILE : IMAGE_COUNT_DESKTOP;
+    const STARS_COUNT = isMobile ? 260 : 700;
+    const PETALS_COUNT = isMobile ? 60 : 120;
+    const BASE_FRAME_W = isMobile ? 220 : 320;
+    const BASE_FRAME_H = isMobile ? 150 : 220;
+    const MIN_CAMERA_DISTANCE = 420;
+    const MAX_CAMERA_DISTANCE = 2000;
+
+    // ----------------- RENDERER/SCENE -----------------
+    const container = document.getElementById('canvas-container');
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.touchAction = 'none'; // importante para touch gestures
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x08020a);
+    scene.fog = new THREE.FogExp2(0x08020a, 0.00025);
+
+    const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 12000);
+    let cameraDistance = isMobile ? 1000 : 900;
+    camera.position.set(0, 60, cameraDistance);
+    camera.lookAt(0,0,0);
+
+    // lights
+    const hemi = new THREE.HemisphereLight(0xfff0f6, 0x111122, 0.55); scene.add(hemi);
+    const ambient = new THREE.AmbientLight(0xffe7f0, 0.18); scene.add(ambient);
+    const key = new THREE.PointLight(0xff9ac0, 0.95, 2500); key.position.set(700,300,300); scene.add(key);
+    const soft = new THREE.PointLight(0xffb6d3, 0.45, 1500); soft.position.set(-500,200,-400); scene.add(soft);
+
+    // floor & ring
+    const roomSize = 2800;
+    const floorGeo = new THREE.PlaneGeometry(roomSize, roomSize);
+    const floorMat = new THREE.MeshStandardMaterial({ color:0x0b0710, roughness:0.18, metalness:0.18 });
+    const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(900, 18, 48, 260), new THREE.MeshStandardMaterial({ color:0xff7aa0, emissive:0xff7aa0, emissiveIntensity:0.18, roughness:0.5, metalness:0.45 }));
+    ring.rotation.x = Math.PI/2; ring.position.y = -60; scene.add(ring);
+
+    // stars
+    const starsGeo = new THREE.BufferGeometry();
+    const starsCount = STARS_COUNT;
+    const positions = new Float32Array(starsCount*3);
+    const colors = new Float32Array(starsCount*3);
+    for(let i=0;i<starsCount;i++){
+      const r = 500 + Math.random()*2000;
+      const theta = Math.random()*Math.PI*2;
+      const phi = Math.acos(2*Math.random()-1);
+      positions[i*3]   = Math.sin(phi)*Math.cos(theta)*r;
+      positions[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.55;
+      positions[i*3+2] = Math.cos(phi)*r;
+      colors[i*3]=1.0; colors[i*3+1]=0.75+Math.random()*0.25; colors[i*3+2]=0.9;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    starsGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+    const starsMat = new THREE.PointsMaterial({ size: isMobile ? 2.0 : 3.0, sizeAttenuation:true, vertexColors:true, opacity:0.95, transparent:true });
+    const stars = new THREE.Points(starsGeo, starsMat); scene.add(stars);
+
+    // images
+    const imageUrls = [
+      'https://picsum.photos/id/1015/900/600', 'https://picsum.photos/id/1025/900/600', 'https://picsum.photos/id/1035/900/600',
+      'https://picsum.photos/id/1041/900/600', 'https://picsum.photos/id/1050/900/600', 'https://picsum.photos/id/1069/900/600',
+      'https://picsum.photos/id/1074/900/600', 'https://picsum.photos/id/1084/900/600'
+    ];
+    const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
+    const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
+
+    // heart curve
+    function heartPoint(t, scale=1){
+      const x = 16*Math.pow(Math.sin(t),3);
+      const y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+      return new THREE.Vector3(x*scale, y*scale, Math.sin(t*3.3)*40*scale);
+    }
+
+    function getScaleFactor(){ return Math.min(1, window.innerWidth / 1200); }
+
+    // framed image
+    function createFramedImage(url, pos, idx){
+      const scaleFactor = getScaleFactor();
+      const frameW = BASE_FRAME_W * scaleFactor;
+      const frameH = BASE_FRAME_H * scaleFactor;
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(frameW*1.12, frameH*1.12), new THREE.MeshBasicMaterial({ color:0xff9ec5, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(frameW*1.02, frameH*1.04, Math.max(6, Math.round(6*scaleFactor))), new THREE.MeshStandardMaterial({ color:0x2b1b1b, roughness:0.2, metalness:0.6 }));
+      const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
+      const img = new THREE.Mesh(new THREE.PlaneGeometry(frameW-12, frameH-12), imgMat);
+      const group = new THREE.Group();
+      glow.position.set(0,6 * scaleFactor,-4); frame.position.set(0,0,-6 * scaleFactor); img.position.set(0,0,4 * scaleFactor);
+      group.add(glow); group.add(frame); group.add(img);
+      group.position.copy(pos); group.userData={idx,url};
+      loader.load(url, tex=>{ imgMat.map = tex; imgMat.needsUpdate = true; });
+      imagesGroup.add(group); return group;
+    }
+
+    function getFrameCollisionRadius(){ const scaleFactor = getScaleFactor(); const fw = BASE_FRAME_W*scaleFactor, fh = BASE_FRAME_H*scaleFactor; return Math.sqrt((fw/2)*(fw/2) + (fh/2)*(fh/2)) * 0.95; }
+
+    // arrange images with collision avoidance
+    let mode = 'heart';
+    function arrangeImages(shape='heart'){
+      const placed = [];
+      while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
+      const total = TOTAL_IMAGES;
+      for(let i=0;i<total;i++){
+        const t = (i/total)*Math.PI*2;
+        let basePos;
+        if(shape==='heart'){
+          const point = heartPoint(t, 32);
+          const layer = 1 + Math.floor(i / Math.max(1,Math.floor(total/6))) * 0.16;
+          basePos = new THREE.Vector3(point.x * layer, point.y*layer - 120, point.z * layer);
+        } else {
+          const radius = 420 + i*18 * getScaleFactor();
+          const ang = i*0.35;
+          basePos = new THREE.Vector3(Math.cos(ang)*radius, -40 + Math.sin(i*0.6)*12, Math.sin(ang)*radius);
+        }
+        let candidate = basePos.clone();
+        let safety = 0;
+        const R = getFrameCollisionRadius();
+        while(true){
+          let conflict=false;
+          for(const p of placed){ if(p.distanceTo(candidate) < R * 1.2){ conflict = true; break; } }
+          if(!conflict) break;
+          candidate.x *= 1.05; candidate.z *= 1.05;
+          candidate.x += (Math.random()-0.5) * 12 * getScaleFactor();
+          candidate.z += (Math.random()-0.5) * 12 * getScaleFactor();
+          safety++; if(safety>42) break;
+        }
+        placed.push(candidate.clone());
+        candidate.y = Math.max(-300, Math.min(160, candidate.y));
+        createFramedImage(imageUrls[i % imageUrls.length], candidate, i);
+      }
+    }
+    arrangeImages(mode);
+
+    // petals
+    const petalsGeo = new THREE.BufferGeometry();
+    const petalsCount = PETALS_COUNT;
+    const petPos = new Float32Array(petalsCount*3);
+    for(let i=0;i<petalsCount;i++){ petPos[i*3] = (Math.random()-0.5)*2200; petPos[i*3+1] = -200 + Math.random()*800; petPos[i*3+2] = (Math.random()-0.5)*2200; }
+    petalsGeo.setAttribute('position', new THREE.BufferAttribute(petPos,3));
+    function createHeartTexture(){ const s=128; const c=document.createElement('canvas'); c.width=s; c.height=s; const cx=c.getContext('2d'); cx.clearRect(0,0,s,s); cx.fillStyle='rgba(255,120,160,0.95)'; cx.beginPath(); const x=s/2,y=s/2,scale=s/26; cx.moveTo(x,y+3*scale); cx.bezierCurveTo(x+11*scale,y-9*scale,x+20*scale,y+9*scale,x,y+18*scale); cx.bezierCurveTo(x-20*scale,y+9*scale,x-11*scale,y-9*scale,x,y+3*scale); cx.closePath(); cx.fill(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(255,182,193,0.18)'; cx.beginPath(); cx.arc(x,y+2*scale,30*scale,0,Math.PI*2); cx.fill(); return new THREE.CanvasTexture(c); }
+    const heartTex = createHeartTexture();
+    const petalsMat = new THREE.PointsMaterial({ size:48 * getScaleFactor(), map:heartTex, transparent:true, alphaTest:0.01, depthWrite:false });
+    const petals = new THREE.Points(petalsGeo, petalsMat); scene.add(petals);
+
+    // lanterns & orbs
+    const lanterns = new THREE.Group(); scene.add(lanterns);
+    function addLantern(pos, color=0xffc4d6){ const geo = new THREE.SphereGeometry(18 * getScaleFactor(), 12, 12); const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.8, roughness:0.4, metalness:0.1 }); const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(pos); const light = new THREE.PointLight(color, 0.8, 600 * getScaleFactor()); light.position.copy(pos); lanterns.add(mesh); lanterns.add(light); }
+    for(let i=0;i<12;i++){ const a = i/12*Math.PI*2; const r=900 * getScaleFactor(); addLantern(new THREE.Vector3(Math.cos(a)*r, -120, Math.sin(a)*r)); }
+    const orbs = new THREE.Group(); scene.add(orbs);
+    function addOrb(pos){ const geo = new THREE.SphereGeometry(28 * getScaleFactor(), 20, 20); const mat = new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0.0, roughness:0.05, transmission:0.85, transparent:true, opacity:0.9, clearcoat:0.6, clearcoatRoughness:0.1 }); const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(pos); orbs.add(mesh); }
+    for(let i=0;i<8;i++){ const a=Math.random()*Math.PI*2; const r=400*getScaleFactor()+Math.random()*900*getScaleFactor(); addOrb(new THREE.Vector3(Math.cos(a)*r, -40 + Math.random()*220, Math.sin(a)*r)); }
+
+    // bursts & hearts
+    const bursts = []; const floatingHearts = [];
+    function spawnBurstAt(worldPos, color=0xffc4d6, count= isMobile ? 12 : 28){
+      for(let i=0;i<count;i++){ const g=new THREE.SphereGeometry(3 + Math.random()*6 * getScaleFactor(), 8, 8); const m=new THREE.MeshBasicMaterial({ color }); const mesh=new THREE.Mesh(g,m); mesh.position.copy(worldPos); scene.add(mesh); const dir=new THREE.Vector3((Math.random()-0.5)*2, 0.5+Math.random()*1.6, (Math.random()-0.5)*2).normalize(); const speed = 60*getScaleFactor() + Math.random()*140*getScaleFactor(); bursts.push({mesh, vel: dir.multiplyScalar(speed), life:0.7+Math.random()*0.8}); }
+    }
+    function spawnFloatingHeart(){ const canvas=document.createElement('canvas'); canvas.width=64; canvas.height=64; const cx=canvas.getContext('2d'); cx.clearRect(0,0,64,64); cx.fillStyle='rgba(255,120,160,0.95)'; cx.beginPath(); cx.moveTo(32,20); cx.bezierCurveTo(44,2,62,18,32,46); cx.bezierCurveTo(2,18,20,2,32,20); cx.fill(); const tex=new THREE.CanvasTexture(canvas); const mat=new THREE.SpriteMaterial({ map:tex, transparent:true, opacity:0.95 }); const s=new THREE.Sprite(mat); const scale = 120 * getScaleFactor(); s.scale.set(scale, scale, 1); s.position.set((Math.random()-0.5)*900*getScaleFactor(), -80 + Math.random()*260, (Math.random()-0.5)*900*getScaleFactor()); scene.add(s); floatingHearts.push({ sprite:s, life: 4 + Math.random()*4 }); }
+
+    // ----------------- INTERACTION (mouse & touch) -----------------
+    let mouse = new THREE.Vector2(0,0);
+    const raycaster = new THREE.Raycaster(); let hovered = null;
+    let lastTap = 0;
+    let isPointerDown=false, pointerStart={}, cameraYaw=0, cameraPitch=0, targetYaw=0, targetPitch=0;
+    const maxPitch = Math.PI/2 - 0.08;
+
+    // pointer move: for mouse we allow move-without-press; for touch we require drag
+    function onPointerMoveEvent(e){
+      const p = getClientPoint(e);
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((p.x - rect.left)/rect.width)*2 -1;
+      mouse.y = -((p.y - rect.top)/rect.height)*2 +1;
+      // if pointer is a mouse (no touches), update look immediately so desktop moves without click
+      if(e.pointerType === 'mouse' || (!e.touches && !e.pointerType)){
+        const mx = (p.x - rect.left) / rect.width;
+        const my = (p.y - rect.top) / rect.height;
+        targetYaw = -(mx - 0.5) * Math.PI * 1.05;
+        targetPitch = -(my - 0.5) * Math.PI * 0.85;
+        targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
+      } else {
+        // if touch and dragging
+        if(isPointerDown && (!e.touches || e.touches.length === 1)){
+          const dx = (p.x - pointerStart.x) / window.innerWidth;
+          const dy = (p.y - pointerStart.y) / window.innerHeight;
+          targetYaw = -dx * Math.PI * 1.1;
+          targetPitch = -dy * Math.PI * 0.9;
+        }
+      }
+    }
+    function onPointerDown(e){
+      isPointerDown = true;
+      const p = getClientPoint(e);
+      pointerStart.x = p.x; pointerStart.y = p.y;
+      pointerStart.touches = e.touches ? e.touches.length : (e.pointerType || 'mouse') === 'mouse' ? 1 : 1;
+      const now = performance.now();
+      if(isMobile && now - lastTap < 350) toggleAutoRotate();
+      lastTap = now;
+    }
+    function onPointerUp(e){ isPointerDown = false; }
+    function getClientPoint(e){ if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; if(e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }; return { x: e.clientX, y: e.clientY }; }
+
+    renderer.domElement.addEventListener('pointermove', onPointerMoveEvent, {passive:true});
+    renderer.domElement.addEventListener('pointerdown', onPointerDown, {passive:true});
+    window.addEventListener('pointerup', onPointerUp, {passive:true});
+
+    // pinch zoom for touch
+    let pinchStartDist = 0, pinchStartCameraDist = cameraDistance;
+    function getTouchDist(e){ if(!e.touches || e.touches.length < 2) return 0; const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
+    renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length === 2){ pinchStartDist = getTouchDist(e); pinchStartCameraDist = cameraDistance; } }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length === 2){ const d = getTouchDist(e); if(pinchStartDist > 0){ const factor = pinchStartDist / d; cameraDistance = pinchStartCameraDist * factor; cameraDistance = Math.max(MIN_CAMERA_DISTANCE, Math.min(MAX_CAMERA_DISTANCE, cameraDistance)); } } }, {passive:true});
+
+    // wheel zoom
+    renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraDistance += e.deltaY * 0.6; cameraDistance = Math.max(MIN_CAMERA_DISTANCE, Math.min(MAX_CAMERA_DISTANCE, cameraDistance)); }, {passive:false});
+
+    // click/tap to open preview & ripple
+    function onClick(e){
+      const rect = renderer.domElement.getBoundingClientRect();
+      const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX) || (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientX);
+      const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY) || (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY);
+      // ripple for buttons if clicked inside overlay
+      const target = e.target;
+      if(target.closest && target.closest('.btn, .btn-ghost')) createRipple(target.closest('.btn, .btn-ghost'), clientX, clientY);
+      const cx = clientX - rect.left;
+      const cy = clientY - rect.top;
+      const mx = (cx/rect.width)*2 -1; const my = -((cy/rect.height)*2 -1);
+      raycaster.setFromCamera({ x: mx, y: my }, camera);
+      const ints = raycaster.intersectObjects(imagesGroup.children, true);
+      if(ints.length>0){
+        let obj = ints[0].object;
+        while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
+        if(obj && obj.userData && obj.userData.url){
+          openPreview(obj.userData.url);
+          const world = new THREE.Vector3(); obj.getWorldPosition(world);
+          spawnBurstAt(world);
+        }
+      }
+    }
+    renderer.domElement.addEventListener('click', onClick, {passive:true});
+
+    // ----------------- PREVIEW MODAL -----------------
+    const previewModal = document.getElementById('previewModal'); const previewImage = document.getElementById('previewImage'); const previewClose = document.getElementById('previewClose');
+    function openPreview(url){ previewImage.src = url; previewModal.style.display='flex'; previewModal.setAttribute('aria-hidden','false'); }
+    function closePreview(){ previewModal.style.display='none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
+    previewClose.addEventListener('click', closePreview); previewModal.addEventListener('click',(e)=>{ if(e.target===previewModal) closePreview(); });
+
+    // ----------------- BUTTONS (ripple + actions) -----------------
+    function createRipple(button, clientX, clientY){
+      const rect = button.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const r = Math.max(rect.width, rect.height);
+      const el = document.createElement('span');
+      el.className = 'ripple';
+      el.style.width = el.style.height = (r*1.6) + 'px';
+      el.style.left = (x - r*0.8) + 'px';
+      el.style.top = (y - r*0.8) + 'px';
+      button.appendChild(el);
+      setTimeout(()=>{ el.remove(); }, 700);
+    }
+
+    const toggleBtn = document.getElementById('toggleAuto'); let autoRotate=false;
+    function toggleAutoRotate(){ autoRotate = !autoRotate; toggleBtn.textContent = autoRotate ? 'Detener' : 'Auto-rotar'; toggleBtn.setAttribute('aria-pressed', String(autoRotate)); }
+    toggleBtn.addEventListener('click', (e)=>{ createRipple(toggleBtn, e.clientX, e.clientY); toggleAutoRotate(); });
+
+    const heartBtn = document.getElementById('heartBtn'); heartBtn.addEventListener('click', (e)=>{ createRipple(heartBtn, e.clientX, e.clientY); mode = (mode==='heart')? 'spiral':'heart'; arrangeImages(mode); });
+    const shuffleBtn = document.getElementById('shuffleBtn'); shuffleBtn.addEventListener('click', (e)=>{ createRipple(shuffleBtn, e.clientX, e.clientY); imagesGroup.children.forEach((g)=>{ g.position.x += (Math.random()-0.5)*120 * getScaleFactor(); g.position.z += (Math.random()-0.5)*120 * getScaleFactor(); }); });
+
+    // Return button sends EXACTLY { type: 'doorClosed' } as requested
+    document.getElementById('returnBtn').addEventListener('click', (e)=>{ createRipple(e.currentTarget, e.clientX, e.clientY); window.parent.postMessage({ type: 'doorClosed' }, '*'); });
+
+    window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePreview(); });
+
+    // ----------------- ANIMATE LOOP -----------------
+    let lastTime = performance.now();
+    let heartSpawnTimer = 0;
+    function animate(){
+      requestAnimationFrame(animate);
+      const now = performance.now(); const dt = Math.max(0.001, (now - lastTime)/1000); lastTime = now;
+
+      const lerp = 1 - Math.pow(0.001, dt * 60);
+      cameraYaw += (targetYaw - cameraYaw) * (lerp * 0.95);
+      cameraPitch += (targetPitch - cameraPitch) * (lerp * 0.95);
+      cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, cameraPitch));
+      camera.position.x += ((cameraYaw * 600) - camera.position.x) * 0.06;
+      camera.position.y += ((cameraPitch * -150 + 60) - camera.position.y) * 0.06;
+      camera.position.z += (cameraDistance - camera.position.z) * 0.08;
+      camera.lookAt(0,0,0);
+
+      stars.rotation && (stars.rotation.y += 0.00025 * (autoRotate ? 1.6 : 1));
+
+      // petals drift
+      const posAttr = petals.geometry.getAttribute('position');
+      for(let i=0;i<petalsCount;i++){
+        let idx = i*3;
+        let y = posAttr.array[idx+1];
+        y += (1.2 + Math.sin(i*0.18 + now*0.001) * 0.5) * dt * 12;
+        if(y > 1200){ y = -200 - Math.random()*400; posAttr.array[idx] = (Math.random()-0.5)*2200; posAttr.array[idx+2] = (Math.random()-0.5)*2200; }
+        posAttr.array[idx+1] = y;
+      }
+      posAttr.needsUpdate = true;
+
+      // update images: bob & face camera
+      imagesGroup.children.forEach((g, idx)=>{ const bob = Math.sin((idx*0.6 + now*0.0008)) * 0.6; g.position.y += bob * 0.008 * getScaleFactor(); g.lookAt(camera.position); g.rotation.z = Math.sin(idx + now*0.0004)*0.02; });
+
+      // bursts update
+      for(let i = bursts.length - 1; i >= 0; i--){
+        const b = bursts[i]; b.life -= dt;
+        b.mesh.position.x += b.vel.x * dt; b.mesh.position.y += b.vel.y * dt; b.mesh.position.z += b.vel.z * dt;
+        if(b.mesh.material && b.mesh.material.opacity !== undefined) b.mesh.material.opacity = Math.max(0, b.life / 0.9);
+        if(b.life <= 0){ scene.remove(b.mesh); bursts.splice(i,1); }
+      }
+
+      // floating hearts
+      heartSpawnTimer += dt;
+      if(heartSpawnTimer > 2.4 + Math.random()*3.0){ heartSpawnTimer = 0; spawnFloatingHeart(); }
+      for(let i=floatingHearts.length-1;i>=0;i--){
+        floatingHearts[i].life -= dt;
+        floatingHearts[i].sprite.position.y += dt * 18 * getScaleFactor();
+        floatingHearts[i].sprite.material.opacity = Math.max(0, floatingHearts[i].life / 4);
+        if(floatingHearts[i].life <= 0){ scene.remove(floatingHearts[i].sprite); floatingHearts.splice(i,1); }
+      }
+
+      lanterns.rotation.y += 0.0002;
+      orbs.rotation.y -= 0.0001;
+      if(autoRotate) imagesGroup.rotation.y += dt * 0.06;
+
+      // hover detection on non-touch
+      if(!isMobile){
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(imagesGroup.children, true);
+        if(intersects.length>0){
+          let obj = intersects[0].object; while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
+          if(obj && obj !== hovered){ if(hovered) hovered.scale && hovered.scale.setScalar(1); hovered = obj; hovered.scale && hovered.scale.setScalar(1.06); }
+        } else if(hovered){ hovered.scale && hovered.scale.setScalar(1); hovered = null; }
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // ----------------- RESIZE -----------------
+    function onResize(){ renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); arrangeImages(mode); }
+    window.addEventListener('resize', onResize);
+
+    // expose debug API
+    window._romanticScene = { arrangeImages, spawnBurstAt, spawnFloatingHeart, toggleAutoRotate };
+
+  })();
+  </script>
+</body>
+</html>

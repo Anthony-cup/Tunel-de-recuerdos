@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Puerta Romántica — Partículas automáticas</title>
+  <style>
+    :root{ --accent1:#ff8fb3; --accent2:#ffd6e6; --panel: rgba(255,255,255,0.03); }
+    html,body{height:100%;margin:0;background:
+      radial-gradient(900px 600px at 20% 12%, rgba(255,150,200,0.02), transparent 8%),
+      linear-gradient(180deg,#030014,#05000b);overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
+    #canvas-container{width:100vw;height:100vh;position:relative;display:block;touch-action:none}
+    #overlay{position:absolute; left:16px; top:16px; z-index:250; min-width:230px; padding:12px;border-radius:12px; background: linear-gradient(180deg,var(--panel), rgba(0,0,0,0.12)); backdrop-filter: blur(6px); box-shadow: 0 18px 60px rgba(0,0,0,0.6);}
+    #overlay h3{margin:0 0 8px 0;font-size:15px;color:var(--accent1)}
+    #overlay p{margin:0;font-size:13px;opacity:0.95}
+    .controls{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .btn, .btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;border:0;cursor:pointer;font-weight:700;font-size:14px;-webkit-tap-highlight-color: transparent; transition: transform .12s ease, box-shadow .12s ease;}
+    .btn{ background: linear-gradient(180deg,var(--accent1),var(--accent2)); color:#111; box-shadow: 0 8px 30px rgba(255,120,160,0.06) }
+    .btn:hover{ transform: translateY(-3px) }
+    .btn-ghost{ background:transparent;border:1px solid rgba(255,255,255,0.06); color:#fff; padding:8px 10px }
+    .btn-ghost:hover{ background: rgba(255,255,255,0.02); transform: translateY(-2px) }
+    #credits{position:absolute;right:16px;bottom:18px;color:#f8e1ea;font-size:12px;z-index:200;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.06))}
+    #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;color:#ffdfe8;z-index:200;font-size:13px;padding:8px 14px;border-radius:999px;background:linear-gradient(90deg, rgba(255,166,200,0.04), rgba(255,220,170,0.03));backdrop-filter:blur(2px)}
+    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.95));z-index:350}
+    #previewContent{max-width:94vw;max-height:92vh;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:10px;box-shadow:0 30px 90px rgba(0,0,0,0.8)}
+    #previewContent img{max-width:100%;max-height:82vh;border-radius:10px;display:block;box-shadow:0 18px 50px rgba(0,0,0,0.6)}
+    #previewClose{align-self:flex-end;padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--accent1),var(--accent2));color:#111;cursor:pointer}
+    @media (max-width:720px){ #overlay{left:10px;top:10px;padding:10px} .btn{padding:9px 10px;font-size:14px} #hint{display:none} }
+  </style>
+</head>
+<body>
+  <div id="canvas-container" aria-hidden="false"></div>
+
+  <div id="overlay" role="region" aria-label="Controles">
+    <h3>Puerta — Partículas automáticas</h3>
+    <p>Toca/arrastra para mirar. Pellizca para acercar/alejar. Las figuras cambian solas.</p>
+    <div class="controls">
+      <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
+      <button id="surpriseBtn" class="btn-ghost">Sorpresa</button>
+      <button id="returnBtn" class="btn-ghost">Regresar</button>
+    </div>
+  </div>
+
+  <div id="credits">Imágenes: picsum.photos (ejemplos)</div>
+  <div id="hint">Pulsa una imagen para ampliar</div>
+
+  <div id="previewModal" aria-hidden="true">
+    <div id="previewContent"><button id="previewClose">Cerrar</button><img id="previewImage" src="" alt="Vista previa"></div>
+  </div>
+
+  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+  <script>
+  (function(){
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
+    const IMAGE_POOL = [
+      'https://picsum.photos/id/1015/900/600','https://picsum.photos/id/1025/900/600','https://picsum.photos/id/1035/900/600',
+      'https://picsum.photos/id/1041/900/600','https://picsum.photos/id/1050/900/600','https://picsum.photos/id/1069/900/600',
+      'https://picsum.photos/id/1074/900/600','https://picsum.photos/id/1084/900/600'
+    ];
+    const TOTAL_IMAGES = 10; // <-- reducido a 10
+    const PARTICLES = isMobile ? 300 : 700;
+    const FRAME_W = isMobile ? 220 : 320;
+    const FRAME_H = isMobile ? 150 : 210;
+
+    // renderer / scene / camera
+    const container = document.getElementById('canvas-container');
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.touchAction = 'none';
+    container.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050012);
+    scene.fog = new THREE.FogExp2(0x050012, 0.00012);
+
+    const camera = new THREE.PerspectiveCamera(68, window.innerWidth/window.innerHeight, 0.1, 12000);
+    let cameraRadius = isMobile ? 920 : 780;
+    camera.position.set(0, 40, cameraRadius);
+
+    scene.add(new THREE.HemisphereLight(0xfff2fb, 0x07101b, 0.55));
+    scene.add(new THREE.AmbientLight(0xffeaf4, 0.18));
+    const key = new THREE.PointLight(0xffcbe6, 0.9, 2200); key.position.set(760,260,300); scene.add(key);
+
+    // floor + ring
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(2600,2600), new THREE.MeshStandardMaterial({ color:0x04020a, roughness:0.18 }));
+    floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(900, 14, 40, 300), new THREE.MeshStandardMaterial({ color:0xffb0d1, emissive:0xffe0c8, emissiveIntensity:0.08, roughness:0.45 }));
+    ring.rotation.x = Math.PI/2; ring.position.y = -80; scene.add(ring);
+
+    // images group
+    const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
+    const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
+
+    function createFrame(url, pos, idx){
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W*1.12, FRAME_H*1.12), new THREE.MeshBasicMaterial({ color:0xffcce3, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W*1.03, FRAME_H*1.04, 12), new THREE.MeshStandardMaterial({ color:0x1f1418, roughness:0.18, metalness:0.6 }));
+      const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
+      const img = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W-14, FRAME_H-14), imgMat);
+      const g = new THREE.Group();
+      glow.position.set(0,8,-6); frame.position.set(0,0,-8); img.position.set(0,0,6);
+      g.add(glow, frame, img);
+      g.position.copy(pos);
+      g.userData = { url, idx };
+      loader.load(url, tex => { imgMat.map = tex; imgMat.needsUpdate = true; });
+      imagesGroup.add(g);
+      return g;
+    }
+
+    function arrangeImages(){
+      // vaciar
+      while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
+      // colocar TOTAL_IMAGES alrededor
+      const total = TOTAL_IMAGES;
+      const ringRadius = 420;
+      for(let i=0;i<total;i++){
+        const a = (i/total) * Math.PI * 2;
+        const layer = (i % 2 === 0) ? 0 : 1;
+        const radius = ringRadius + layer * 90 + (Math.random()-0.5)*40;
+        const x = Math.cos(a) * radius + (Math.random()-0.5)*26;
+        const z = Math.sin(a) * radius + (Math.random()-0.5)*26;
+        const y = -120 + Math.sin(i*0.8) * 28 + (layer*30);
+        const url = IMAGE_POOL[i % IMAGE_POOL.length];
+        createFrame(url, new THREE.Vector3(x,y,z), i);
+      }
+    }
+    arrangeImages();
+
+    // stars
+    const starsCount = isMobile ? 300 : 700;
+    const starsGeo = new THREE.BufferGeometry();
+    const starsPos = new Float32Array(starsCount * 3);
+    for(let i=0;i<starsCount;i++){
+      const r = 400 + Math.random()*2000;
+      const theta = Math.random()*Math.PI*2;
+      const phi = Math.acos(2*Math.random()-1);
+      starsPos[i*3] = Math.sin(phi)*Math.cos(theta)*r;
+      starsPos[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.55;
+      starsPos[i*3+2] = Math.cos(phi)*r;
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
+    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size: isMobile?2.0:3.0, color:0xffffff, opacity:0.95, transparent:true }));
+    scene.add(stars);
+
+    // particles
+    const ptsGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(PARTICLES*3);
+    const sizes = new Float32Array(PARTICLES);
+    for(let i=0;i<PARTICLES;i++){
+      positions[i*3] = (Math.random()-0.5) * 2200;
+      positions[i*3+1] = -80 + Math.random()*420;
+      positions[i*3+2] = (Math.random()-0.5) * 2200;
+      sizes[i] = Math.random() * (isMobile?6:9) + (isMobile?2:3);
+    }
+    ptsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+    ptsGeo.setAttribute('size', new THREE.BufferAttribute(sizes,1));
+
+    // sprite
+    const sprite = (()=>{
+      const c = document.createElement('canvas'); c.width=64; c.height=64; const cx = c.getContext('2d');
+      const g = cx.createRadialGradient(32,32,2,32,32,32); g.addColorStop(0,'rgba(255,200,225,1)'); g.addColorStop(1,'rgba(255,200,225,0)');
+      cx.fillStyle=g; cx.fillRect(0,0,64,64);
+      return new THREE.CanvasTexture(c);
+    })();
+
+    const ptsMat = new THREE.PointsMaterial({
+      size: isMobile?5:7, map: sprite, transparent:true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.95
+    });
+    const particles = new THREE.Points(ptsGeo, ptsMat);
+    scene.add(particles);
+
+    const targetPos = new Float32Array(PARTICLES*3);
+
+    // shape generators
+    function generateHeartTargets(){
+      for(let i=0;i<PARTICLES;i++){
+        const t = (i / PARTICLES) * Math.PI * 2 * (1 + Math.random()*0.5);
+        const x = 16*Math.pow(Math.sin(t),3);
+        const y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+        const sx = x * 18 * (0.9 + Math.random()*0.4) + (Math.random()-0.5)*20;
+        const sy = y * 14 * (0.9 + Math.random()*0.25) + 60 + (Math.random()-0.5)*28;
+        const sz = Math.sin(t*3.2) * 36 * (0.8 + Math.random()*0.5) + (Math.random()-0.5)*40;
+        targetPos[i*3] = sx; targetPos[i*3+1] = sy; targetPos[i*3+2] = sz;
+      }
+    }
+    function generateSpiralTargets(){
+      for(let i=0;i<PARTICLES;i++){
+        const t = i / PARTICLES;
+        const turns = 4.0;
+        const angle = t * turns * Math.PI * 2;
+        const radius = 60 + Math.pow(t,0.6) * 700;
+        const sx = Math.cos(angle) * radius + (Math.random()-0.5)*22;
+        const sz = Math.sin(angle) * radius + (Math.random()-0.5)*22;
+        const sy = -60 + Math.sin(t*Math.PI*6)*22 + (1 - t) * 160 + (Math.random()-0.5)*30;
+        targetPos[i*3] = sx; targetPos[i*3+1] = sy; targetPos[i*3+2] = sz;
+      }
+    }
+    function generateStarTargets(){
+      for(let i=0;i<PARTICLES;i++){
+        const t = i / PARTICLES;
+        const r = 180 + Math.random()*600;
+        const angle = t * Math.PI * 2 * (1 + Math.random()*0.2);
+        const k = Math.sin(angle*5) * (0.5 + Math.random()*0.7);
+        const sx = Math.cos(angle) * r * k + (Math.random()-0.5)*40;
+        const sz = Math.sin(angle) * r * k + (Math.random()-0.5)*40;
+        const sy = -40 + Math.cos(t*Math.PI*3)*50 + (Math.random()-0.5)*30;
+        targetPos[i*3] = sx; targetPos[i*3+1] = sy; targetPos[i*3+2] = sz;
+      }
+    }
+    function generateFlowerTargets(){
+      for(let i=0;i<PARTICLES;i++){
+        const t = i/PARTICLES;
+        const petals = 6;
+        const angle = t * Math.PI * 2 * (0.9 + Math.random()*0.2);
+        const pet = Math.sin(angle * petals) * (0.6 + Math.random()*0.6);
+        const radius = 40 + Math.pow(Math.random(),0.7)*520*pet;
+        const sx = Math.cos(angle) * radius + (Math.random()-0.5)*22;
+        const sz = Math.sin(angle) * radius + (Math.random()-0.5)*22;
+        const sy = -20 + Math.sin(t*6)*28 + (Math.random()-0.5)*20;
+        targetPos[i*3] = sx; targetPos[i*3+1] = sy; targetPos[i*3+2] = sz;
+      }
+    }
+
+    const shapes = ['heart','spiral','star','flower'];
+    let shapeIndex = 0;
+    function setShape(idx){
+      shapeIndex = idx % shapes.length;
+      if(shapes[shapeIndex] === 'heart') generateHeartTargets();
+      else if(shapes[shapeIndex] === 'spiral') generateSpiralTargets();
+      else if(shapes[shapeIndex] === 'star') generateStarTargets();
+      else generateFlowerTargets();
+    }
+    setShape(0);
+
+    // auto-cycle shapes
+    const cycleSeconds = 6; // cada X segundos cambia de figura
+    setInterval(()=> {
+      setShape((shapeIndex+1) % shapes.length);
+    }, cycleSeconds * 1000);
+
+    // interaction & camera control
+    let targetYaw = 0, targetPitch = 0, yaw = 0, pitch = 0;
+    const maxPitch = Math.PI/2 - 0.08;
+    let pointerDown=false, pointerStart=null;
+
+    function clientPoint(e){
+      if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
+    function onPointerDown(e){ pointerDown=true; pointerStart=clientPoint(e); }
+    function onPointerMove(e){
+      const p = clientPoint(e);
+      const rect = renderer.domElement.getBoundingClientRect();
+      const mx = (p.x - rect.left) / rect.width;
+      const my = (p.y - rect.top) / rect.height;
+      if(pointerDown && e.type.startsWith('touch')){
+        const dx = (p.x - pointerStart.x) / window.innerWidth;
+        const dy = (p.y - pointerStart.y) / window.innerHeight;
+        targetYaw = -dx * Math.PI * 1.15;
+        targetPitch = -dy * Math.PI * 0.95;
+      } else {
+        targetYaw = -(mx - 0.5) * Math.PI * 1.05;
+        targetPitch = -(my - 0.5) * Math.PI * 0.85;
+      }
+      targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
+    }
+    function onPointerUp(){ pointerDown=false; pointerStart=null; }
+    renderer.domElement.addEventListener('pointerdown', onPointerDown, {passive:true});
+    renderer.domElement.addEventListener('pointermove', onPointerMove, {passive:true});
+    window.addEventListener('pointerup', onPointerUp, {passive:true});
+
+    // pinch zoom
+    let pinchStart = 0, startRadius = cameraRadius;
+    function distTouches(t){ const dx = t[0].clientX - t[1].clientX; const dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
+    renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length===2){ pinchStart = distTouches(e.touches); startRadius = cameraRadius; } }, {passive:true});
+    renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length===2 && pinchStart>0){ const d = distTouches(e.touches); const f = pinchStart / Math.max(1,d); cameraRadius = startRadius * f; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); } }, {passive:true});
+    renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraRadius += e.deltaY * 0.6; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); }, {passive:false});
+
+    // click-to-preview images via raycaster
+    const raycaster = new THREE.Raycaster();
+    function onClick(ev){
+      const p = clientPoint(ev);
+      const rect = renderer.domElement.getBoundingClientRect();
+      const mx = ((p.x - rect.left) / rect.width) * 2 - 1;
+      const my = -(((p.y - rect.top) / rect.height) * 2 - 1);
+      raycaster.setFromCamera({ x: mx, y: my }, camera);
+      const ints = raycaster.intersectObjects(imagesGroup.children, true);
+      if(ints.length>0){
+        let obj = ints[0].object;
+        while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
+        if(obj && obj.userData && obj.userData.url) openPreview(obj.userData.url);
+        if(obj){ obj.scale.setScalar(1.06); setTimeout(()=>obj.scale.setScalar(1.0), 200); }
+      }
+    }
+    renderer.domElement.addEventListener('click', onClick, {passive:true});
+
+    // preview modal
+    const previewModal = document.getElementById('previewModal');
+    const previewImage = document.getElementById('previewImage');
+    const previewClose = document.getElementById('previewClose');
+    function openPreview(url){ previewImage.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden','false'); }
+    function closePreview(){ previewModal.style.display = 'none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
+    previewClose.addEventListener('click', closePreview);
+    previewModal.addEventListener('click', (e)=>{ if(e.target===previewModal) closePreview(); });
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePreview(); });
+
+    // UI
+    const toggleAuto = document.getElementById('toggleAuto');
+    const surpriseBtn = document.getElementById('surpriseBtn');
+    const returnBtn = document.getElementById('returnBtn');
+    let auto = true;
+    toggleAuto.addEventListener('click', ()=>{ auto = !auto; toggleAuto.textContent = auto ? 'Detener' : 'Auto-rotar'; toggleAuto.setAttribute('aria-pressed', String(auto)); });
+    surpriseBtn.addEventListener('click', ()=>{
+      for(let i=0;i<PARTICLES;i++){ targetPos[i*3+1] += Math.random()*80; }
+      cameraRadius = Math.max(360, cameraRadius - 40);
+      setTimeout(()=> cameraRadius = isMobile?920:780, 700);
+    });
+    // mantener el comportamiento que pediste
+    returnBtn.addEventListener('click', ()=> window.parent.postMessage({ type: 'doorClosed' }, '*'));
+
+    // morph loop
+    let last = performance.now();
+    let morphSpeed = isMobile ? 0.06 : 0.12;
+    function animate(){
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const dt = Math.max(0.001, (now - last)/1000);
+      last = now;
+
+      // camera lerp & auto rotate
+      const lerp = 1 - Math.pow(0.001, dt * 60);
+      yaw += (targetYaw - yaw) * lerp;
+      pitch += (targetPitch - pitch) * lerp;
+      if(auto) yaw -= dt * 0.02;
+      const cp = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+      const r = cameraRadius;
+      const cx = Math.sin(yaw) * r, cz = Math.cos(yaw) * r, cy = -cp * 220 + 60;
+      camera.position.set(cx, cy, cz);
+      camera.lookAt(0, 0, 0);
+
+      // particles morph toward targets
+      const pos = ptsGeo.attributes.position.array;
+      for(let i=0;i<PARTICLES;i++){
+        const idx = i*3;
+        const nx = (Math.random()-0.5) * 0.5;
+        const ny = (Math.random()-0.5) * 0.5;
+        const nz = (Math.random()-0.5) * 0.5;
+        pos[idx]   += (targetPos[idx]   - pos[idx])   * morphSpeed + nx * 0.04;
+        pos[idx+1] += (targetPos[idx+1] - pos[idx+1]) * morphSpeed + ny * 0.04;
+        pos[idx+2] += (targetPos[idx+2] - pos[idx+2]) * morphSpeed + nz * 0.04;
+      }
+      ptsGeo.attributes.position.needsUpdate = true;
+
+      // gentle movement of ring & stars
+      ring.rotation.z += 0.00005;
+      stars.rotation.y += 0.00008;
+
+      // image frames look at camera & bob
+      imagesGroup.children.forEach((g,i)=>{ g.lookAt(camera.position); g.position.y += Math.sin(i*0.6 + now*0.0008) * 0.0016; });
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // cycle morph speed tweaks when shape changes
+    // (setShape already sets targets; here we slightly pulse morphSpeed for nicer transitions)
+    const originalMorph = morphSpeed;
+    function pulseMorph(){
+      morphSpeed = isMobile ? 0.14 : 0.26;
+      setTimeout(()=> morphSpeed = originalMorph, 600);
+    }
+    // intercept setShape to pulse speed
+    const _setShape = setShape;
+    setShape = function(i){ _setShape(i); pulseMorph(); };
+
+    // automatically cycle shapes (already set above), but also pulse speed each change
+    setInterval(()=> { setShape((shapeIndex+1) % shapes.length); }, 6000);
+
+    // resize
+    window.addEventListener('resize', ()=>{
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+
+    // expose debug obj (opcional)
+    window._puertaRomantica = { setShape, shapes, particlesCount:PARTICLES, imagesCount:TOTAL_IMAGES };
+
+  })();
+  </script>
+</body>
+</html>
