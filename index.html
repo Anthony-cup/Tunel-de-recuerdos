@@ -11,6 +11,7 @@
       overflow: hidden;
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
     }
     canvas {
       display: block;
@@ -40,6 +41,18 @@
       width: 0;
       height: 0;
     }
+    #errorMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      text-align: center;
+      color: #ff4081;
+      text-shadow: 0 0 10px #ff4081, 0 0 20px #ff4081;
+      z-index: 10;
+      display: none;
+    }
   </style>
   <svg>
     <filter id="glitch">
@@ -51,12 +64,73 @@
   </svg>
 </head>
 <body>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, proporciona un ID válido.</div>
   <canvas id="tunnelCanvas"></canvas>
   <iframe id="blackHoleFrame" src="negro.html"></iframe>
   <iframe id="doorFrame" src=""></iframe>
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script>
-    (function(){
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
+      authDomain: "tunel-de-recuerdos.firebaseapp.com",
+      projectId: "tunel-de-recuerdos",
+      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
+      messagingSenderId: "630660710506",
+      appId: "1:630660710506:web:90d34150c9f21f668eca13",
+      measurementId: "G-ETFDVEHML1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    async function validateAndFetchDoorTitles() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id');
+      const errorMessage = document.getElementById('errorMessage');
+      const defaultTitles = ["2000", "2001", "2002", "2003", "2004", "2005"];
+
+      if (!userId) {
+        console.error("No se encontró 'id' en la URL.");
+        errorMessage.style.display = 'block';
+        return null;
+      }
+
+      try {
+        const snapshot = await get(ref(database, `usuarios/${userId}`));
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const titles = [
+            data.puerta1Anio || defaultTitles[0],
+            data.puerta2Anio || defaultTitles[1],
+            data.puerta3Anio || defaultTitles[2],
+            data.puerta4Anio || defaultTitles[3],
+            data.puerta5Anio || defaultTitles[4],
+            data.puerta6Anio || defaultTitles[5]
+          ];
+          console.log("Títulos obtenidos de Firebase:", titles);
+          return titles;
+        } else {
+          console.error(`No se encontraron datos para el usuario ${userId}.`);
+          errorMessage.style.display = 'block';
+          return null;
+        }
+      } catch (error) {
+        console.error("Error al obtener datos de Firebase:", error);
+        errorMessage.style.display = 'block';
+        return null;
+      }
+    }
+
+    (async function(){
+      const doorTitles = await validateAndFetchDoorTitles();
+      if (!doorTitles) {
+        console.error("No se puede continuar sin un ID válido o datos en Firebase.");
+        return; // Detener ejecución si no hay títulos válidos
+      }
+
       const tunnelCanvas = document.getElementById('tunnelCanvas');
       const blackHoleFrame = document.getElementById('blackHoleFrame');
       const doorFrame = document.getElementById('doorFrame');
@@ -157,7 +231,6 @@
       scene.add(points);
 
       const doorPosition = -(15 * ringSpacing) - 200;
-      const doorTitles = ["2000", "2001", "2002", "2003", "2004", "2005"];
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5]; // Turquesa neón, Rosa chicle, Verde esmeralda, Púrpura brillante, Naranja neón, Azul cobalto
 
       const emojiList = ['🩷', '🥰', '💌'];
