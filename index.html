@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vórtice de Anillos Giratorios v66</title>
+  <title>Vórtice de Anillos Giratorios v77</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
@@ -87,7 +87,7 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Generar un ID único si no está en la URL
+    // Generar un ID único
     function generateUniqueId() {
       return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
     }
@@ -112,8 +112,6 @@
             puerta5Anio: "2004"
           });
           console.log(`Usuario ${userId} inicializado en Firebase.`);
-        } else {
-          console.log(`Usuario ${userId} ya existe en Firebase.`);
         }
         return true;
       } catch (error) {
@@ -276,9 +274,9 @@
       scene.add(points);
 
       const doorPosition = -(15 * ringSpacing) - 200;
-      const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100]; // Turquesa neón, Rosa chicle, Verde esmeralda, Púrpura brillante, Naranja neón
+      const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5];
 
-      const emojiList = ['🩷', '🥰', '💌'];
+      const emojiList = ['🩷', '�0', '💌'];
       const rainCount = 50;
       const rainParticles = [];
       const heartShape = new THREE.Shape();
@@ -292,7 +290,7 @@
 
       for (let i = 0; i < rainCount; i++) {
         let particle;
-        const type = Math.floor(Math.random() * 4); // 0-2: emojis, 3: corazón
+        const type = Math.floor(Math.random() * 4);
         if (type < 3) {
           const emojiCanvas = document.createElement('canvas');
           emojiCanvas.width = 128;
