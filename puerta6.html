@@ -28,10 +28,12 @@
     #previewContent{max-width:94vw;max-height:92vh;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:10px}
     #previewContent img{max-width:100%;max-height:82vh;border-radius:10px;display:block}
     #previewClose{align-self:flex-end;padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--accent1),var(--accent2));color:#111;cursor:pointer}
+    #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;text-align:center;color:#ffd6ee;text-shadow:0 0 10px #ffd6ee, 0 0 20px #ffd6ee;z-index:130;display:none}
     @media (max-width:720px){ #panel{left:10px;top:10px;padding:10px} .btn{padding:8px 10px} #hint{display:none} }
   </style>
 </head>
 <body>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero.</div>
   <div id="canvas-container" aria-hidden="false"></div>
 
   <div id="panel" role="region" aria-label="Controles">
@@ -44,7 +46,7 @@
     </div>
   </div>
 
-  <div id="credits">Imágenes: picsum.photos (ejemplos)</div>
+  <div id="credits">Imágenes desde Firebase • Interfaz romántica</div>
   <div id="hint">Pulsa una imagen para ampliar</div>
 
   <div id="previewModal" aria-hidden="true">
@@ -52,337 +54,155 @@
   </div>
 
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script>
-  (function(){
-    // mobile detection & settings
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-    const IMAGE_POOL = [
-      'https://picsum.photos/id/1015/1200/800','https://picsum.photos/id/1025/1200/800',
-      'https://picsum.photos/id/1035/1200/800','https://picsum.photos/id/1041/1200/800',
-      'https://picsum.photos/id/1050/1200/800','https://picsum.photos/id/1069/1200/800',
-      'https://picsum.photos/id/1074/1200/800','https://picsum.photos/id/1084/1200/800'
-    ];
-    const TOTAL_IMAGES = 10; // solo 10 como pediste
-    const PARTICLES = isMobile ? 300 : 700;
-    const FRAME_W = isMobile ? 220 : 320;
-    const FRAME_H = isMobile ? 150 : 210;
-
-    // Three setup
-    const container = document.getElementById('canvas-container');
-    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.domElement.style.display='block';
-    renderer.domElement.style.touchAction='none';
-    container.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x090015);
-    scene.fog = new THREE.FogExp2(0x090015, 0.00012);
-
-    const camera = new THREE.PerspectiveCamera(66, window.innerWidth/window.innerHeight, 0.1, 12000);
-    let cameraRadius = isMobile ? 980 : 760;
-    camera.position.set(0, 40, cameraRadius);
-
-    // lights + floor + soft ring
-    scene.add(new THREE.HemisphereLight(0xffeef8, 0x050016, 0.6));
-    scene.add(new THREE.AmbientLight(0xffeaf4, 0.18));
-    const key = new THREE.PointLight(0xff9ecf, 0.9, 2500); key.position.set(700,260,300); scene.add(key);
-
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(2600,2600), new THREE.MeshStandardMaterial({ color:0x03020a, roughness:0.18 }));
-    floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(880, 12, 36, 260), new THREE.MeshStandardMaterial({ color:0xffb5dc, emissive:0xffb5dc, emissiveIntensity:0.06, roughness:0.45 }));
-    ring.rotation.x = Math.PI/2; ring.position.y = -86; scene.add(ring);
-
-    // images
-    const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
-    const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
-    function createFrame(url, pos, idx){
-      const glow = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W*1.12, FRAME_H*1.12), new THREE.MeshBasicMaterial({ color:0xffcfe6, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
-      const frame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W*1.03, FRAME_H*1.04, 12), new THREE.MeshStandardMaterial({ color:0x1d1419, roughness:0.18, metalness:0.6 }));
-      const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
-      const img = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W-14, FRAME_H-14), imgMat);
-      const g = new THREE.Group();
-      glow.position.set(0,8,-6); frame.position.set(0,0,-8); img.position.set(0,0,6);
-      g.add(glow, frame, img);
-      g.position.copy(pos);
-      g.userData = { url, idx };
-      loader.load(url, tex => { imgMat.map = tex; imgMat.needsUpdate = true; });
-      imagesGroup.add(g);
-      return g;
-    }
-
-    // arrange images into a gentle heart-like ring but only 10
-    function arrangeImagesHeart(){
-      while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
-      const total = TOTAL_IMAGES;
-      for(let i=0;i<total;i++){
-        const t = (i / total) * Math.PI * 2;
-        // heart param but scaled smaller so frames not overlap
-        const x = 16*Math.pow(Math.sin(t),3) * 24 + (Math.random()-0.5)*24;
-        const y = (13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)) * 14 - 120 + (Math.random()-0.5)*18;
-        const z = Math.sin(t*2.4) * 220 + (Math.random()-0.5)*40;
-        const url = IMAGE_POOL[i % IMAGE_POOL.length];
-        createFrame(url, new THREE.Vector3(x, y, z), i);
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+    const firebaseConfig = {
+      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
+      authDomain: "tunel-de-recuerdos.firebaseapp.com",
+      projectId: "tunel-de-recuerdos",
+      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
+      messagingSenderId: "630660710506",
+      appId: "1:630660710506:web:90d34150c9f21f668eca13",
+      measurementId: "G-ETFDVEHML1"
+    };
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    let imageUrls = [];
+    async function fetchImages() {
+      const errorMessage = document.getElementById('errorMessage');
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id')?.trim();
+      console.log("ID extraído de la URL:", userId);
+      if (!userId || userId === '') {
+        console.error("No se encontró 'id' en la URL o es inválido.");
+        errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
+        errorMessage.style.display = 'block';
+        return [];
+      }
+      try {
+        console.log(`Consultando Firebase para usuarios/${userId}/puerta6Fotos`);
+        const snapshot = await get(ref(database, `usuarios/${userId}`));
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const puertaFotos = data.puerta6Fotos || [];
+          const validFotos = puertaFotos.slice(0, 5).filter(url => typeof url === 'string' && url.trim() !== '');
+          console.log("Imágenes obtenidas de puerta6Fotos:", validFotos);
+          if (validFotos.length === 0) {
+            console.warn(`No hay imágenes en puerta6Fotos para el usuario ${userId}.`);
+            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega imágenes primero.';
+            errorMessage.style.display = 'block';
+          }
+          return validFotos;
+        } else {
+          console.error(`No se encontraron datos para el usuario ${userId}.`);
+          errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
+          errorMessage.style.display = 'block';
+          return [];
+        }
+      } catch (error) {
+        console.error("Error al consultar Firebase:", error);
+        errorMessage.textContent = 'Error al cargar las imágenes. Por favor, intenta de nuevo.';
+        errorMessage.style.display = 'block';
+        return [];
       }
     }
-    arrangeImagesHeart();
+    (async function(){
+      imageUrls = await fetchImages();
+      console.log("Imágenes finales para la escena:", imageUrls);
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
+      const TOTAL_IMAGES = 10;
+      const PARTICLES = isMobile ? 300 : 700;
+      const FRAME_W = isMobile ? 220 : 320;
+      const FRAME_H = isMobile ? 150 : 210;
 
-    // stars
-    const starsCount = isMobile ? 300 : 700;
-    const starsGeo = new THREE.BufferGeometry();
-    const starsPos = new Float32Array(starsCount*3);
-    for(let i=0;i<starsCount;i++){
-      const r = 400 + Math.random()*2000;
-      const theta = Math.random()*Math.PI*2;
-      const phi = Math.acos(2*Math.random()-1);
-      starsPos[i*3] = Math.sin(phi)*Math.cos(theta)*r;
-      starsPos[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.55;
-      starsPos[i*3+2] = Math.cos(phi)*r;
-    }
-    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
-    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size:isMobile?2.0:3.0, color:0xffffff, opacity:0.9, transparent:true }));
-    scene.add(stars);
-
-    // particle system that morphs into romantic shapes
-    const ptsGeo = new THREE.BufferGeometry();
-    const posArr = new Float32Array(PARTICLES*3);
-    for(let i=0;i<PARTICLES;i++){
-      posArr[i*3] = (Math.random()-0.5)*2200;
-      posArr[i*3+1] = -80 + Math.random()*420;
-      posArr[i*3+2] = (Math.random()-0.5)*2200;
-    }
-    ptsGeo.setAttribute('position', new THREE.BufferAttribute(posArr,3));
-
-    // particle sprite (soft dot)
-    const sprite = (() => {
-      const c = document.createElement('canvas'); c.width=64; c.height=64; const cx = c.getContext('2d');
-      const g = cx.createRadialGradient(32,32,2,32,32,32);
-      g.addColorStop(0,'rgba(255,220,240,1)'); g.addColorStop(1,'rgba(255,220,240,0)');
-      cx.fillStyle = g; cx.fillRect(0,0,64,64);
-      return new THREE.CanvasTexture(c);
-    })();
-
-    const ptsMat = new THREE.PointsMaterial({ size:isMobile?5:7, map:sprite, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 });
-    const particles = new THREE.Points(ptsGeo, ptsMat);
-    scene.add(particles);
-
-    // target buffer
-    const targetPos = new Float32Array(PARTICLES*3);
-
-    // shape generators (distinct & romantic)
-    function shape_HeartCone(){
-      for(let i=0;i<PARTICLES;i++){
-        const t = (i / PARTICLES) * Math.PI * 2 * (1 + Math.random()*0.2);
-        const r = 16 * (1 + Math.random()*0.8);
-        const x = 16*Math.pow(Math.sin(t),3) * 18 + (Math.random()-0.5)*14;
-        const y = (13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)) * 12 + (Math.random()-0.5)*24;
-        const z = -Math.abs((Math.random()*600)) + Math.sin(t*2.1)*60;
-        const idx = i*3;
-        targetPos[idx] = x;
-        targetPos[idx+1] = y - 60;
-        targetPos[idx+2] = z;
-      }
-    }
-
-    function shape_PetalCloud(){
-      for(let i=0;i<PARTICLES;i++){
-        const a = Math.random()*Math.PI*2;
-        const rad = Math.pow(Math.random(),0.7)*520;
-        const pet = Math.sin(a*8) * (0.5 + Math.random()*0.5);
-        const x = Math.cos(a) * rad * pet + (Math.random()-0.5)*40;
-        const z = Math.sin(a) * rad * pet + (Math.random()-0.5)*40;
-        const y = -20 + Math.random()*260 - Math.abs(Math.sin(a*2))*60;
-        const idx = i*3;
-        targetPos[idx] = x;
-        targetPos[idx+1] = y;
-        targetPos[idx+2] = z;
-      }
-    }
-
-    function shape_RoseSpiral(){
-      for(let i=0;i<PARTICLES;i++){
-        const t = i / PARTICLES;
-        const turns = 5.2;
-        const angle = t * turns * Math.PI * 2;
-        const a = 0.22 + Math.random()*0.08;
-        const radius = 8 + Math.exp(a * angle) * 1.5;
-        const x = Math.cos(angle) * radius * (0.9 + Math.random()*0.25);
-        const z = Math.sin(angle) * radius * (0.9 + Math.random()*0.25);
-        const y = Math.sin(angle*0.7) * 28 + (Math.random()-0.5)*30 + 20;
-        const idx = i*3;
-        targetPos[idx]=x*12;
-        targetPos[idx+1]=y;
-        targetPos[idx+2]=z*12;
-      }
-    }
-
-    function shape_RibbonHearts(){
-      for(let i=0;i<PARTICLES;i++){
-        const t = i / PARTICLES * Math.PI * 2 * 3.0;
-        const r = 160 + Math.sin(t*0.8)*60 + Math.cos(i*0.23)*40;
-        const x = Math.cos(t) * r + (Math.random()-0.5)*36;
-        const z = Math.sin(t) * r * 0.6 + (Math.random()-0.5)*36;
-        const y = Math.cos(i*0.12) * 28 + 10 + (Math.random()-0.5)*18;
-        const idx = i*3;
-        targetPos[idx]=x;
-        targetPos[idx+1]=y;
-        targetPos[idx+2]=z;
-      }
-    }
-
-    const shapes = [shape_HeartCone, shape_PetalCloud, shape_RoseSpiral, shape_RibbonHearts];
-    let shapeIndex = 0;
-    function setShape(i){
-      shapeIndex = i % shapes.length;
-      shapes[shapeIndex]();
-    }
-    setShape(0);
-    setInterval(()=> setShape((shapeIndex+1)%shapes.length), 5500);
-
-    // interaction: pointer look + pinch + wheel zoom
-    let pointerDown=false, pointerStart=null;
-    let targetYaw=0, targetPitch=0, yaw=0, pitch=0;
-    const maxPitch = Math.PI/2 - 0.08;
-
-    function clientPoint(e){ if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; return { x: e.clientX, y: e.clientY }; }
-    function onPointerDown(e){ pointerDown = true; pointerStart = clientPoint(e); }
-    function onPointerMove(e){
-      const p = clientPoint(e);
-      const rect = renderer.domElement.getBoundingClientRect();
-      const mx = (p.x - rect.left) / rect.width;
-      const my = (p.y - rect.top) / rect.height;
-      if(pointerDown && e.type.startsWith('touch') && e.touches && e.touches.length===1){
-        const dx = (p.x - pointerStart.x) / window.innerWidth;
-        const dy = (p.y - pointerStart.y) / window.innerHeight;
-        targetYaw = -dx * Math.PI * 1.1;
-        targetPitch = -dy * Math.PI * 0.95;
-      } else {
-        targetYaw = -(mx - 0.5) * Math.PI * 1.05;
-        targetPitch = -(my - 0.5) * Math.PI * 0.85;
-      }
-      targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
-    }
-    function onPointerUp(){ pointerDown=false; pointerStart=null; }
-    renderer.domElement.addEventListener('pointerdown', onPointerDown, {passive:true});
-    renderer.domElement.addEventListener('pointermove', onPointerMove, {passive:true});
-    window.addEventListener('pointerup', onPointerUp, {passive:true});
-
-    // pinch zoom
-    let pinchStart = 0, startRadius = cameraRadius;
-    function distTouches(t){ const dx = t[0].clientX - t[1].clientX; const dy = t[0].clientY - t[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
-    renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length===2){ pinchStart = distTouches(e.touches); startRadius = cameraRadius; }}, {passive:true});
-    renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length===2 && pinchStart>0){ const d = distTouches(e.touches); const f = pinchStart / Math.max(1,d); cameraRadius = startRadius * f; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); }}, {passive:true});
-    renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraRadius += e.deltaY * 0.6; cameraRadius = Math.max(380, Math.min(1800, cameraRadius)); }, {passive:false});
-
-    // click to preview images via raycaster
-    const raycaster = new THREE.Raycaster();
-    function onClick(e){
-      const p = clientPoint(e);
-      const rect = renderer.domElement.getBoundingClientRect();
-      const mx = ((p.x - rect.left) / rect.width) * 2 - 1;
-      const my = -(((p.y - rect.top) / rect.height) * 2 - 1);
-      raycaster.setFromCamera({ x: mx, y: my }, camera);
-      const ints = raycaster.intersectObjects(imagesGroup.children, true);
-      if(ints.length>0){
-        let obj = ints[0].object;
-        while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
-        if(obj && obj.userData && obj.userData.url) openPreview(obj.userData.url);
-        if(obj){ obj.scale.setScalar(1.06); setTimeout(()=>obj.scale.setScalar(1.0), 200); }
-      }
-    }
-    renderer.domElement.addEventListener('click', onClick, {passive:true});
-
-    // preview modal
-    const previewModal = document.getElementById('previewModal');
-    const previewImage = document.getElementById('previewImage');
-    const previewClose = document.getElementById('previewClose');
-    function openPreview(url){ previewImage.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden','false'); }
-    function closePreview(){ previewModal.style.display = 'none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
-    previewClose.addEventListener('click', closePreview);
-    previewModal.addEventListener('click', (e)=>{ if(e.target===previewModal) closePreview(); });
-    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closePreview(); });
-
-    // UI buttons
-    const toggleAutoBtn = document.getElementById('toggleAuto');
-    const nextShapeBtn = document.getElementById('nextShape');
-    const returnBtn = document.getElementById('returnBtn');
-    let auto = true;
-    toggleAutoBtn.addEventListener('click', ()=>{ auto = !auto; toggleAutoBtn.textContent = auto ? 'Detener' : 'Auto-rotar'; toggleAutoBtn.setAttribute('aria-pressed', String(auto)); });
-    nextShapeBtn.addEventListener('click', ()=> { setShape((shapeIndex+1) % shapes.length); pulseMorph(); });
-
-    // keep the exact "Regresar" function you wanted
-    returnBtn.addEventListener('click', ()=> window.parent.postMessage({ type: 'doorClosed' }, '*'));
-
-    // morph & animation
-    let last = performance.now();
-    let morphSpeed = isMobile ? 0.06 : 0.12;
-    function animate(){
-      requestAnimationFrame(animate);
-      const now = performance.now();
-      const dt = Math.max(0.001,(now-last)/1000);
-      last = now;
-
-      // camera smoothing + auto rotate
-      const lerp = 1 - Math.pow(0.001, dt*60);
-      yaw += (targetYaw - yaw) * lerp;
-      pitch += (targetPitch - pitch) * lerp;
-      if(auto) yaw -= dt * 0.02;
-      const cp = Math.max(-maxPitch, Math.min(maxPitch, pitch));
-      const r = cameraRadius;
-      const cx = Math.sin(yaw) * r, cz = Math.cos(yaw) * r, cy = -cp * 220 + 40;
-      camera.position.set(cx, cy, cz);
-      camera.lookAt(0, 0, 0);
-
-      // morph particles toward targets
-      const pos = ptsGeo.attributes.position.array;
-      for(let i=0;i<PARTICLES;i++){
-        const idx = i*3;
-        const tx = targetPos[idx], ty = targetPos[idx+1], tz = targetPos[idx+2];
-        pos[idx]   += (tx - pos[idx])   * morphSpeed + (Math.random()-0.5)*0.03;
-        pos[idx+1] += (ty - pos[idx+1]) * morphSpeed + (Math.random()-0.5)*0.03;
-        pos[idx+2] += (tz - pos[idx+2]) * morphSpeed + (Math.random()-0.5)*0.03;
-      }
-      ptsGeo.attributes.position.needsUpdate = true;
-
-      // subtle scene animation
-      ring.rotation.z += 0.00005;
-      stars.rotation.y += 0.0001;
-      imagesGroup.children.forEach((g,i)=>{ g.lookAt(camera.position); g.position.y += Math.sin(i*0.6 + now*0.00085) * 0.0014; });
-
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    function pulseMorph(){ morphSpeed = isMobile ? 0.18 : 0.36; setTimeout(()=> morphSpeed = isMobile ? 0.06 : 0.12, 650); }
-
-    // small helper to randomize initial particle targets for organic start
-    function randomizeTargets(){
-      for(let i=0;i<PARTICLES;i++){
-        targetPos[i*3] = (Math.random()-0.5)*1600;
-        targetPos[i*3+1] = -80 + Math.random()*420;
-        targetPos[i*3+2] = (Math.random()-0.5)*1600;
-      }
-    }
-    randomizeTargets();
-
-    // quick expose for debug in console if desired
-    window._puertaVariante = { setShape, shapes: shapes.length, particles: PARTICLES };
-
-    // utility: change shape function to also pulse
-    const _setShape = setShape;
-    setShape = function(i){ _setShape(i); pulseMorph(); };
-
-    // change shapes occasionally and on load morph gently
-    setTimeout(()=> setShape(1), 1200);
-
-    // resize
-    window.addEventListener('resize', ()=> {
+      const container = document.getElementById('canvas-container');
+      const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-    });
-  })();
-  </script>
-</body>
-</html>
+      renderer.domElement.style.display='block';
+      renderer.domElement.style.touchAction='none';
+      container.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x090015);
+      scene.fog = new THREE.FogExp2(0x090015, 0.00012);
+
+      const camera = new THREE.PerspectiveCamera(66, window.innerWidth/window.innerHeight, 0.1, 12000);
+      let cameraRadius = isMobile ? 980 : 760;
+      camera.position.set(0, 40, cameraRadius);
+
+      scene.add(new THREE.HemisphereLight(0xffeef8, 0x050016, 0.6));
+      scene.add(new THREE.AmbientLight(0xffeaf4, 0.18));
+      const key = new THREE.PointLight(0xff9ecf, 0.9, 2500); key.position.set(700,260,300); scene.add(key);
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(2600,2600), new THREE.MeshStandardMaterial({ color:0x03020a, roughness:0.18 }));
+      floor.rotation.x = -Math.PI/2; floor.position.y = -420; scene.add(floor);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(880, 12, 36, 260), new THREE.MeshStandardMaterial({ color:0xffb5dc, emissive:0xffb5dc, emissiveIntensity:0.06, roughness:0.45 }));
+      ring.rotation.x = Math.PI/2; ring.position.y = -86; scene.add(ring);
+
+      const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
+      const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
+      function createFrame(url, pos, idx){
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W*1.12, FRAME_H*1.12), new THREE.MeshBasicMaterial({ color:0xffcfe6, transparent:true, opacity:0.08, side:THREE.DoubleSide }));
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(FRAME_W*1.03, FRAME_H*1.04, 12), new THREE.MeshStandardMaterial({ color:0x1d1419, roughness:0.18, metalness:0.6 }));
+        const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
+        const img = new THREE.Mesh(new THREE.PlaneGeometry(FRAME_W-14, FRAME_H-14), imgMat);
+        const g = new THREE.Group();
+        glow.position.set(0,8,-6); frame.position.set(0,0,-8); img.position.set(0,0,6);
+        g.add(glow, frame, img);
+        g.position.copy(pos);
+        g.userData = { url, idx };
+        loader.load(url, tex => { imgMat.map = tex; imgMat.needsUpdate = true; });
+        imagesGroup.add(g);
+        return g;
+      }
+
+      function arrangeImagesHeart(){
+        while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
+        const total = TOTAL_IMAGES;
+        for(let i=0;i<total;i++){
+          const t = (i / total) * Math.PI * 2;
+          const x = 16*Math.pow(Math.sin(t),3) * 24 + (Math.random()-0.5)*24;
+          const y = (13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)) * 14 - 120 + (Math.random()-0.5)*18;
+          const z = Math.sin(t*2.4) * 220 + (Math.random()-0.5)*40;
+          const url = imageUrls[i % imageUrls.length];
+          createFrame(url, new THREE.Vector3(x, y, z), i);
+        }
+      }
+      arrangeImagesHeart();
+
+      const starsCount = isMobile ? 300 : 700;
+      const starsGeo = new THREE.BufferGeometry();
+      const starsPos = new Float32Array(starsCount*3);
+      for(let i=0;i<starsCount;i++){
+        const r = 400 + Math.random()*2000;
+        const theta = Math.random()*Math.PI*2;
+        const phi = Math.acos(2*Math.random()-1);
+        starsPos[i*3] = Math.sin(phi)*Math.cos(theta)*r;
+        starsPos[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.55;
+        starsPos[i*3+2] = Math.cos(phi)*r;
+      }
+      starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos,3));
+      const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ size:isMobile?2.0:3.0, color:0xffffff, opacity:0.9, transparent:true }));
+      scene.add(stars);
+
+      const ptsGeo = new THREE.BufferGeometry();
+      const posArr = new Float32Array(PARTICLES*3);
+      for(let i=0;i<PARTICLES;i++){
+        posArr[i*3] = (Math.random()-0.5)*2200;
+        posArr[i*3+1] = -80 + Math.random()*420;
+        posArr[i*3+2] = (Math.random()-0.5)*2200;
+      }
+      ptsGeo.setAttribute('position', new THREE.BufferAttribute(posArr,3));
+
+      const sprite = (() => {
+        const c = document.createElement('canvas'); c.width=64; c.height=64; const cx = c.getContext('2d');
+        const g = cx.createRadialGradient(32,32,2,32,32,32);
+        g.addColorStop(0,'rgba(255,220,240,1)'); g.addColorStop(1,'rgba(255,220,240,0)');
+        cx.fillStyle = g; cx.fillRect(0,0,64,64);
+        return new THREE.CanvasTexture(c);
+      })();
+
+      const ptsMat = new THREE.PointsMaterial({ size:isMobile?5:7, map:sprite, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 });
+      const particles = new THREE.Points(ptsGeo, ptsMat
