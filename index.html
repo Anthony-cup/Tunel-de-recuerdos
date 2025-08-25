@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Vórtice de Anillos Giratorios</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -14,7 +14,10 @@
     }
     canvas {
       display: block;
+      width: 100vw;
+      height: 100vh;
       filter: brightness(1.4) contrast(1.5) saturate(1.7);
+      touch-action: none; /* Prevent default touch behaviors */
     }
     #blackHoleFrame, #doorFrame {
       position: absolute;
@@ -41,25 +44,47 @@
       height: 0;
     }
     #errorMessage {
-      position: absolute;
+      position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: clamp(1rem, 4vw, 1.5rem);
+      font-size: clamp(0.9rem, 3.5vw, 1.2rem); /* Smaller font for mobile */
       text-align: center;
       color: #ff4081;
       text-shadow: 0 0 8px #ff4081, 0 0 16px #ff4081;
       z-index: 10;
       display: none;
-      padding: 10px;
-      max-width: 90%;
+      padding: clamp(8px, 2vw, 12px);
+      max-width: 85vw; /* Slightly smaller on mobile */
+      background: rgba(0, 0, 0, 0.7); /* Semi-transparent background for contrast */
+      border-radius: 10px;
+      line-height: 1.4;
+      box-sizing: border-box;
+    }
+    /* Mobile-specific adjustments */
+    @media (max-width: 720px) {
+      #errorMessage {
+        font-size: clamp(0.8rem, 3vw, 1rem);
+        padding: clamp(6px, 1.5vw, 10px);
+        max-width: 90vw;
+      }
+      canvas {
+        filter: brightness(1.2) contrast(1.3) saturate(1.5); /* Slightly toned down for mobile */
+      }
+    }
+    /* Ensure high-resolution displays are handled */
+    @media (min-resolution: 2dppx) {
+      canvas {
+        width: 100vw !important;
+        height: 100vh !important;
+      }
     }
   </style>
   <svg>
     <filter id="glitch">
-      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0"/>
       <feOffset dx="2" dy="0" result="offset"/>
-      <feColorMatrix type="matrix" in="offset" values="1 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+      <feColorMatrix type="matrix" in="offset" values="1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0"/>
       <feBlend mode="screen"/>
     </filter>
   </svg>
@@ -73,7 +98,6 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
-
     const firebaseConfig = {
       apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
       authDomain: "tunel-de-recuerdos.firebaseapp.com",
@@ -83,15 +107,12 @@
       appId: "1:630660710506:web:90d34150c9f21f668eca13",
       measurementId: "G-ETFDVEHML1"
     };
-
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-
     // Generar un ID único
     function generateUniqueId() {
       return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
     }
-
     // Inicializar usuario en Firebase
     async function initializeUser(userId) {
       try {
@@ -119,19 +140,16 @@
         return false;
       }
     }
-
     // Obtener títulos de las puertas desde Firebase
     async function fetchDoorTitles() {
       const urlParams = new URLSearchParams(window.location.search);
       let userId = urlParams.get('id')?.trim();
       const errorMessage = document.getElementById('errorMessage');
-
       if (!userId) {
         console.log("No se encontró 'id' en la URL, generando uno nuevo.");
         userId = generateUniqueId();
         window.history.replaceState({}, '', `?id=${userId}`);
       }
-
       console.log("ID utilizado:", userId);
       const initSuccess = await initializeUser(userId);
       if (!initSuccess) {
@@ -139,7 +157,6 @@
         errorMessage.style.display = 'block';
         return { userId: null, titles: null };
       }
-
       try {
         const snapshot = await get(ref(database, `usuarios/${userId}`));
         if (snapshot.exists()) {
@@ -165,7 +182,6 @@
         return { userId: null, titles: null };
       }
     }
-
     (async function(){
       const result = await fetchDoorTitles();
       if (!result.userId || !result.titles) {
@@ -173,7 +189,6 @@
         return;
       }
       const { userId, titles: doorTitles } = result;
-
       const tunnelCanvas = document.getElementById('tunnelCanvas');
       const blackHoleFrame = document.getElementById('blackHoleFrame');
       const doorFrame = document.getElementById('doorFrame');
@@ -181,27 +196,22 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 0);
-
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 20000);
       camera.position.set(0, 0, 30);
-
       const tunnelRadius = 250;
       const tunnelLength = 20000;
       const ringsCount = 200;
       const particlesPerRing = 220;
       const totalPoints = ringsCount * particlesPerRing;
       const ringSpacing = tunnelLength / ringsCount;
-
       const posArr = new Float32Array(totalPoints * 3);
       const sizeArr = new Float32Array(totalPoints);
       const alphaArr = new Float32Array(totalPoints);
       const colorArr = new Float32Array(totalPoints * 3);
-
       const ringBaseZ = new Float32Array(ringsCount);
       const ringRotation = new Float32Array(ringsCount);
       const ringBaseRadius = new Float32Array(ringsCount);
-
       for (let r = 0; r < ringsCount; r++) {
         ringBaseZ[r] = - (r * ringSpacing) - 200;
         ringRotation[r] = 0;
@@ -222,13 +232,11 @@
           colorArr[idx * 3 + 2] = col.b;
         }
       }
-
       const pointsGeo = new THREE.BufferGeometry();
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
       pointsGeo.setAttribute('size', new THREE.BufferAttribute(sizeArr, 1));
       pointsGeo.setAttribute('alpha', new THREE.BufferAttribute(alphaArr, 1));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(colorArr, 3));
-
       const pointsMat = new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
@@ -269,13 +277,10 @@
           }
         `
       });
-
       const points = new THREE.Points(pointsGeo, pointsMat);
       scene.add(points);
-
       const doorPosition = -(15 * ringSpacing) - 200;
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100, 0x3f51b5]; // Turquesa neón, Rosa chicle, Verde esmeralda, Púrpura brillante, Naranja neón, Azul cobalto
-
       const emojiList = ['🩷', '🥰', '💌'];
       const rainCount = 50;
       const rainParticles = [];
@@ -287,7 +292,6 @@
       heartShape.bezierCurveTo(0.7, -0.6, 0, -0.4, 0, 0);
       const heartGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 0.1, bevelEnabled: false });
       heartGeo.scale(tunnelRadius * 0.05, tunnelRadius * 0.05, tunnelRadius * 0.05);
-
       for (let i = 0; i < rainCount; i++) {
         let particle;
         const type = Math.floor(Math.random() * 4); // 0-2: emojis, 3: corazón
@@ -323,14 +327,12 @@
         scene.add(particle);
         rainParticles.push(particle);
       }
-
       const doors = [];
       const labelMeshes = [];
       const buttonMeshes = [];
       const buttonTextMeshes = [];
       const buttonLights = [];
       const buttonEdges = [];
-
       for (let i = 0; i < doorTitles.length; i++) {
         const doorGeo = new THREE.TorusGeometry(tunnelRadius * 0.9, 10, 16, 64);
         const doorMat = new THREE.MeshStandardMaterial({
@@ -345,7 +347,6 @@
         door.visible = i === 0;
         scene.add(door);
         doors.push(door);
-
         const edgeGeo = new THREE.TorusGeometry(tunnelRadius * 0.95, 2, 8, 64);
         const edgeMat = new THREE.MeshBasicMaterial({
           color: doorColors[i],
@@ -357,7 +358,6 @@
         edge.position.set(0, 0, doorPosition);
         edge.visible = i === 0;
         scene.add(edge);
-
         const labelCanvas = document.createElement('canvas');
         labelCanvas.width = 1024;
         labelCanvas.height = 512;
@@ -370,7 +370,6 @@
         labelCtx.shadowColor = '#' + doorColors[i].toString(16).padStart(6, '0');
         labelCtx.shadowBlur = 50;
         labelCtx.fillText(doorTitles[i], 512, 256);
-
         const labelTexture = new THREE.CanvasTexture(labelCanvas);
         const labelMaterial = new THREE.MeshBasicMaterial({
           map: labelTexture,
@@ -384,7 +383,6 @@
         labelMesh.userData = { baseOpacity: 1.0 };
         scene.add(labelMesh);
         labelMeshes.push(labelMesh);
-
         const heartShape = new THREE.Shape();
         heartShape.moveTo(0, 0);
         heartShape.bezierCurveTo(0, -0.4, -0.7, -0.6, -0.7, 0);
@@ -407,7 +405,6 @@
         buttonMesh.visible = i === 0;
         buttonMesh.userData = { doorIndex: i, baseColor: doorColors[i] };
         scene.add(buttonMesh);
-
         const buttonEdgeGeo = new THREE.EdgesGeometry(buttonGeo);
         const buttonEdgeMat = new THREE.LineBasicMaterial({
           color: 0x000000, // Bordes negros
@@ -419,12 +416,10 @@
         buttonEdge.rotation.z = Math.PI;
         buttonEdge.visible = i === 0;
         scene.add(buttonEdge);
-
         const buttonLight = new THREE.PointLight(doorColors[i], 1.5, tunnelRadius * 0.5);
         buttonLight.position.set(0, -tunnelRadius * 0.15, doorPosition - 0.1);
         buttonLight.visible = i === 0;
         scene.add(buttonLight);
-
         const buttonTextCanvas = document.createElement('canvas');
         buttonTextCanvas.width = 256;
         buttonTextCanvas.height = 128;
@@ -438,7 +433,6 @@
         btnCtx.shadowColor = '#ffffff';
         btnCtx.shadowBlur = 20;
         btnCtx.fillText('Iniciar', 128, 64);
-
         const buttonTextTexture = new THREE.CanvasTexture(buttonTextCanvas);
         const buttonTextMat = new THREE.MeshBasicMaterial({
           map: buttonTextTexture,
@@ -457,17 +451,14 @@
         buttonLights.push(buttonLight);
         buttonEdges.push(buttonEdge);
       }
-
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
       scene.add(ambientLight);
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
       directionalLight.position.set(0, 100, doorPosition - 50);
       scene.add(directionalLight);
-
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       let lastHoveredButton = null;
-
       window.addEventListener('mousemove', (event) => {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
@@ -491,7 +482,6 @@
           lastHoveredButton = null;
         }
       });
-
       window.addEventListener('click', (event) => {
         console.log(`Clic detectado en coordenadas: x=${event.clientX}, y=${event.clientY}`);
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -534,11 +524,9 @@
           console.warn(`No se detectó el botón de ${doorTitles[currentDoorIndex]} o no está visible`);
         }
       });
-
       doorFrame.onerror = () => {
         console.error(`Error al cargar el iframe: ${doorFrame.src}`);
       };
-
       let timeElapsed = 0;
       let panelHidden = false;
       let isStopped = false;
@@ -546,13 +534,11 @@
       let resetStartTime = 0;
       let currentDoorIndex = 0;
       const doorStates = doorTitles.map(() => ({ z: doorPosition, opened: false }));
-
       window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
       });
-
       window.addEventListener('message', (event) => {
         console.log('Mensaje recibido:', event.data);
         if (event.data.type === 'zoomUpdate') {
@@ -638,16 +624,13 @@
           }
         }
       });
-
       let last = performance.now();
-
       function render() {
         requestAnimationFrame(render);
         const now = performance.now();
         const dt = (now - last) / 1000;
         last = now;
         timeElapsed += dt;
-
         if (timeElapsed > 10 && !panelHidden) {
           blackHoleFrame.style.opacity = 0;
           setTimeout(() => {
@@ -664,7 +647,6 @@
             console.log(`Mostrando puerta inicial: ${doorTitles[0]}`);
           }, 500);
         }
-
         if (isResetting) {
           const resetDuration = 0.5;
           const resetProgress = Math.min((timeElapsed - resetStartTime) / resetDuration, 1);
@@ -713,7 +695,6 @@
             }, 500);
           }
         }
-
         if (panelHidden && !isStopped && !isResetting && currentDoorIndex < doorStates.length && !doorStates[currentDoorIndex].opened) {
           const targetZ = doorStates[currentDoorIndex].z + 200;
           camera.position.z += (targetZ - camera.position.z) * 0.02 * dt * 60;
@@ -722,7 +703,6 @@
             console.log(`Zoom completado para puerta: ${doorTitles[currentDoorIndex]}, posición z: ${camera.position.z}`);
           }
         }
-
         rainParticles.forEach(p => {
           if (p.visible && timeElapsed > p.userData.startTime) {
             p.position.y += p.userData.velocity * dt;
@@ -735,9 +715,7 @@
             p.rotation.z += 0.5 * dt; // Rotación para dinamismo
           }
         });
-
         pointsMat.uniforms.uTime.value = now * 0.001;
-
         buttonMeshes.forEach((mesh, i) => {
           mesh.position.y = -tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.015;
           buttonLights[i].position.y = mesh.position.y;
@@ -746,10 +724,8 @@
         labelMeshes.forEach((mesh) => {
           mesh.position.y = tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.02;
         });
-
         renderer.render(scene, camera);
       }
-
       render();
     })();
   </script>
