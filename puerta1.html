@@ -52,11 +52,11 @@
   </style>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v4.</div>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v5.</div>
   <div id="canvas-container"></div>
   <div id="romOverlay"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Vórtice de Anillos Giratorios v4</h3>
+    <h3>Sala Romántica — Vórtice de Anillos Giratorios v5</h3>
     <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
     <div class="controls">
       <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
@@ -65,7 +65,7 @@
       <button id="returnBtn" class="btn-ghost">Regresar</button>
     </div>
   </div>
-  <div id="credits">Diseño romántico • Imágenes personalizadas o de ejemplo: picsum.photos</div>
+  <div id="credits">Diseño romántico • Imágenes de tu galería</div>
   <div id="hint">Toca una imagen para abrirla • Pellizca para acercar</div>
   <div id="tooltip">Sugerencia: prueba "Cambiar forma"</div>
   <div id="previewModal" aria-hidden="true"><div id="previewContent"><button id="previewClose">Cerrar</button><img id="previewImage" src="" alt="Vista previa"></div></div>
@@ -89,55 +89,53 @@
 
     let imageUrls = [];
     async function fetchImages() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id')?.trim();
       const errorMessage = document.getElementById('errorMessage');
-      const defaultImages = [
-        'https://picsum.photos/id/1015/900/600', 'https://picsum.photos/id/1025/900/600',
-        'https://picsum.photos/id/1035/900/600', 'https://picsum.photos/id/1041/900/600',
-        'https://picsum.photos/id/1050/900/600', 'https://picsum.photos/id/1069/900/600',
-        'https://picsum.photos/id/1074/900/600'
-      ];
+      const rawSearch = window.location.search;
+      console.log("URL completa:", window.location.href);
+      console.log("Parámetros de búsqueda:", rawSearch);
+      
+      const urlParams = new URLSearchParams(rawSearch);
+      const userId = urlParams.get('id')?.trim();
+      console.log("ID extraído de la URL:", userId);
 
       if (!userId || userId === '') {
         console.error("No se encontró 'id' en la URL o es inválido.");
         errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
         errorMessage.style.display = 'block';
-        return defaultImages;
+        return [];
       }
 
       try {
+        console.log(`Consultando Firebase para usuarios/${userId}`);
         const snapshot = await get(ref(database, `usuarios/${userId}`));
         if (snapshot.exists()) {
           const data = snapshot.val();
           const puertaFotos = data.puerta1Fotos || [];
           const validFotos = puertaFotos.slice(0, 5).filter(url => typeof url === 'string' && url.trim() !== '');
-          console.log("Imágenes obtenidas de Firebase para puerta1:", validFotos);
+          console.log("Imágenes obtenidas de puerta1Fotos:", validFotos);
           if (validFotos.length === 0) {
-            console.warn(`No hay imágenes en puerta1Fotos para el usuario ${userId}. Usando imágenes predeterminadas.`);
-            return defaultImages;
+            console.warn(`No hay imágenes en puerta1Fotos para el usuario ${userId}.`);
+            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega imágenes primero.';
+            errorMessage.style.display = 'block';
           }
-          return [...validFotos, ...defaultImages.slice(validFotos.length, 7)];
+          return validFotos;
         } else {
           console.error(`No se encontraron datos para el usuario ${userId}.`);
           errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
           errorMessage.style.display = 'block';
-          return defaultImages;
+          return [];
         }
       } catch (error) {
-        console.error("Error al obtener imágenes de Firebase:", error);
+        console.error("Error al consultar Firebase:", error);
         errorMessage.textContent = 'Error al cargar las imágenes. Por favor, intenta de nuevo.';
         errorMessage.style.display = 'block';
-        return defaultImages;
+        return [];
       }
     }
 
     (async function(){
       imageUrls = await fetchImages();
-      const errorMessage = document.getElementById('errorMessage');
-      if (errorMessage.style.display === 'block') {
-        console.warn("Continuando con imágenes predeterminadas debido a error en ID o datos.");
-      }
+      console.log("Imágenes finales para la escena:", imageUrls);
 
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
       const IMAGE_COUNT_DESKTOP = 20;
@@ -228,6 +226,7 @@
 
       let mode = 'heart';
       function arrangeImages(shape='heart'){
+        console.log("Organizando imágenes, modo:", shape, "Total imágenes:", imageUrls.length);
         const placed = [];
         while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
         const total = Math.min(TOTAL_IMAGES, imageUrls.length);
