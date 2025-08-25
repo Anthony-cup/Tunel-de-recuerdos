@@ -9,13 +9,13 @@
     html,body{height:100%;margin:0;background:radial-gradient(1000px 600px at 20% 10%, rgba(255,100,140,0.05), transparent 10%, #000 60%), #000;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
     #canvas-container{width:100vw;height:100vh;display:block;position:relative;touch-action:none}
     #overlay{position:absolute;left:10px;top:10px;color:#111;z-index:80;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.1));backdrop-filter: blur(5px);box-shadow:0 6px 25px rgba(0,0,0,0.5);display:none}
-    #overlay h3{margin:0 0 5px 0;font-size:13px;color:var(--rose-2)}
-    #overlay p{margin:0;font-size:11px;color:rgba(255,255,255,0.85)}
+    #overlay h3{margin:0 0 5px 0;font-size:14px;color:var(--rose-2)}
+    #overlay p{margin:0;font-size:12px;color:rgba(255,255,255,0.85)}
     .controls{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
     .btn, .btn-ghost {
       position:relative;
       overflow:hidden;
-      display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border-radius:10px;border:0;cursor:pointer;font-weight:600;font-size:12px;
+      display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600;font-size:12px;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
       transition:transform .12s ease, box-shadow .12s ease;
@@ -23,7 +23,7 @@
     .btn{background:var(--btn-bg); color:#111; box-shadow: 0 5px 15px rgba(255,120,160,0.08);}
     .btn:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(255,120,160,0.1);}
     .btn:active{transform:translateY(0);}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.07);color:#fff;padding:6px 9px}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.07);color:#fff;padding:7px 10px}
     .btn-ghost:hover{background:rgba(255,255,255,0.02);transform:translateY(-1px)}
     .btn:focus{outline:2px solid rgba(255,120,160,0.12);outline-offset:2px}
     .ripple{position:absolute;border-radius:999px;transform:scale(0);animation:rip .5s ease-out;pointer-events:none;background:rgba(255,255,255,0.15)}
@@ -63,7 +63,7 @@
   </style>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero v2.</div>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero.</div>
   <div id="loadingBarContainer">
     <div id="loadingBar"></div>
     <div id="loadingText">Cargando...</div>
@@ -71,7 +71,7 @@
   <div id="canvas-container"></div>
   <div id="romOverlay"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Forma corazón</h3>
+    <h3>Sala Romántica — Forma corazón v12</h3>
     <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
     <div class="controls">
       <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
@@ -116,13 +116,18 @@
         if (snapshot.exists()) {
           const data = snapshot.val();
           const puertaFotos = data.puerta1Fotos || [];
-          const validFotos = puertaFotos.slice(0, 7).filter(url => typeof url === 'string' && url.trim() !== '');
+          let validFotos = puertaFotos.slice(0, 7).filter(url => typeof url === 'string' && url.trim() !== '');
           if (validFotos.length === 0) {
-            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega hasta 7 imágenes.';
+            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega al menos 1 imagen.';
             errorMessage.style.display = 'block';
             document.getElementById('loadingBarContainer').style.display = 'none';
+            return [];
           }
-          return validFotos;
+          // Duplicate images to reach 7 if fewer are available
+          while (validFotos.length < 7) {
+            validFotos = validFotos.concat(validFotos.slice(0, Math.min(validFotos.length, 7 - validFotos.length)));
+          }
+          return validFotos.slice(0, 7);
         } else {
           errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
           errorMessage.style.display = 'block';
@@ -144,15 +149,15 @@
       loadingText.textContent = 'Cargando...';
       imageUrls = await fetchImages();
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-      const TOTAL_IMAGES = 7; // Fixed to 7 images
+      const TOTAL_IMAGES = 7;
       const STARS_COUNT = isMobile ? 80 : 300;
       const PETALS_COUNT = isMobile ? 15 : 40;
       const LANTERNS_COUNT = isMobile ? 3 : 6;
       const ORBS_COUNT = isMobile ? 1 : 4;
-      const BASE_FRAME_W = isMobile ? 140 : 260;
-      const BASE_FRAME_H = isMobile ? 100 : 180;
-      const MIN_CAMERA_DISTANCE = 350;
-      const MAX_CAMERA_DISTANCE = 1400;
+      const BASE_FRAME_W = isMobile ? 180 : 300; // Increased sizes
+      const BASE_FRAME_H = isMobile ? 130 : 220;
+      const MIN_CAMERA_DISTANCE = 300;
+      const MAX_CAMERA_DISTANCE = 1200;
       let loadedImages = 0;
       const totalImages = Math.min(imageUrls.length, 7);
       function updateLoadingProgress() {
@@ -187,7 +192,7 @@
       }
       const container = document.getElementById('canvas-container');
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.1));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); // Increased for clarity
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.domElement.style.display = 'block';
       renderer.domElement.style.touchAction = 'none';
@@ -196,7 +201,7 @@
       scene.background = new THREE.Color(0x08020a);
       scene.fog = new THREE.FogExp2(0x08020a, 0.00035);
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 8000);
-      let cameraDistance = isMobile ? 700 : 600;
+      let cameraDistance = isMobile ? 600 : 500; // Closer camera
       camera.position.set(0, 50, cameraDistance);
       camera.lookAt(0,0,0);
       const hemi = new THREE.HemisphereLight(0xfff0f6, 0x111122, 0.45); scene.add(hemi);
@@ -240,13 +245,21 @@
         const frameH = BASE_FRAME_H * scaleFactor;
         const glow = new THREE.Mesh(new THREE.PlaneGeometry(frameW*1.08, frameH*1.08), new THREE.MeshBasicMaterial({ color:0xff9ec5, transparent:true, opacity:0.06, side:THREE.DoubleSide }));
         const frame = new THREE.Mesh(new THREE.BoxGeometry(frameW*1.01, frameH*1.02, Math.max(4, Math.round(4*scaleFactor))), new THREE.MeshStandardMaterial({ color:0x2b1b1b, roughness:0.3, metalness:0.5 }));
-        const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff });
+        const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff, map: null }); // Initialize map as null
         const img = new THREE.Mesh(new THREE.PlaneGeometry(frameW-8, frameH-8), imgMat);
         const group = new THREE.Group();
         glow.position.set(0,4 * scaleFactor,-2); frame.position.set(0,0,-4 * scaleFactor); img.position.set(0,0,2 * scaleFactor);
         group.add(glow); group.add(frame); group.add(img);
         group.position.copy(pos); group.userData={idx,url};
-        loader.load(url, tex=>{ imgMat.map = tex; imgMat.needsUpdate = true; });
+        loader.load(url, tex => {
+          tex.minFilter = THREE.LinearFilter; // Improve clarity
+          tex.magFilter = THREE.LinearFilter;
+          tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Enhance texture quality
+          imgMat.map = tex;
+          imgMat.needsUpdate = true;
+        }, undefined, err => {
+          console.warn(`Error al cargar textura: ${url}`, err);
+        });
         imagesGroup.add(group); return group;
       }
       function getFrameCollisionRadius(){ const scaleFactor = getScaleFactor(); const fw = BASE_FRAME_W*scaleFactor, fh = BASE_FRAME_H*scaleFactor; return Math.sqrt((fw/2)*(fw/2) + (fh/2)*(fh/2)) * 1.2; }
@@ -259,28 +272,28 @@
           const t = (i/total)*Math.PI*2;
           let basePos;
           if(shape==='heart'){
-            const point = heartPoint(t, 40);
-            const layer = 1 + Math.floor(i / Math.max(1,Math.floor(total/4))) * 0.2;
-            basePos = new THREE.Vector3(point.x * layer, point.y*layer - 80, point.z * layer);
+            const point = heartPoint(t, 45); // Increased scale
+            const layer = 1 + Math.floor(i / Math.max(1,Math.floor(total/4))) * 0.22;
+            basePos = new THREE.Vector3(point.x * layer, point.y*layer - 70, point.z * layer);
           } else {
-            const radius = 480 + i*25 * getScaleFactor();
-            const ang = i*0.45;
-            basePos = new THREE.Vector3(Math.cos(ang)*radius, -30 + Math.sin(i*0.4)*8, Math.sin(ang)*radius);
+            const radius = 500 + i*30 * getScaleFactor(); // Increased spacing
+            const ang = i*0.5;
+            basePos = new THREE.Vector3(Math.cos(ang)*radius, -25 + Math.sin(i*0.35)*10, Math.sin(ang)*radius);
           }
           let candidate = basePos.clone();
           let safety = 0;
           const R = getFrameCollisionRadius();
           while(true){
             let conflict=false;
-            for(const p of placed){ if(p.distanceTo(candidate) < R * 1.6){ conflict = true; break; } }
+            for(const p of placed){ if(p.distanceTo(candidate) < R * 1.8){ conflict = true; break; } } // Increased spacing
             if(!conflict) break;
-            candidate.x *= 1.07; candidate.z *= 1.07;
-            candidate.x += (Math.random()-0.5) * 16 * getScaleFactor();
-            candidate.z += (Math.random()-0.5) * 16 * getScaleFactor();
+            candidate.x *= 1.08; candidate.z *= 1.08;
+            candidate.x += (Math.random()-0.5) * 18 * getScaleFactor();
+            candidate.z += (Math.random()-0.5) * 18 * getScaleFactor();
             safety++; if(safety>35) break;
           }
           placed.push(candidate.clone());
-          candidate.y = Math.max(-260, Math.min(120, candidate.y));
+          candidate.y = Math.max(-240, Math.min(140, candidate.y));
           createFramedImage(imageUrls[i % imageUrls.length], candidate, i);
         }
       }
@@ -299,7 +312,7 @@
       for(let i=0;i<LANTERNS_COUNT;i++){ const a = i/LANTERNS_COUNT*Math.PI*2; const r=700 * getScaleFactor(); addLantern(new THREE.Vector3(Math.cos(a)*r, -100, Math.sin(a)*r)); }
       const orbs = new THREE.Group(); scene.add(orbs);
       function addOrb(pos){ const geo = new THREE.SphereGeometry(24 * getScaleFactor(), 12, 12); const mat = new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0.0, roughness:0.15, transmission:0.75, transparent:true, opacity:0.8, clearcoat:0.4, clearcoatRoughness:0.2 }); const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(pos); orbs.add(mesh); }
-      for(let i=0;i<ORBS_COUNT;i++){ const a=Math.random()*Math.PI*2; const r=700*getScaleFactor()+Math.random()*700*getScaleFactor(); addOrb(new THREE.Vector3(Math.cos(a)*r, -30 + Math.random()*180, Math.sin(a)*r)); }
+      for(let i=0;i<ORBS_COUNT;i++){ const a=Math.random()*Math.PI*2; const r=700*getScaleFactor()+Math.random()*700*getScaleFactor(); addOrb(new THREE.Vector3(Math.cos(a)*r, -25 + Math.random()*180, Math.sin(a)*r)); }
       const bursts = []; const floatingHearts = [];
       function spawnBurstAt(worldPos, color=0xffc4d6, count= isMobile ? 4 : 12){
         for(let i=0;i<count;i++){ const g=new THREE.SphereGeometry(2 + Math.random()*4 * getScaleFactor(), 4, 4); const m=new THREE.MeshBasicMaterial({ color }); const mesh=new THREE.Mesh(g,m); mesh.position.copy(worldPos); scene.add(mesh); const dir=new THREE.Vector3((Math.random()-0.5)*2, 0.5+Math.random()*1.2, (Math.random()-0.5)*2).normalize(); const speed = 40*getScaleFactor() + Math.random()*100*getScaleFactor(); bursts.push({mesh, vel: dir.multiplyScalar(speed), life:0.5+Math.random()*0.6}); }
