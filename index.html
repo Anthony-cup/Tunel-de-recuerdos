@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vórtice de Anillos Giratorios v2</title>
+  <title>Vórtice de Anillos Giratorios v5</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
@@ -81,14 +81,15 @@
   </svg>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero.</div>
+  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ling primero.</div>
   <canvas id="tunnelCanvas"></canvas>
   <iframe id="blackHoleFrame" src="negro.html"></iframe>
   <iframe id="doorFrame" src=""></iframe>
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+    import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
     const firebaseConfig = {
       apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
       authDomain: "tunel-de-recuerdos.firebaseapp.com",
@@ -98,49 +99,98 @@
       appId: "1:630660710506:web:90d34150c9f21f668eca13",
       measurementId: "G-ETFDVEHML1"
     };
+
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
+
+    // Generar un ID único si no está en la URL
+    function generateUniqueId() {
+      return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+    }
+
+    async function initializeUser(userId) {
+      try {
+        const userRef = ref(database, `usuarios/${userId}`);
+        const snapshot = await get(userRef);
+        if (!snapshot.exists()) {
+          console.log(`Creando nuevo usuario con ID: ${userId}`);
+          await set(userRef, {
+            puerta1Fotos: [],
+            puerta2Fotos: [],
+            puerta3Fotos: [],
+            puerta4Fotos: [],
+            puerta5Fotos: [],
+            puerta1Anio: "2000",
+            puerta2Anio: "2001",
+            puerta3Anio: "2002",
+            puerta4Anio: "2003",
+            puerta5Anio: "2004"
+          });
+          console.log(`Usuario ${userId} inicializado en Firebase.`);
+        } else {
+          console.log(`Usuario ${userId} ya existe en Firebase.`);
+        }
+        return true;
+      } catch (error) {
+        console.error("Error al inicializar usuario en Firebase:", error);
+        return false;
+      }
+    }
+
     async function validateAndFetchDoorTitles() {
       const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id')?.trim();
+      let userId = urlParams.get('id')?.trim();
       const errorMessage = document.getElementById('errorMessage');
-      const defaultTitles = ["2000", "2001", "2002", "2003", "2004"];
-      if (!userId || userId === '') {
-        console.error("No se encontró 'id' en la URL o es inválido.");
-        errorMessage.style.display = 'block';
-        return { userId: null, titles: null };
+
+      if (!userId) {
+        console.log("No se encontró 'id' en la URL, generando uno nuevo.");
+        userId = generateUniqueId();
+        // Actualizar la URL con el nuevo ID sin recargar la página
+        window.history.replaceState({}, '', `?id=${userId}`);
       }
+
+      console.log("ID utilizado:", userId);
+      const initSuccess = await initializeUser(userId);
+      if (!initSuccess) {
+        errorMessage.textContent = 'Error al inicializar el proyecto. Intenta de nuevo.';
+        errorMessage.style.display = 'block';
+        return null;
+      }
+
       try {
-        console.log(`Consultando Firebase para usuarios/${userId}`);
         const snapshot = await get(ref(database, `usuarios/${userId}`));
         if (snapshot.exists()) {
           const data = snapshot.val();
           const titles = [
-            data.puerta1Anio || defaultTitles[0],
-            data.puerta2Anio || defaultTitles[1],
-            data.puerta3Anio || defaultTitles[2],
-            data.puerta4Anio || defaultTitles[3],
-            data.puerta5Anio || defaultTitles[4]
+            data.puerta1Anio || "2000",
+            data.puerta2Anio || "2001",
+            data.puerta3Anio || "2002",
+            data.puerta4Anio || "2003",
+            data.puerta5Anio || "2004"
           ];
           console.log("Títulos obtenidos de Firebase:", titles);
           return { userId, titles };
         } else {
           console.error(`No se encontraron datos para el usuario ${userId}.`);
           errorMessage.style.display = 'block';
-          return { userId: null, titles: null };
+          return null;
         }
       } catch (error) {
         console.error("Error al obtener datos de Firebase:", error);
+        errorMessage.textContent = 'Error al cargar los datos. Por favor, intenta de nuevo.';
         errorMessage.style.display = 'block';
-        return { userId: null, titles: null };
+        return null;
       }
     }
+
     (async function(){
-      const { userId, doorTitles } = await validateAndFetchDoorTitles();
-      if (!userId || !doorTitles) {
+      const result = await validateAndFetchDoorTitles();
+      if (!result) {
         console.error("No se puede continuar sin un ID válido o datos en Firebase.");
         return;
       }
+      const { userId, titles: doorTitles } = result;
+
       const tunnelCanvas = document.getElementById('tunnelCanvas');
       const blackHoleFrame = document.getElementById('blackHoleFrame');
       const doorFrame = document.getElementById('doorFrame');
@@ -148,10 +198,12 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setClearColor(0x000000, 0);
+
       const scene = new THREE.Scene();
       const isMobile = window.innerWidth <= 768;
       const camera = new THREE.PerspectiveCamera(isMobile ? 80 : 70, window.innerWidth/window.innerHeight, 0.1, 20000);
       camera.position.set(0, 0, 30);
+
       const tunnelRadius = isMobile ? 200 : 250;
       const tunnelLength = 20000;
       const ringsCount = isMobile ? 150 : 200;
@@ -165,6 +217,7 @@
       const ringBaseZ = new Float32Array(ringsCount);
       const ringRotation = new Float32Array(ringsCount);
       const ringBaseRadius = new Float32Array(ringsCount);
+
       for (let r = 0; r < ringsCount; r++) {
         ringBaseZ[r] = - (r * ringSpacing) - 200;
         ringRotation[r] = 0;
@@ -185,6 +238,7 @@
           colorArr[idx * 3 + 2] = col.b;
         }
       }
+
       const pointsGeo = new THREE.BufferGeometry();
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
       pointsGeo.setAttribute('size', new THREE.BufferAttribute(sizeArr, 1));
@@ -232,11 +286,13 @@
       });
       const points = new THREE.Points(pointsGeo, pointsMat);
       scene.add(points);
+
       const doorPosition = -(15 * ringSpacing) - 200;
       const doorColors = [0x26c6da, 0xff4081, 0x00e676, 0xab47bc, 0xff9100];
       const emojiList = ['🩷', '🥰', '💌'];
       const rainCount = isMobile ? 30 : 50;
       const rainParticles = [];
+
       const heartShape = new THREE.Shape();
       heartShape.moveTo(0, 0);
       heartShape.bezierCurveTo(0, -0.4, -0.7, -0.6, -0.7, 0);
@@ -245,6 +301,7 @@
       heartShape.bezierCurveTo(0.7, -0.6, 0, -0.4, 0, 0);
       const heartGeo = new THREE.ExtrudeGeometry(heartShape, { depth: 0.1, bevelEnabled: false });
       heartGeo.scale(tunnelRadius * 0.05, tunnelRadius * 0.05, tunnelRadius * 0.05);
+
       for (let i = 0; i < rainCount; i++) {
         let particle;
         const type = Math.floor(Math.random() * 4);
@@ -280,12 +337,14 @@
         scene.add(particle);
         rainParticles.push(particle);
       }
+
       const doors = [];
       const labelMeshes = [];
       const buttonMeshes = [];
       const buttonTextMeshes = [];
       const buttonLights = [];
       const buttonEdges = [];
+
       for (let i = 0; i < doorTitles.length; i++) {
         const doorGeo = new THREE.TorusGeometry(tunnelRadius * 0.9, isMobile ? 8 : 10, 16, 64);
         const doorMat = new THREE.MeshStandardMaterial({
@@ -300,6 +359,7 @@
         door.visible = i === 0;
         scene.add(door);
         doors.push(door);
+
         const edgeGeo = new THREE.TorusGeometry(tunnelRadius * 0.95, isMobile ? 1.5 : 2, 8, 64);
         const edgeMat = new THREE.MeshBasicMaterial({
           color: doorColors[i],
@@ -311,6 +371,7 @@
         edge.position.set(0, 0, doorPosition);
         edge.visible = i === 0;
         scene.add(edge);
+
         const labelCanvas = document.createElement('canvas');
         labelCanvas.width = isMobile ? 768 : 1024;
         labelCanvas.height = isMobile ? 384 : 512;
@@ -336,6 +397,7 @@
         labelMesh.userData = { baseOpacity: 1.0 };
         scene.add(labelMesh);
         labelMeshes.push(labelMesh);
+
         const heartShape = new THREE.Shape();
         heartShape.moveTo(0, 0);
         heartShape.bezierCurveTo(0, -0.4, -0.7, -0.6, -0.7, 0);
@@ -358,6 +420,7 @@
         buttonMesh.visible = i === 0;
         buttonMesh.userData = { doorIndex: i, baseColor: doorColors[i] };
         scene.add(buttonMesh);
+
         const buttonEdgeGeo = new THREE.EdgesGeometry(buttonGeo);
         const buttonEdgeMat = new THREE.LineBasicMaterial({
           color: 0x000000,
@@ -369,10 +432,12 @@
         buttonEdge.rotation.z = Math.PI;
         buttonEdge.visible = i === 0;
         scene.add(buttonEdge);
+
         const buttonLight = new THREE.PointLight(doorColors[i], isMobile ? 1.2 : 1.5, tunnelRadius * 0.5);
         buttonLight.position.set(0, -tunnelRadius * 0.15, doorPosition - 0.1);
         buttonLight.visible = i === 0;
         scene.add(buttonLight);
+
         const buttonTextCanvas = document.createElement('canvas');
         buttonTextCanvas.width = isMobile ? 192 : 256;
         buttonTextCanvas.height = isMobile ? 96 : 128;
@@ -399,19 +464,23 @@
         buttonTextMesh.visible = false;
         buttonTextMesh.userData = { doorIndex: i };
         scene.add(buttonTextMesh);
+
         buttonMeshes.push(buttonMesh);
         buttonTextMeshes.push(buttonTextMesh);
         buttonLights.push(buttonLight);
         buttonEdges.push(buttonEdge);
       }
+
       const ambientLight = new THREE.AmbientLight(0xffffff, isMobile ? 0.6 : 0.7);
       scene.add(ambientLight);
       const directionalLight = new THREE.DirectionalLight(0xffffff, isMobile ? 0.8 : 0.9);
       directionalLight.position.set(0, 100, doorPosition - 50);
       scene.add(directionalLight);
+
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
       let lastHoveredButton = null;
+
       function updateMouseOrTouch(event, isTouch = false) {
         const clientX = isTouch ? event.touches[0].clientX : event.clientX;
         const clientY = isTouch ? event.touches[0].clientY : event.clientY;
@@ -437,16 +506,19 @@
           lastHoveredButton = null;
         }
       }
+
       window.addEventListener('mousemove', (event) => updateMouseOrTouch(event));
       window.addEventListener('touchstart', (event) => {
         event.preventDefault();
         updateMouseOrTouch(event, true);
       }, { passive: false });
+
       window.addEventListener('click', (event) => handleInteraction(event));
       window.addEventListener('touchend', (event) => {
         event.preventDefault();
         handleInteraction(event, true);
       }, { passive: false });
+
       function handleInteraction(event, isTouch = false) {
         const clientX = isTouch ? event.changedTouches[0].clientX : event.clientX;
         const clientY = isTouch ? event.changedTouches[0].clientY : event.clientY;
@@ -491,9 +563,11 @@
           console.warn(`No se detectó el botón de ${doorTitles[currentDoorIndex]} o no está visible`);
         }
       }
+
       doorFrame.onerror = () => {
         console.error(`Error al cargar el iframe: ${doorFrame.src}`);
       };
+
       let timeElapsed = 0;
       let panelHidden = false;
       let isStopped = false;
@@ -501,13 +575,16 @@
       let resetStartTime = 0;
       let currentDoorIndex = 0;
       const doorStates = doorTitles.map(() => ({ z: doorPosition, opened: false }));
+
       function updateRendererSize() {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
       }
+
       window.addEventListener('resize', updateRendererSize);
       window.addEventListener('orientationchange', updateRendererSize);
+
       window.addEventListener('message', (event) => {
         console.log('Mensaje recibido:', event.data);
         if (event.data.type === 'zoomUpdate') {
@@ -593,6 +670,7 @@
           }
         }
       });
+
       let last = performance.now();
       function render() {
         requestAnimationFrame(render);
@@ -600,6 +678,7 @@
         const dt = (now - last) / 1000;
         last = now;
         timeElapsed += dt;
+
         if (timeElapsed > 10 && !panelHidden) {
           blackHoleFrame.style.opacity = 0;
           setTimeout(() => {
@@ -616,6 +695,7 @@
             console.log(`Mostrando puerta inicial: ${doorTitles[0]}`);
           }, 500);
         }
+
         if (isResetting) {
           const resetDuration = 0.5;
           const resetProgress = Math.min((timeElapsed - resetStartTime) / resetDuration, 1);
@@ -664,6 +744,7 @@
             }, 500);
           }
         }
+
         if (panelHidden && !isStopped && !isResetting && currentDoorIndex < doorStates.length && !doorStates[currentDoorIndex].opened) {
           const targetZ = doorStates[currentDoorIndex].z + 200;
           camera.position.z += (targetZ - camera.position.z) * 0.02 * dt * 60;
@@ -672,6 +753,7 @@
             console.log(`Zoom completado para puerta: ${doorTitles[currentDoorIndex]}, posición z: ${camera.position.z}`);
           }
         }
+
         rainParticles.forEach(p => {
           if (p.visible && timeElapsed > p.userData.startTime) {
             p.position.y += p.userData.velocity * dt;
@@ -684,6 +766,7 @@
             p.rotation.z += 0.5 * dt;
           }
         });
+
         pointsMat.uniforms.uTime.value = now * 0.001;
         buttonMeshes.forEach((mesh, i) => {
           mesh.position.y = -tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.015;
@@ -693,8 +776,10 @@
         labelMeshes.forEach((mesh) => {
           mesh.position.y = tunnelRadius * 0.15 + Math.sin(now * 0.001) * tunnelRadius * 0.02;
         });
+
         renderer.render(scene, camera);
       }
+
       render();
     })();
   </script>
