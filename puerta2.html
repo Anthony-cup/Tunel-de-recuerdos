@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Galería Romántica — Móvil (2D)</title>
+  <title>Galería Romántica — Móvil (2D) — Bucle Automático</title>
   <style>
     :root{
       --bg-1: #050006;
@@ -11,38 +11,45 @@
       --card-bg: rgba(255,255,255,0.03);
       --accent-a: #ffd1e6;
       --accent-b: #a6f0ff;
-      --glass: rgba(255,255,255,0.04);
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;color:#fff;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;touch-action:manipulation}
 
-    /* bokeh/back layers */
+    /* background bokeh */
     .bg-layers{position:fixed;inset:0;pointer-events:none;z-index:0}
     .bokeh{position:absolute;filter:blur(36px);opacity:0.12}
     .bokeh.b1{width:520px;height:320px;left:-6%;top:4%;background:radial-gradient(circle at 20% 30%, #ffd1e6 0%, transparent 40%), radial-gradient(circle at 80% 70%, #a6f0ff 0%, transparent 35%)}
     .bokeh.b2{width:360px;height:260px;right:-6%;bottom:6%;background:radial-gradient(circle at 30% 40%, #ffb3d1 0%, transparent 40%)}
 
     /* overlay */
-    .overlay{position:fixed;left:12px;top:12px;z-index:40;background:linear-gradient(180deg,var(--glass),transparent);padding:10px;border-radius:12px;backdrop-filter: blur(6px);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .overlay{position:fixed;left:12px;top:12px;z-index:40;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:10px;border-radius:12px;backdrop-filter: blur(6px);box-shadow:0 8px 30px rgba(0,0,0,0.6)}
     .overlay h2{margin:0;font-size:14px;color:var(--accent-a)}
     .overlay p{margin:6px 0 0 0;font-size:12px;opacity:0.9}
     .controls{display:flex;gap:8px;margin-top:8px}
     .btn{padding:8px 12px;border-radius:12px;border:0;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#ffc8e0,#9ff3ff);color:#111;box-shadow:0 10px 30px rgba(160,160,200,0.06)}
     .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 12px;border-radius:12px}
 
-    /* mobile-first gallery */
+    /* gallery */
     .wrap{position:relative;z-index:10;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
     .gallery{width:100%;max-width:980px;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:220px;gap:12px;justify-items:center;align-items:center}
     @media(min-width:720px){ .gallery{grid-template-columns:repeat(4,1fr);gap:18px} }
 
     .card{width:100%;height:100%;max-width:420px;max-height:280px;position:relative;border-radius:14px;overflow:visible;display:flex;align-items:center;justify-content:center}
-    .polaroid{position:relative;width:100%;height:100%;border-radius:12px;background:var(--card-bg);backdrop-filter: blur(4px);box-shadow:0 12px 40px rgba(0,0,0,0.6);transform-origin:center;transition:box-shadow .28s;--px:0px;--py:0px;--scale:1;--rot:0deg}
-    .polaroid{transform: translateX(var(--px)) translateY(var(--py)) rotate(var(--rot)) scale(var(--scale));}
-    .polaroid img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
 
-    /* gentle looping breathing animation via JS (CSS fallback) */
-    @keyframes floaty{0%{transform:translateY(0) rotate(var(--rot)) scale(1)}50%{transform:translateY(-6px) rotate(calc(var(--rot) + 0.6deg)) scale(1.02)}100%{transform:translateY(0) rotate(var(--rot)) scale(1)}}
-    .polaroid.auto-float{animation:floaty 6s ease-in-out infinite}
+    /* polaroid: we keep CSS vars for per-card motion */
+    .polaroid{position:relative;width:100%;height:100%;border-radius:12px;background:var(--card-bg);backdrop-filter: blur(4px);box-shadow:0 12px 40px rgba(0,0,0,0.6);transform-origin:center;--px:0px;--py:0px;--scale:1;--rot:0deg}
+    .polaroid{transform: translateX(var(--px)) translateY(var(--py)) rotate(var(--rot)) scale(var(--scale));}
+    .polaroid img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;transition:transform .45s cubic-bezier(.2,.9,.3,1), filter .45s}
+
+    /* automatic romantic loop keyframes (continuous bucle) */
+    @keyframes romanticLoop {
+      0%   { transform: translateX(var(--px)) translateY(var(--py)) rotate(var(--rot)) scale(var(--scale)); filter: brightness(1) saturate(1);} 
+      22%  { transform: translateX(calc(var(--px) + 6px)) translateY(calc(var(--py) - 10px)) rotate(calc(var(--rot) + 0.8deg)) scale(calc(var(--scale) * 1.03)); filter: brightness(1.06) saturate(1.05);} 
+      45%  { transform: translateX(calc(var(--px) - 4px)) translateY(calc(var(--py) + 6px)) rotate(calc(var(--rot) - 0.6deg)) scale(calc(var(--scale) * 0.995)); filter: brightness(0.98) saturate(0.98);} 
+      68%  { transform: translateX(calc(var(--px) + 4px)) translateY(calc(var(--py) - 6px)) rotate(calc(var(--rot) + 0.4deg)) scale(calc(var(--scale) * 1.02)); filter: brightness(1.03) saturate(1.04);} 
+      100% { transform: translateX(var(--px)) translateY(var(--py)) rotate(var(--rot)) scale(var(--scale)); filter: brightness(1) saturate(1);} 
+    }
+    .polaroid.romantic-loop{ animation-name: romanticLoop; animation-iteration-count: infinite; animation-timing-function: ease-in-out; will-change: transform, filter; }
 
     /* focused style used by slideshow */
     .polaroid.focused{z-index:80;--scale:1.12;box-shadow:0 40px 110px rgba(0,0,0,0.75)}
@@ -50,7 +57,7 @@
     /* disable hover effects on touch devices */
     @media (hover: none){ .polaroid:hover{--scale:1;box-shadow:0 12px 40px rgba(0,0,0,0.6);} }
 
-    /* modal preview */
+    /* modal */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.95));z-index:160;padding:18px}
     .modal.show{display:flex}
     .modal .content{max-width:94vw;max-height:86vh;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -59,7 +66,7 @@
     .modal .replace{background:linear-gradient(180deg,#ffd1e6,#a6f0ff);border:0;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;color:#111}
     .modal .save{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:#fff}
 
-    /* hearts + fx layering */
+    /* hearts + fx */
     .hearts{position:fixed;right:12px;bottom:12px;z-index:30;pointer-events:none}
     #fxCanvas{position:fixed;left:0;top:0;width:100%;height:100%;z-index:50;pointer-events:none}
 
@@ -68,14 +75,11 @@
   </style>
 </head>
 <body>
-  <div class="bg-layers" aria-hidden="true">
-    <div class="bokeh b1"></div>
-    <div class="bokeh b2"></div>
-  </div>
+  <div class="bg-layers" aria-hidden="true"><div class="bokeh b1"></div><div class="bokeh b2"></div></div>
 
   <div class="overlay" role="region" aria-label="Controles">
-    <h2>Galería Romántica — Móvil</h2>
-    <p>Interfaz optimizada para celular • Animaciones automáticas</p>
+    <h2>Galería Romántica — Móvil v2</h2>
+    <p>Animación automática en bucle — romántico y fluido</p>
     <div class="controls">
       <button id="backBtn" class="btn-ghost">Regresar</button>
       <button id="surpriseBtn" class="btn">Sorpresa</button>
@@ -83,23 +87,16 @@
   </div>
 
   <main class="wrap">
-    <section class="gallery" id="gallery" aria-label="Galería de imágenes">
-      <!-- 7 tarjetas se insertan desde JS -->
-    </section>
+    <section class="gallery" id="gallery" aria-label="Galería de imágenes"></section>
   </main>
 
   <div class="credits">Toca para ampliar • Mantén pulsado para reemplazar</div>
 
   <div class="modal" id="modal" aria-hidden="true">
     <div class="content">
-      <div style="display:flex;gap:8px;align-items:center;width:100%;justify-content:flex-end">
-        <button class="save" id="closeModal">Cerrar</button>
-      </div>
+      <div style="display:flex;gap:8px;align-items:center;width:100%;justify-content:flex-end"><button class="save" id="closeModal">Cerrar</button></div>
       <img id="modalImg" src="" alt="Vista ampliada" />
-      <div class="controls">
-        <button class="replace" id="replaceBtn">Reemplazar</button>
-        <button class="save" id="downloadBtn">Guardar</button>
-      </div>
+      <div class="controls"><button class="replace" id="replaceBtn">Reemplazar</button><button class="save" id="downloadBtn">Guardar</button></div>
       <input type="file" id="replaceFile" accept="image/*" style="display:none" />
     </div>
   </div>
@@ -133,154 +130,81 @@
 
     let galleryData = [];
     let currentModalIndex = null;
-
-    // mobile detection
-    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || navigator.userAgent.match(/Mobi/i);
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || /Mobi/i.test(navigator.userAgent);
 
     // loader
-    const loader = document.createElement('div');
-    loader.id = 'loaderOverlay';
-    loader.innerHTML = `
-      <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200;background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.6));">
-        <div style="width:min(720px,90vw);max-width:720px;padding:18px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));backdrop-filter:blur(6px);text-align:center;color:#ffdfe8;box-shadow:0 30px 80px rgba(0,0,0,0.6);">
-          <div style="font-weight:800;font-size:18px;margin-bottom:8px;color:var(--accent-a);">Cargando galería romántica</div>
-          <div style="font-size:13px;opacity:0.9;margin-bottom:12px">Preparando tus imágenes y efectos…</div>
-          <div style="height:12px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin:10px 24px">
-            <div id="loaderBar" style="width:0%;height:100%;background:linear-gradient(90deg,var(--accent-b),var(--accent-a));transition:width .3s ease;"></div>
-          </div>
-          <div id="loaderPct" style="font-size:13px;opacity:0.95;margin-top:8px">0%</div>
-        </div>
-      </div>
-    `;
+    const loader = document.createElement('div'); loader.id = 'loaderOverlay'; loader.innerHTML = `<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200;background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.6));"><div style="width:min(720px,90vw);max-width:720px;padding:18px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));backdrop-filter:blur(6px);text-align:center;color:#ffdfe8;box-shadow:0 30px 80px rgba(0,0,0,0.6);"><div style="font-weight:800;font-size:18px;margin-bottom:8px;color:var(--accent-a);">Cargando galería romántica</div><div style="font-size:13px;opacity:0.9;margin-bottom:12px">Preparando tus imágenes y efectos…</div><div style="height:12px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;margin:10px 24px"><div id="loaderBar" style="width:0%;height:100%;background:linear-gradient(90deg,var(--accent-b),var(--accent-a));transition:width .3s ease;"></div></div><div id="loaderPct" style="font-size:13px;opacity:0.95;margin-top:8px">0%</div></div></div>`;
     document.body.appendChild(loader);
-    function updateLoader(pct){ const bar = document.getElementById('loaderBar'); const pctEl = document.getElementById('loaderPct'); if(bar) bar.style.width = pct + '%'; if(pctEl) pctEl.textContent = Math.round(pct) + '%'; }
+    function updateLoader(pct){ const bar=document.getElementById('loaderBar'); const pctEl=document.getElementById('loaderPct'); if(bar) bar.style.width=pct+'%'; if(pctEl) pctEl.textContent=Math.round(pct)+'%'; }
     function hideLoader(){ loader.remove(); }
 
-    async function fetchImagesFromFirebase(userId){
-      try{
-        const snap = await get(ref(database, `usuarios/${userId}`));
-        if(!snap.exists()) return [];
-        const data = snap.val();
-        const arr = data.puerta2Fotos || data.puertaFotos || data.fotos || data.images || [];
-        if(!Array.isArray(arr)) return [];
-        return arr.filter(u => typeof u === 'string' && u.trim());
-      }catch(err){ console.error('Error leyendo Firebase:', err); return []; }
-    }
+    // DB read
+    async function fetchImagesFromFirebase(userId){ try{ const snap = await get(ref(database, `usuarios/${userId}`)); if(!snap.exists()) return []; const data = snap.val(); const arr = data.puerta2Fotos || data.puertaFotos || data.fotos || data.images || []; if(!Array.isArray(arr)) return []; return arr.filter(u=>typeof u==='string'&&u.trim()); }catch(err){ console.error('Error leyendo Firebase:', err); return []; } }
 
-    function preloadImages(urls, onProgress){
-      return new Promise((resolve)=>{
-        const loaded = [];
-        let done = 0; const total = urls.length || 0;
-        if(total === 0){ onProgress(100); resolve(loaded); return; }
-        urls.forEach((u, idx)=>{ const img = new Image(); img.crossOrigin='anonymous'; img.onload = ()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) resolve(loaded); }; img.onerror = ()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) resolve(loaded); }; img.src = u; });
-      });
-    }
+    // preload
+    function preloadImages(urls,onProgress){ return new Promise((resolve)=>{ const loaded=[]; let done=0; const total=urls.length||0; if(total===0){ onProgress(100); resolve(loaded); return;} urls.forEach((u,idx)=>{ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) resolve(loaded); }; img.onerror=()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) resolve(loaded); }; img.src=u; }); }); }
 
-    function buildGalleryWithUrls(urls){
-      const final = [];
-      if(urls.length === 0) return final;
-      let i = 0; while(final.length < 7){ final.push(urls[i % urls.length]); i++; }
-      galleryData = final.slice(); gallery.innerHTML = '';
-      for(let j=0;j<7;j++){
-        const wrap = document.createElement('div'); wrap.className='card';
-        const pol = document.createElement('div'); pol.className='polaroid auto-float';
-        const rot = (Math.random()*12 - 6).toFixed(2) + 'deg';
-        const dur = (6 + Math.random()*6) + 's';
-        pol.style.setProperty('--rot', rot); pol.style.setProperty('--dur', dur);
+    // build gallery with continuous loop animation
+    function buildGalleryWithUrls(urls){ const final=[]; if(urls.length===0) return final; let i=0; while(final.length<7){ final.push(urls[i%urls.length]); i++; } galleryData = final.slice(); gallery.innerHTML=''; for(let j=0;j<7;j++){ const wrap=document.createElement('div'); wrap.className='card'; const pol=document.createElement('div'); pol.className='polaroid romantic-loop auto-float'; const rot=(Math.random()*12-6).toFixed(2)+'deg'; const dur=(6+Math.random()*6)+'s'; pol.style.setProperty('--rot',rot); pol.style.setProperty('--dur',dur); // loop duration and random delay give continuous staggered bucle
+        const loopDur = 6 + Math.random()*4; pol.style.setProperty('--loopDur', loopDur+'s'); pol.style.animationDuration = loopDur+'s'; pol.style.animationDelay = (Math.random()*2)+'s';
+        const img=document.createElement('img'); img.alt=`Foto ${j+1}`; img.loading='lazy'; img.src=final[j]; img.dataset.index=j; img.addEventListener('error',()=>{ img.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640"><rect width="100%" height="100%" fill="#2b1b1f"/></svg>' }); img.style.transition='transform .45s cubic-bezier(.2,.9,.3,1), filter .45s'; img.addEventListener('click',()=>openModal(parseInt(img.dataset.index,10)));
 
-        const img = document.createElement('img'); img.alt = `Foto ${j+1}`; img.loading='lazy'; img.src = final[j]; img.dataset.index = j; img.addEventListener('error', ()=>{ img.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640"><rect width="100%" height="100%" fill="#2b1b1f"/></svg>' });
+        // Add a gentle pulsing zoom using Web Animations API (mobile-friendly) so each image has its own perpetual loop change in brightness/scale
+        const anim = img.animate([
+          { filter: 'brightness(1) saturate(1)', transform: 'scale(1)' },
+          { filter: 'brightness(1.04) saturate(1.05)', transform: 'scale(1.02)' },
+          { filter: 'brightness(1) saturate(1)', transform: 'scale(1)'}
+        ], { duration: 5000 + j*300, iterations: Infinity, easing: 'ease-in-out', delay: j*140 });
 
-        img.style.transition='transform .45s cubic-bezier(.2,.9,.3,1)'; img.addEventListener('click', ()=> openModal(parseInt(img.dataset.index,10)));
+        // per-card subtle motion via css vars driven by requestAnimationFrame (keeps it smooth and low-cost)
+        (function(localPol){ const phase=Math.random()*Math.PI*2; const amp=3+Math.random()*6; const rotAmp=0.2+Math.random()*0.8; function frame(t){ const s=1+Math.sin((t/2200)+phase)*(amp/450); const tx=Math.sin((t/3300)+phase)*(amp*0.6); const ty=Math.cos((t/2900)+phase)*(amp*0.7); const r=(Math.sin((t/2600)+phase)*rotAmp).toFixed(2)+'deg'; localPol.style.setProperty('--px', tx+'px'); localPol.style.setProperty('--py', ty+'px'); localPol.style.setProperty('--rot', r); localPol.style.setProperty('--scale', s); requestAnimationFrame(frame); } requestAnimationFrame(frame); })(pol);
 
-        // subtle per-card gentle loop using JS for mobile-friendly motion (no mouse required)
-        (function(localPol, idx){
-          const phase = Math.random()*Math.PI*2; const amp = 3 + Math.random()*6; const rotAmp = 0.2 + Math.random()*0.8;
-          function frame(t){
-            const s = 1 + Math.sin((t/2000) + phase) * (amp/400); // scale tiny
-            const tx = Math.sin((t/3000)+phase) * (amp*0.6);
-            const ty = Math.cos((t/2800)+phase) * (amp*0.7);
-            const r = (Math.sin((t/2500)+phase) * rotAmp).toFixed(2) + 'deg';
-            localPol.style.setProperty('--px', tx + 'px');
-            localPol.style.setProperty('--py', ty + 'px');
-            localPol.style.setProperty('--rot', r);
-            localPol.style.setProperty('--scale', s);
-            requestAnimationFrame(frame);
-          }
-          requestAnimationFrame(frame);
-        })(pol, j);
-
-        // long-press to replace on mobile
-        let pressTimer = null; img.addEventListener('touchstart', ()=>{ pressTimer = setTimeout(()=>{ triggerReplace(j); }, 700); }); img.addEventListener('touchend', ()=>{ clearTimeout(pressTimer); });
+        // long-press replace
+        let pressTimer=null; img.addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ triggerReplace(j); },700); }); img.addEventListener('touchend',()=>{ clearTimeout(pressTimer); });
 
         pol.appendChild(img); wrap.appendChild(pol); gallery.appendChild(wrap);
       }
-
       // entrance stagger
-      Array.from(document.querySelectorAll('.polaroid')).forEach((p, idx)=>{ p.style.opacity=0; p.style.transform='translateY(12px)'; setTimeout(()=>{ p.style.transition='opacity .7s ease, transform .7s cubic-bezier(.2,.9,.3,1)'; p.style.opacity=1; p.style.transform=''; }, 120 + idx*90); });
+      Array.from(document.querySelectorAll('.polaroid')).forEach((p,idx)=>{ p.style.opacity=0; p.style.transform='translateY(12px)'; setTimeout(()=>{ p.style.transition='opacity .7s ease, transform .7s cubic-bezier(.2,.9,.3,1)'; p.style.opacity=1; p.style.transform=''; }, 120+idx*90); });
+      _focusIdx=0; cycleFocus(); }
 
-      // make sure focus cycle restarts
-      _focusIdx = 0; cycleFocus();
-    }
-
-    function openModal(index){ currentModalIndex = index; modalImg.src = galleryData[index]; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; if(window._surpriseInterval) clearInterval(window._surpriseInterval); }
-    function close(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modalImg.src=''; document.body.style.overflow=''; if(window._surpriseInterval) clearInterval(window._surpriseInterval); window._surpriseInterval = setInterval(()=>{ triggerSurprise(); }, 12000 + Math.floor(Math.random()*6000)); }
-    closeModal.addEventListener('click', close); modal.addEventListener('click',(e)=>{ if(e.target===modal) close(); }); document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') close(); });
+    function openModal(index){ currentModalIndex=index; modalImg.src=galleryData[index]; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; if(window._surpriseInterval) clearInterval(window._surpriseInterval); }
+    function close(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modalImg.src=''; document.body.style.overflow=''; if(window._surpriseInterval) clearInterval(window._surpriseInterval); window._surpriseInterval=setInterval(()=>{ triggerSurprise(); }, 12000+Math.floor(Math.random()*6000)); }
+    closeModal.addEventListener('click',close); modal.addEventListener('click',(e)=>{ if(e.target===modal) close(); }); document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') close(); });
 
     function saveImage(src){ const a=document.createElement('a'); a.href=src; a.download='imagen'; document.body.appendChild(a); a.click(); a.remove(); }
-    downloadBtn.addEventListener('click', ()=>{ if(modalImg.src) saveImage(modalImg.src); });
+    downloadBtn.addEventListener('click',()=>{ if(modalImg.src) saveImage(modalImg.src); });
 
-    replaceBtn.addEventListener('click', ()=>{ replaceFile.click(); });
-    replaceFile.addEventListener('change',(ev)=>{ const f=ev.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ if(currentModalIndex===null) return; const dataUrl=reader.result; galleryData[currentModalIndex]=dataUrl; const img=document.querySelector(`img[data-index='${currentModalIndex}']`); if(img) img.src=dataUrl; modalImg.src=dataUrl; }; reader.readAsDataURL(f); });
+    replaceBtn.addEventListener('click',()=>{ replaceFile.click(); }); replaceFile.addEventListener('change',(ev)=>{ const f=ev.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ if(currentModalIndex===null) return; const dataUrl=reader.result; galleryData[currentModalIndex]=dataUrl; const img=document.querySelector(`img[data-index='${currentModalIndex}']`); if(img) img.src=dataUrl; modalImg.src=dataUrl; }; reader.readAsDataURL(f); });
 
-    // FX canvas
-    const fxCanvas=document.getElementById('fxCanvas'); const ctx=fxCanvas.getContext('2d'); let W=fxCanvas.width=innerWidth; let H=fxCanvas.height=innerHeight; window.addEventListener('resize',()=>{ W=fxCanvas.width=innerWidth; H=fxCanvas.height=innerHeight; }); const particles=[];
-    function rand(mn,mx){ return Math.random()*(mx-mn)+mn }
+    // FX
+    const fxCanvas=document.getElementById('fxCanvas'); const ctx=fxCanvas.getContext('2d'); let W=fxCanvas.width=innerWidth; let H=fxCanvas.height=innerHeight; window.addEventListener('resize',()=>{ W=fxCanvas.width=innerWidth; H=fxCanvas.height=innerHeight; }); const particles=[]; function rand(mn,mx){ return Math.random()*(mx-mn)+mn }
     function launchFirework(x,y){ const count=20+Math.floor(Math.random()*30); const hue=Math.floor(rand(320,20))||340; for(let i=0;i<count;i++){ const a=Math.random()*Math.PI*2; const s=rand(2,6); particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(0.8,1.6),age:0,hue}); } }
     function tickFX(dt){ ctx.clearRect(0,0,W,H); for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.age+=dt; if(p.age>=p.life){ particles.splice(i,1); continue;} p.vy+=0.06; p.vx*=0.997; p.vy*=0.998; p.x+=p.vx; p.y+=p.vy; const t=p.age/p.life; ctx.globalCompositeOperation='lighter'; ctx.fillStyle=`hsla(${p.hue},85%,65%,${1-t})`; ctx.beginPath(); ctx.arc(p.x,p.y,2.4*(1-t)+0.8,0,Math.PI*2); ctx.fill(); } }
     let lastFX=performance.now(); function loopFX(){ const now=performance.now(); const dt=(now-lastFX)/1000; lastFX=now; tickFX(dt); requestAnimationFrame(loopFX); } loopFX();
 
     function spawnHearts(){ const container=document.getElementById('hearts'); for(let i=0;i<10;i++){ const el=document.createElement('div'); el.style.width=el.style.height=(8+Math.random()*22)+'px'; el.style.opacity=0.95; el.style.marginBottom='6px'; el.style.transform='translateY(0)'; el.style.transition=`transform ${3+Math.random()*1.6}s cubic-bezier(.2,.8,.2,1), opacity 1.6s`; el.innerHTML='❤'; el.style.fontSize=el.style.width; el.style.pointerEvents='none'; el.style.display='block'; el.style.filter='drop-shadow(0 4px 12px rgba(0,0,0,0.45))'; container.appendChild(el); setTimeout(()=>{ el.style.transform=`translateY(-${160+Math.random()*240}px) translateX(${(Math.random()-0.5)*120}px) rotate(${(Math.random()-0.5)*40}deg)`; el.style.opacity=0; }, 80+i*40); setTimeout(()=>el.remove(),3800+Math.random()*900); } }
 
-    const surpriseBtn=document.getElementById('surpriseBtn'); surpriseBtn.addEventListener('click',()=>{ for(let i=0;i<3;i++){ const x=rand(innerWidth*0.2,innerWidth*0.8); const y=rand(innerHeight*0.2,innerHeight*0.5); launchFirework(x,y);} spawnHearts();});
-    function triggerSurprise(){ for(let i=0;i<3;i++){ const x=rand(innerWidth*0.2,innerWidth*0.8); const y=rand(innerHeight*0.18,innerHeight*0.52); launchFirework(x,y);} spawnHearts(); }
-    setTimeout(triggerSurprise,900); window._surpriseInterval=setInterval(()=>{ triggerSurprise(); }, 12000 + Math.floor(Math.random()*6000));
+    const surpriseBtn=document.getElementById('surpriseBtn'); surpriseBtn.addEventListener('click',()=>{ for(let i=0;i<3;i++){ const x=rand(innerWidth*0.2,innerWidth*0.8); const y=rand(innerHeight*0.2,innerHeight*0.5); launchFirework(x,y);} spawnHearts(); }); function triggerSurprise(){ for(let i=0;i<3;i++){ const x=rand(innerWidth*0.2,innerWidth*0.8); const y=rand(innerHeight*0.18,innerHeight*0.52); launchFirework(x,y);} spawnHearts(); }
+    setTimeout(triggerSurprise,900); window._surpriseInterval=setInterval(()=>{ triggerSurprise(); }, 12000+Math.floor(Math.random()*6000));
 
-    // Mobile-friendly slideshow focus
+    // slideshow focus (mobile-friendly)
     let _focusIdx=0; function focusOn(idx){ document.querySelectorAll('.polaroid').forEach((p,i)=>{ p.classList.toggle('focused', i===idx); }); }
     function cycleFocus(){ focusOn(_focusIdx); _focusIdx=(_focusIdx+1)%7; }
-    let _slideshowHandle = setInterval(cycleFocus, 5200);
+    let _slideshowHandle = setInterval(cycleFocus,5200);
+    let interactionTimeout=null; function pauseSlideshow(){ clearInterval(_slideshowHandle); } function resumeSlideshow(){ clearInterval(_slideshowHandle); _slideshowHandle=setInterval(cycleFocus,5200); }
+    document.addEventListener('touchstart',()=>{ pauseSlideshow(); if(interactionTimeout) clearTimeout(interactionTimeout); },{passive:true}); document.addEventListener('touchend',()=>{ if(interactionTimeout) clearTimeout(interactionTimeout); interactionTimeout=setTimeout(()=>{ resumeSlideshow(); },2000); },{passive:true});
 
-    // pause slideshow while user interacts (touch) and resume after
-    let interactionTimeout = null;
-    function pauseSlideshow(){ clearInterval(_slideshowHandle); }
-    function resumeSlideshow(){ clearInterval(_slideshowHandle); _slideshowHandle = setInterval(cycleFocus, 5200); }
-    document.addEventListener('touchstart', ()=>{ pauseSlideshow(); if(interactionTimeout) clearTimeout(interactionTimeout); }, {passive:true});
-    document.addEventListener('touchend', ()=>{ if(interactionTimeout) clearTimeout(interactionTimeout); interactionTimeout=setTimeout(()=>{ resumeSlideshow(); }, 2000); }, {passive:true});
-
-    // helper to trigger replace quickly
     function triggerReplace(index){ currentModalIndex=index; replaceFile.click(); }
 
-    // initial flow: read id, fetch from DB, preload, build
-    (async function init(){
-      const urlParams = new URLSearchParams(window.location.search); const userId = urlParams.get('id')?.trim();
-      let dbUrls = [];
-      if(userId) dbUrls = await fetchImagesFromFirebase(userId);
-      if(!dbUrls || dbUrls.length===0){ dbUrls = ['https://picsum.photos/900/640?random=201','https://picsum.photos/900/640?random=202']; }
-      updateLoader(8);
-      const uniqueUrls = Array.from(new Set(dbUrls));
-      const preloaded = await preloadImages(uniqueUrls, (p)=>{ const mapped = 8 + (p * 0.8); updateLoader(mapped); });
-      const finalSet = []; if(preloaded.length===0) finalSet.push('https://picsum.photos/900/640?random=301'); let idx=0; while(finalSet.length<7){ finalSet.push(preloaded[idx%preloaded.length]); idx++; }
-      updateLoader(94); setTimeout(()=>{ buildGalleryWithUrls(finalSet); updateLoader(100); setTimeout(()=> hideLoader(),450); },220);
-
-      // small tip overlay only on mobile
-      if(isTouch){ const hint = document.createElement('div'); hint.style.position='fixed'; hint.style.left='50%'; hint.style.transform='translateX(-50%)'; hint.style.bottom='80px'; hint.style.zIndex='120'; hint.style.padding='8px 12px'; hint.style.borderRadius='999px'; hint.style.background='linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03))'; hint.style.color='#ffdfe8'; hint.style.fontSize='13px'; hint.textContent='Mantén pulsado para reemplazar una foto'; document.body.appendChild(hint); setTimeout(()=> hint.remove(),4200); }
+    (async function init(){ const urlParams=new URLSearchParams(window.location.search); const userId=urlParams.get('id')?.trim(); let dbUrls=[]; if(userId) dbUrls = await fetchImagesFromFirebase(userId); if(!dbUrls || dbUrls.length===0){ dbUrls=['https://picsum.photos/900/640?random=201','https://picsum.photos/900/640?random=202']; }
+      updateLoader(8); const uniqueUrls=Array.from(new Set(dbUrls)); const preloaded = await preloadImages(uniqueUrls, (p)=>{ const mapped=8 + (p * 0.8); updateLoader(mapped); }); const finalSet=[]; if(preloaded.length===0) finalSet.push('https://picsum.photos/900/640?random=301'); let idx=0; while(finalSet.length<7){ finalSet.push(preloaded[idx%preloaded.length]); idx++; } updateLoader(94); setTimeout(()=>{ buildGalleryWithUrls(finalSet); updateLoader(100); setTimeout(()=>hideLoader(),450); },220);
+      if(isTouch){ const hint=document.createElement('div'); hint.style.position='fixed'; hint.style.left='50%'; hint.style.transform='translateX(-50%)'; hint.style.bottom='80px'; hint.style.zIndex='120'; hint.style.padding='8px 12px'; hint.style.borderRadius='999px'; hint.style.background='linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03))'; hint.style.color='#ffdfe8'; hint.style.fontSize='13px'; hint.textContent='Mantén pulsado para reemplazar una foto'; document.body.appendChild(hint); setTimeout(()=>hint.remove(),4200); }
     })();
 
-    // accessibility: open with Enter (keyboard)
-    gallery.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && e.target && e.target.querySelector('img')){ openModal(parseInt(e.target.querySelector('img').dataset.index,10)); } });
-
-    // back
-    document.getElementById('backBtn').addEventListener('click', ()=>{ window.parent.postMessage({ type:'doorClosed' }, '*'); });
+    // accessibility
+    gallery.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && e.target && e.target.querySelector('img')){ openModal(parseInt(e.target.querySelector('img').dataset.index,10)); } });
+    document.getElementById('backBtn').addEventListener('click',()=>{ window.parent.postMessage({ type:'doorClosed' },'*'); });
 
   </script>
 </body>
