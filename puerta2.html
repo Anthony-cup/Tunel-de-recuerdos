@@ -1,812 +1,158 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Galería Romántica — Móvil Mejorada</title>
-  <style>
-    :root{
-      --bg-1: #0a0511; 
-      --bg-2: #1a0f2e; 
-      --accent-a: #ff9ec7; 
-      --accent-b: #87ceeb;
-      --pink-glow: #ff6b9d;
-      --blue-glow: #4ecdc4;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    html, body {
-      height: 100%;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      color: #fff;
-      background: radial-gradient(ellipse at center top, var(--bg-2) 0%, var(--bg-1) 100%);
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      touch-action: manipulation;
-    }
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Galería Romántica Automática</title>
+<style>
+:root{--bg1:#0a0511;--bg2:#1a0f2e;--pink:#ff9ec7;--blue:#87ceeb;--glow:#ff6b9d;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Inter,sans-serif;color:#fff;background:radial-gradient(ellipse at top,var(--bg2),var(--bg1));overflow-x:hidden;-webkit-font-smoothing:antialiased;touch-action:manipulation}
 
-    /* Fondo con partículas flotantes más románticas */
-    .bg-particles {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
-    }
+/* Partículas románticas */
+.particles{position:fixed;inset:0;pointer-events:none;z-index:1}
+.particle{position:absolute;width:2px;height:2px;background:var(--pink);border-radius:50%;opacity:.5;animation:float 12s infinite ease-in-out}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0deg);opacity:.3}50%{transform:translateY(-30px) rotate(180deg);opacity:.8}}
 
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.4;
-      animation: float 12s infinite ease-in-out;
-    }
+/* Header con botón arriba */
+.top-bar{position:fixed;top:0;left:0;right:0;z-index:200;padding:15px 20px;background:linear-gradient(180deg,rgba(26,15,46,.95),transparent);backdrop-filter:blur(15px);display:flex;justify-content:space-between;align-items:center}
+.back-btn{background:linear-gradient(135deg,var(--pink),var(--blue));border:none;color:#fff;padding:10px 20px;border-radius:25px;font-weight:600;cursor:pointer;box-shadow:0 4px 15px rgba(255,107,157,.3);transition:all .3s ease}
+.back-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,157,.5)}
+.instruction{font-size:12px;color:#ffdfe8;text-align:center;opacity:.9;max-width:200px;line-height:1.3}
 
-    .particle.heart {
-      width: 6px;
-      height: 6px;
-      background: radial-gradient(circle, var(--pink-glow) 0%, transparent 70%);
-    }
+/* Título flotante */
+.title{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;background:rgba(255,255,255,.05);padding:15px 25px;border-radius:20px;backdrop-filter:blur(10px)}
+.title h1{font-size:22px;background:linear-gradient(135deg,var(--pink),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px}
+.title p{font-size:13px;opacity:.8}
 
-    .particle.star {
-      width: 4px;
-      height: 4px;
-      background: radial-gradient(circle, var(--accent-b) 0%, transparent 70%);
-    }
+/* Galería principal */
+.container{padding:160px 15px 80px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.gallery{width:100%;max-width:450px;display:grid;grid-template-columns:1fr 1fr;gap:15px;position:relative}
 
-    @keyframes float {
-      0%, 100% { 
-        transform: translateY(0px) translateX(0px) rotate(0deg) scale(0.8); 
-        opacity: 0.2; 
-      }
-      25% { 
-        transform: translateY(-15px) translateX(10px) rotate(90deg) scale(1); 
-        opacity: 0.6; 
-      }
-      50% { 
-        transform: translateY(-25px) translateX(-5px) rotate(180deg) scale(1.2); 
-        opacity: 0.8; 
-      }
-      75% { 
-        transform: translateY(-10px) translateX(-15px) rotate(270deg) scale(1); 
-        opacity: 0.6; 
-      }
-    }
+/* Tarjetas de fotos con animaciones automáticas */
+.card{position:relative;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(0,0,0,.4),inset 0 1px 2px rgba(255,255,255,.1);transition:all .8s cubic-bezier(.23,1,.32,1);cursor:pointer}
 
-    /* Efecto de vignette cinematográfico */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 15%, rgba(10,5,17,0.3) 70%, rgba(10,5,17,0.7) 95%);
-    }
+.card:nth-child(1){aspect-ratio:3/4}
+.card:nth-child(2){aspect-ratio:3/4}
+.card:nth-child(3){grid-column:span 2;aspect-ratio:16/9}
+.card:nth-child(4){aspect-ratio:3/4}
+.card:nth-child(5){aspect-ratio:3/4}
+.card:nth-child(6){grid-column:span 2;aspect-ratio:16/9}
+.card:nth-child(7){grid-column:span 2;aspect-ratio:3/2}
 
-    /* Header con botones en esquinas */
-    .top-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 200;
-      padding: 15px 20px;
-      background: linear-gradient(180deg, rgba(26,15,46,0.95) 0%, transparent 100%);
-      backdrop-filter: blur(20px);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
+.card img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease,filter .8s ease;will-change:transform}
 
-    .back-section {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+/* Animaciones automáticas de zoom romántico */
+@keyframes romanticZoom{0%{transform:scale(1) translate(0,0);filter:brightness(1) saturate(1)}25%{transform:scale(1.08) translate(-3px,-2px);filter:brightness(1.1) saturate(1.15)}75%{transform:scale(1.05) translate(2px,-1px);filter:brightness(1.05) saturate(1.1)}100%{transform:scale(1) translate(0,0);filter:brightness(1) saturate(1)}}
 
-    .back-btn {
-      background: linear-gradient(135deg, rgba(255,158,199,0.9), rgba(135,206,235,0.9));
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255,158,199,0.3);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      margin-bottom: 8px;
-    }
+@keyframes gentleFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.02)}}
 
-    .back-btn:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 25px rgba(255,158,199,0.5);
-    }
+@keyframes pulseGlow{0%,100%{box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(255,158,199,.1)}50%{box-shadow:0 12px 40px rgba(255,107,157,.3),0 0 30px rgba(255,158,199,.2)}}
 
-    .instruction-text {
-      font-size: 11px;
-      color: rgba(255,223,232,0.8);
-      max-width: 200px;
-      line-height: 1.3;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
+/* Aplicar animaciones automáticas */
+.card.auto-zoom img{animation:romanticZoom 8s ease-in-out infinite}
+.card.auto-float{animation:gentleFloat 6s ease-in-out infinite}
+.card.auto-glow{animation:pulseGlow 4s ease-in-out infinite}
 
-    .surprise-section {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
+/* Overlay romántico */
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,158,199,.08) 0%,transparent 40%,transparent 60%,rgba(135,206,235,.08) 100%);opacity:0;transition:opacity .5s ease;z-index:1}
+.card:hover::before,.card.active::before{opacity:1}
 
-    .surprise-btn {
-      background: linear-gradient(135deg, var(--pink-glow), #ff4757);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255,71,87,0.3);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      margin-bottom: 8px;
-      animation: pulse 3s ease-in-out infinite;
-    }
+/* Brillo sutil */
+.card::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.15) 50%,transparent 60%);transform:rotate(45deg);opacity:0;transition:all .6s ease;pointer-events:none}
+.card:hover::after{opacity:1;animation:shine 2s ease infinite}
+@keyframes shine{0%{transform:translateX(-100%) translateY(-100%) rotate(45deg)}100%{transform:translateX(100%) translateY(100%) rotate(45deg)}}
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255,71,87,0.3); }
-      50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(255,71,87,0.5); }
-    }
+/* Estados activos */
+.card:hover,.card.spotlight{transform:translateY(-5px) scale(1.02);box-shadow:0 20px 40px rgba(255,107,157,.25),0 8px 32px rgba(0,0,0,.6)}
+.card:hover img,.card.spotlight img{transform:scale(1.1);filter:brightness(1.15) saturate(1.2)}
 
-    .surprise-btn:hover {
-      animation: none;
-      transform: translateY(-3px) scale(1.08);
-      box-shadow: 0 12px 30px rgba(255,71,87,0.6);
-    }
+/* Corazones flotantes */
+.hearts{position:fixed;inset:0;pointer-events:none;z-index:50}
+.heart{position:absolute;color:var(--glow);font-size:16px;opacity:.8;animation:floatHeart 8s linear infinite}
+@keyframes floatHeart{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%,90%{opacity:.8}100%{transform:translateY(-50px) rotate(360deg);opacity:0}}
 
-    /* Título central flotante */
-    .title-section {
-      text-align: center;
-      margin-top: 8px;
-    }
+/* Modal romántico */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(10,5,17,.98),rgba(26,15,46,.98));backdrop-filter:blur(20px);z-index:1000;padding:20px}
+.modal.show{display:flex}
+.modal-content{max-width:90vw;max-height:80vh;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.modal img{width:100%;height:100%;object-fit:contain;border-radius:20px}
+.modal-close{position:absolute;top:15px;right:15px;background:rgba(0,0,0,.8);border:none;color:#fff;width:35px;height:35px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:1001}
 
-    .title-section h1 {
-      font-size: 20px;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent-a), var(--accent-b), #ffd700);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-shadow: 0 0 30px rgba(255,158,199,0.4);
-      animation: titleGlow 4s ease-in-out infinite;
-    }
+/* Botón sorpresa flotante */
+.surprise-btn{position:fixed;bottom:30px;right:30px;z-index:150;background:linear-gradient(135deg,var(--glow),var(--blue));border:none;color:#fff;width:60px;height:60px;border-radius:50%;cursor:pointer;box-shadow:0 8px 25px rgba(255,107,157,.4);transition:all .3s ease;display:flex;align-items:center;justify-content:center;font-size:24px}
+.surprise-btn:hover{transform:scale(1.1);box-shadow:0 12px 35px rgba(255,107,157,.6)}
 
-    @keyframes titleGlow {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,158,199,0.3)); }
-      50% { filter: drop-shadow(0 0 15px rgba(255,158,199,0.6)); }
-    }
+/* Loading suave */
+.loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg1),var(--bg2));z-index:9999;transition:opacity .5s ease}
+.loading-content{text-align:center;color:var(--pink)}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,158,199,.3);border-top:3px solid var(--pink);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 15px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-    /* Contenedor principal */
-    .container {
-      position: relative;
-      z-index: 10;
-      min-height: 100vh;
-      padding: 120px 16px 80px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+/* Entrada suave */
+.card{opacity:0;transform:translateY(20px);animation:fadeInUp .8s ease forwards}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}
+.card:nth-child(4){animation-delay:.4s}.card:nth-child(5){animation-delay:.5s}.card:nth-child(6){animation-delay:.6s}
+.card:nth-child(7){animation-delay:.7s}
+@keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
 
-    /* Galería con efectos cinematográficos */
-    .gallery {
-      width: 100%;
-      max-width: 500px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      margin-bottom: 30px;
-      perspective: 1000px;
-    }
+.credits{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,223,232,.6);text-align:center}
 
-    /* Tarjetas con efectos de cámara avanzados */
-    .photo-card {
-      position: relative;
-      aspect-ratio: 3/4;
-      border-radius: 22px;
-      overflow: hidden;
-      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      backdrop-filter: blur(15px);
-      box-shadow: 
-        0 10px 40px rgba(0,0,0,0.4),
-        inset 0 1px 2px rgba(255,255,255,0.15);
-      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-      cursor: pointer;
-      transform-style: preserve-3d;
-    }
-
-    .photo-card:nth-child(1) { grid-row: span 1; }
-    .photo-card:nth-child(2) { grid-row: span 1; }
-    .photo-card:nth-child(3) { grid-column: span 2; aspect-ratio: 16/9; }
-    .photo-card:nth-child(4) { grid-row: span 1; }
-    .photo-card:nth-child(5) { grid-row: span 1; }
-    .photo-card:nth-child(6) { grid-column: span 2; aspect-ratio: 16/9; }
-    .photo-card:nth-child(7) { grid-column: span 2; aspect-ratio: 3/2; }
-
-    .photo-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      will-change: transform, filter;
-      transform-origin: center center;
-    }
-
-    /* Efectos automáticos de cámara */
-    .photo-card.camera-focus {
-      transform: translateY(-12px) scale(1.04) rotateX(5deg);
-      box-shadow: 
-        0 25px 60px rgba(255, 107, 157, 0.25),
-        0 15px 40px rgba(0,0,0,0.6),
-        inset 0 1px 2px rgba(255,255,255,0.25);
-      z-index: 50;
-    }
-
-    .photo-card.camera-focus img {
-      transform: scale(1.15) rotate(1deg);
-      filter: brightness(1.15) saturate(1.3) contrast(1.1);
-    }
-
-    .photo-card.camera-blur {
-      filter: blur(1px);
-      opacity: 0.7;
-      transform: scale(0.98);
-    }
-
-    .photo-card.camera-zoom img {
-      transform: scale(1.2) translate(3px, -2px);
-      filter: brightness(1.1) saturate(1.2);
-    }
-
-    /* Overlay cinematográfico */
-    .photo-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, 
-        rgba(255, 158, 199, 0.15) 0%, 
-        transparent 25%, 
-        transparent 75%, 
-        rgba(135, 206, 235, 0.15) 100%);
-      opacity: 0;
-      transition: opacity 0.6s ease;
-      z-index: 1;
-    }
-
-    .photo-card.camera-focus::before {
-      opacity: 1;
-    }
-
-    /* Efecto de destello de cámara */
-    .photo-card::after {
-      content: '';
-      position: absolute;
-      top: -100%;
-      left: -100%;
-      width: 300%;
-      height: 300%;
-      background: linear-gradient(45deg, 
-        transparent 40%, 
-        rgba(255,255,255,0.3) 50%, 
-        transparent 60%);
-      transform: rotate(45deg);
-      opacity: 0;
-      transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-    }
-
-    .photo-card.camera-flash::after {
-      opacity: 1;
-      animation: cameraFlash 2s ease-out;
-    }
-
-    @keyframes cameraFlash {
-      0% { 
-        transform: translateX(-150%) translateY(-150%) rotate(45deg) scale(0.8); 
-        opacity: 0; 
-      }
-      10% { 
-        opacity: 0.8; 
-      }
-      100% { 
-        transform: translateX(150%) translateY(150%) rotate(45deg) scale(1.2); 
-        opacity: 0; 
-      }
-    }
-
-    /* Efectos de Ken Burns automáticos más suaves */
-    @keyframes kenburns-romantic {
-      0% { 
-        transform: scale(1) translate(0, 0) rotate(0deg); 
-        filter: brightness(1) contrast(1) saturate(1); 
-      }
-      25% { 
-        transform: scale(1.08) translate(-4px, -6px) rotate(0.5deg); 
-        filter: brightness(1.08) contrast(1.05) saturate(1.15); 
-      }
-      50% { 
-        transform: scale(1.12) translate(2px, -8px) rotate(-0.3deg); 
-        filter: brightness(1.12) contrast(1.08) saturate(1.25); 
-      }
-      75% { 
-        transform: scale(1.06) translate(-2px, 4px) rotate(0.2deg); 
-        filter: brightness(1.06) contrast(1.03) saturate(1.1); 
-      }
-      100% { 
-        transform: scale(1) translate(0, 0) rotate(0deg); 
-        filter: brightness(1) contrast(1) saturate(1); 
-      }
-    }
-
-    .photo-card img.kenburns-active {
-      animation: kenburns-romantic 10s ease-in-out infinite;
-    }
-
-    /* Modal cinematográfico */
-    .modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, 
-        rgba(10,5,17,0.98) 0%, 
-        rgba(26,15,46,0.98) 100%);
-      backdrop-filter: blur(25px);
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .modal.show {
-      display: flex;
-      animation: modalAppear 0.6s ease-out;
-    }
-
-    @keyframes modalAppear {
-      from { 
-        opacity: 0; 
-        backdrop-filter: blur(0px); 
-      }
-      to { 
-        opacity: 1; 
-        backdrop-filter: blur(25px); 
-      }
-    }
-
-    .modal-content {
-      max-width: 92vw;
-      max-height: 85vh;
-      position: relative;
-      border-radius: 25px;
-      overflow: hidden;
-      box-shadow: 
-        0 25px 80px rgba(0,0,0,0.8),
-        0 0 60px rgba(255,158,199,0.2);
-      animation: modalContentAppear 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes modalContentAppear {
-      from { 
-        transform: scale(0.8) translateY(50px); 
-        opacity: 0; 
-      }
-      to { 
-        transform: scale(1) translateY(0); 
-        opacity: 1; 
-      }
-    }
-
-    .modal img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 25px;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.8);
-      border: none;
-      color: white;
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      z-index: 1001;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-
-    .modal-close:hover {
-      transform: scale(1.1);
-      background: rgba(255,71,87,0.8);
-    }
-
-    /* Efectos de corazones mejorados */
-    .hearts-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 60;
-    }
-
-    .heart {
-      position: absolute;
-      font-size: 24px;
-      opacity: 0.8;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-      animation: floatHeart 8s linear infinite;
-    }
-
-    @keyframes floatHeart {
-      0% {
-        transform: translateY(100vh) rotate(0deg) scale(0.8);
-        opacity: 0;
-      }
-      15% {
-        opacity: 0.8;
-        transform: translateY(85vh) rotate(45deg) scale(1);
-      }
-      85% {
-        opacity: 0.6;
-        transform: translateY(15vh) rotate(315deg) scale(1.2);
-      }
-      100% {
-        transform: translateY(-50px) rotate(360deg) scale(0.6);
-        opacity: 0;
-      }
-    }
-
-    /* Animaciones de entrada escalonadas */
-    .photo-card {
-      opacity: 0;
-      transform: translateY(40px) scale(0.9);
-      animation: cardAppear 1s ease-out forwards;
-    }
-
-    @keyframes cardAppear {
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .photo-card:nth-child(1) { animation-delay: 0.1s; }
-    .photo-card:nth-child(2) { animation-delay: 0.2s; }
-    .photo-card:nth-child(3) { animation-delay: 0.3s; }
-    .photo-card:nth-child(4) { animation-delay: 0.4s; }
-    .photo-card:nth-child(5) { animation-delay: 0.5s; }
-    .photo-card:nth-child(6) { animation-delay: 0.6s; }
-    .photo-card:nth-child(7) { animation-delay: 0.7s; }
-
-    /* Loading cinematográfico */
-    .loading {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
-      z-index: 9999;
-    }
-
-    .loading-content {
-      text-align: center;
-      color: var(--accent-a);
-    }
-
-    .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(255, 158, 199, 0.3);
-      border-top: 4px solid var(--accent-a);
-      border-radius: 50%;
-      animation: spin 1.5s linear infinite;
-      margin-bottom: 25px;
-      position: relative;
-    }
-
-    .loading-spinner::after {
-      content: '💖';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 20px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .credits {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 12px;
-      color: rgba(255, 223, 232, 0.8);
-      text-align: center;
-      z-index: 100;
-      background: rgba(255,255,255,0.05);
-      padding: 8px 16px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-    }
-
-    /* Responsive */
-    @media (min-width: 768px) {
-      .gallery {
-        max-width: 800px;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-      }
-      
-      .photo-card:nth-child(3) { grid-column: span 1; aspect-ratio: 3/4; }
-      .photo-card:nth-child(6) { grid-column: span 1; aspect-ratio: 3/4; }
-    }
-
-    @media (max-width: 480px) {
-      .top-bar {
-        padding: 12px 15px;
-      }
-      
-      .back-btn, .surprise-btn {
-        padding: 10px 16px;
-        font-size: 13px;
-      }
-      
-      .instruction-text {
-        font-size: 10px;
-        max-width: 150px;
-      }
-    }
-  </style>
+@media(min-width:768px){.gallery{max-width:700px;grid-template-columns:repeat(3,1fr);gap:18px}}
+</style>
 </head>
 <body>
-  <!-- Loading Screen -->
-  <div class="loading" id="loading">
-    <div class="loading-content">
-      <div class="loading-spinner"></div>
-      <h2>Preparando momentos mágicos...</h2>
-      <p>Cargando tus recuerdos más especiales</p>
-    </div>
-  </div>
+<div class="loading" id="loading"><div class="loading-content"><div class="spinner"></div><h3>Cargando momentos románticos...</h3></div></div>
+<div class="particles" id="particles"></div>
+<div class="top-bar"><button class="back-btn" id="backBtn">← Regresar</button><div class="instruction">Presiona regresar para ver el siguiente ✨</div></div>
+<div class="title"><h1>💕 Galería Romántica</h1><p>Animaciones automáticas</p></div>
+<div class="hearts" id="hearts"></div>
+<div class="container"><div class="gallery" id="gallery"></div></div>
+<button class="surprise-btn" id="surpriseBtn">💖</button>
+<div class="modal" id="modal"><div class="modal-content"><button class="modal-close" id="closeModal">×</button><img id="modalImg" alt="Vista ampliada"/></div></div>
+<div class="credits">Las fotos cambian automáticamente • Toca para ampliar</div>
 
-  <!-- Partículas de fondo -->
-  <div class="bg-particles" id="bgParticles"></div>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+import{getDatabase,ref,get}from'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
-  <!-- Barra superior con botones -->
-  <div class="top-bar">
-    <div class="back-section">
-      <button class="back-btn" id="backBtn">← Regresar</button>
-      <div class="instruction-text">
-        Presiona el botón de regresar para ver el siguiente contenido
-      </div>
-    </div>
-    
-    <div class="title-section">
-      <h1>✨ Galería Romántica ✨</h1>
-    </div>
-    
-    <div class="surprise-section">
-      <button class="surprise-btn" id="surpriseBtn">💖 Sorpresa</button>
-      <div class="instruction-text" style="text-align: right;">
-        Efectos mágicos y corazones flotantes
-      </div>
-    </div>
-  </div>
+const firebaseConfig={apiKey:"AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",authDomain:"tunel-de-recuerdos.firebaseapp.com",projectId:"tunel-de-recuerdos",storageBucket:"tunel-de-recuerdos.firebasestorage.app",messagingSenderId:"630660710506",appId:"1:630660710506:web:90d34150c9f21f668eca13"};
+const app=initializeApp(firebaseConfig);const db=getDatabase(app);
 
-  <!-- Contenedor de corazones flotantes -->
-  <div class="hearts-container" id="heartsContainer"></div>
+let galleryData=[];let spotlightIndex=0;
+const loading=document.getElementById('loading');const gallery=document.getElementById('gallery');const modal=document.getElementById('modal');const modalImg=document.getElementById('modalImg');
 
-  <!-- Contenido principal -->
-  <div class="container">
-    <div class="gallery" id="gallery">
-      <!-- Las fotos se cargarán aquí dinámicamente -->
-    </div>
-  </div>
+function createParticles(){const container=document.getElementById('particles');for(let i=0;i<15;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.top=Math.random()*100+'%';p.style.animationDelay=Math.random()*12+'s';p.style.animationDuration=(8+Math.random()*6)+'s';container.appendChild(p)}}
 
-  <!-- Modal -->
-  <div class="modal" id="modal">
-    <div class="modal-content">
-      <button class="modal-close" id="closeModal">×</button>
-      <img id="modalImg" src="" alt="Vista ampliada" />
-    </div>
-  </div>
+function createHearts(){const container=document.getElementById('hearts');const heartTypes=['💖','💕','💗','💘','💝','💞','❤️'];for(let i=0;i<6;i++){const h=document.createElement('div');h.className='heart';h.textContent=heartTypes[Math.floor(Math.random()*heartTypes.length)];h.style.left=Math.random()*100+'%';h.style.animationDelay=Math.random()*8+'s';h.style.animationDuration=(6+Math.random()*4)+'s';container.appendChild(h);setTimeout(()=>{if(h.parentNode)h.parentNode.removeChild(h)},10000)}}
 
-  <!-- Créditos -->
-  <div class="credits">
-    Toca cualquier foto para verla en grande • Animaciones automáticas activadas 💕
-  </div>
+async function fetchImages(userId){try{const snap=await get(ref(db,`usuarios/${userId}`));if(!snap.exists())return[];const data=snap.val();const imgs=data.puerta2Fotos||data.puertaFotos||data.fotos||data.images||[];return Array.isArray(imgs)?imgs.filter(u=>u&&u.trim()):[]}catch(e){return[]}}
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+function buildGallery(images){gallery.innerHTML='';galleryData=[];while(galleryData.length<7){images.forEach(img=>{if(galleryData.length<7)galleryData.push(img)});if(images.length===0)break}
+if(galleryData.length===0){for(let i=1;i<=7;i++)galleryData.push(`https://picsum.photos/600/800?random=${i}`)}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
-      authDomain: "tunel-de-recuerdos.firebaseapp.com",
-      projectId: "tunel-de-recuerdos",
-      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
-      messagingSenderId: "630660710506",
-      appId: "1:630660710506:web:90d34150c9f21f668eca13",
-      measurementId: "G-ETFDVEHML1"
-    };
+galleryData.forEach((url,i)=>{const card=document.createElement('div');card.className='card';card.innerHTML=`<img src="${url}" alt="Foto ${i+1}" loading="lazy"/>`;card.addEventListener('click',()=>openModal(i));gallery.appendChild(card);
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+// Aplicar animaciones automáticas aleatorias
+setTimeout(()=>{const animations=['auto-zoom','auto-float','auto-glow'];const randomAnim=animations[Math.floor(Math.random()*animations.length)];card.classList.add(randomAnim);card.querySelector('img').style.animationDelay=Math.random()*3+'s';card.querySelector('img').style.animationDuration=(6+Math.random()*4)+'s'},500+i*100)});
 
-    let galleryData = [];
-    let currentFocusIndex = 0;
-    let cameraEffectsInterval;
-    let kenburnsInterval;
+startSpotlight();startAutoEffects()}
 
-    // Elementos del DOM
-    const loading = document.getElementById('loading');
-    const gallery = document.getElementById('gallery');
-    const modal = document.getElementById('modal');
-    const modalImg = document.getElementById('modalImg');
-    const closeModal = document.getElementById('closeModal');
-    const backBtn = document.getElementById('backBtn');
-    const surpriseBtn = document.getElementById('surpriseBtn');
+function startSpotlight(){const cards=document.querySelectorAll('.card');function cycle(){cards.forEach((card,i)=>{card.classList.toggle('spotlight',i===spotlightIndex)});spotlightIndex=(spotlightIndex+1)%cards.length}
+cycle();setInterval(cycle,3500)}
 
-    // Crear partículas de fondo más románticas
-    function createBackgroundParticles() {
-      const container = document.getElementById('bgParticles');
-      for (let i = 0; i < 30; i++) {
-        const particle = document.createElement('div');
-        const isHeart = Math.random() > 0.6;
-        particle.className = `particle ${isHeart ? 'heart' : 'star'}`;
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 12 + 's';
-        particle.style.animationDuration = (8 + Math.random() * 6) + 's';
-        container.appendChild(particle);
-      }
-    }
+function startAutoEffects(){setTimeout(createHearts,2000);setInterval(createHearts,12000);setInterval(()=>{const cards=document.querySelectorAll('.card');cards.forEach((card,i)=>{setTimeout(()=>{card.style.transform='translateY(-8px) scale(1.03)';card.style.boxShadow='0 25px 50px rgba(255,107,157,.3)';setTimeout(()=>{card.style.transform='';card.style.boxShadow=''},1000)},i*150)})},20000)}
 
-    // Crear corazones flotantes mejorados
-    function createFloatingHearts() {
-      const container = document.getElementById('heartsContainer');
-      const hearts = ['💖', '💕', '💗', '💘', '💝', '💞', '🌸', '✨', '🦋'];
-      
-      for (let i = 0; i < 8; i++) {
-        const heart = document.createElement('div');
-        heart.className = 'heart';
-        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-        heart.style.left = Math.random() * 100 + '%';
-        heart.style.animationDelay = Math.random() * 2 + 's';
-        heart.style.animationDuration = (6 + Math.random() * 4) + 's';
-        
-        // Colores aleatorios románticos
-        const colors = ['#ff6b9d', '#ff9ec7', '#87ceeb', '#ffd700', '#ff69b4'];
-        heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-        
-        container.appendChild(heart);
-        
-        setTimeout(() => {
-          if (heart.parentNode) {
-            heart.parentNode.removeChild(heart);
-          }
-        }, 10000);
-      }
-    }
+function openModal(i){modalImg.src=galleryData[i];modal.classList.add('show');document.body.style.overflow='hidden'}
+function closeModal(){modal.classList.remove('show');modalImg.src='';document.body.style.overflow=''}
 
-    // Obtener imágenes de Firebase
-    async function fetchImagesFromFirebase(userId) {
-      try {
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
-        if (!snapshot.exists()) return [];
-        
-        const data = snapshot.val();
-        const images = data.puerta2Fotos || data.puertaFotos || data.fotos || data.images || [];
-        
-        return Array.isArray(images) ? images.filter(url => url && url.trim()) : [];
-      } catch (error) {
-        console.error('Error al obtener imágenes:', error);
-        return [];
-      }
-    }
+function triggerSurprise(){createHearts();const cards=document.querySelectorAll('.card');cards.forEach((card,i)=>{setTimeout(()=>{card.style.transform='scale(1.1) rotate(2deg)';card.style.filter='brightness(1.2) saturate(1.3)';setTimeout(()=>{card.style.transform='';card.style.filter=''},800)},i*100)})}
 
-    // Precargar imágenes
-    function preloadImages(urls) {
-      return Promise.all(urls.map(url => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => resolve(url);
-          img.onerror = () => resolve(url);
-          img.src = url;
-        });
-      }));
-    }
+document.getElementById('closeModal').addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.getElementById('backBtn').addEventListener('click',()=>{window.parent.postMessage({type:'doorClosed'},'*')});document.getElementById('surpriseBtn').addEventListener('click',triggerSurprise);
 
-    // Efectos de cámara automáticos
-    function startCameraEffects() {
-      const cards = document.querySelectorAll('.photo-card');
-      if (cards.length === 0) return;
-      
-      let focusIndex = 0;
-      let effectIndex = 0;
-      
-      function applyCameraEffect() {
-        // Resetear todos los efectos
-        cards.forEach(card => {
-          card.classList.remove('camera-focus', 'camera-blur', 'camera-zoom', 'camera-flash');
-          const img = card.querySelector('img');
-          if (img) img.classList.remove('kenburns-active');
-        });
-        
-        // Aplicar efecto principal a la foto enfocada
-        const focusCard = cards[focusIndex];
-        const focusImg = focusCard.querySelector('img');
-        
-        switch(effectIndex % 4) {
-          case 0:
-            focusCard.classList.add('camera-focus');
-            if (focusImg) focusImg.classList.add('kenburns-active');
-            break;
-          case 1:
-            focusCard.classList.add('camera-zoom');
-            focusCard.classList.add('camera-flash');
-            break;
-          case 2:
-            focusCard.classList.add('camera-focus');
-            // Aplicar blur a las otras fotos
-            cards.forEach((card, index) => {
-              if (index !== focusIndex) {
-                card.classList.add('camera-blur');
-              }
-            });
-            break;
-          case 3:
-            focusCard.classList.add('camera-zoom');
-            if (focusImg) focusImg.classList.add('kenburns-active');
-            break;
-        }
-        
-        focusIndex = (focusIndex + 1) % cards.length;
-        effectIndex++;
-      }
-      
-      // Iniciar efectos
-      applyCameraEffect();
-      
-      cameraEffectsInterval = setInterval(applyCameraEffect, 3500);
-    }
+async function init(){createParticles();const urlParams=new URLSearchParams(window.location.search);const userId=urlParams.get('id')?.trim();let images=[];if(userId)images=await fetchImages(userId);if(images.length===0)images=Array.from({length:7},(_,i)=>`https://picsum.photos/600/800?random=${i+10}`);
+buildGallery(images);setTimeout(()=>{loading.style.opacity='0';setTimeout(()=>loading.style.display='none',500)},1000)}
 
-    // Construir galería
-    function buildGallery(images) {
-      gallery.innerHTML = '';
-      galleryData = [];
-
-      // Asegurar que tengamos exactamente 7 imágenes
-      while (galleryData.length < 7) {
-        images.forEach(img => {
-          if (galleryData.length < 7) {
-            galleryData.push(img);
-          }
-        });
-        if (images.length === 0) break;
-      }
-
-      // Si no hay imágenes suficientes,
+init();document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>
