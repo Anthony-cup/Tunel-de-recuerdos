@@ -3,248 +3,312 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Lluvia de Pétalos</title>
+  <title>Puerta Romántica — Lluvia de Pétalos</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #ffeef8 0%, #ffcce5 30%, #e6b3ff 70%, #d9b3ff 100%);
-      min-height: 100vh;
+    
+    :root {
+      --rose: #ff69b4;
+      --pink: #ffc0cb;
+      --light-pink: #ffe4e1;
+      --cream: #fff8dc;
+      --white: #ffffff;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: 'Georgia', serif;
       overflow: hidden;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
       position: relative;
     }
 
     /* Barra de carga */
-    #loadingContainer {
+    #loadingScreen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #ffeef8, #ffcce5);
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       z-index: 1000;
-      transition: opacity 0.8s ease;
+      transition: opacity 1s ease-out;
     }
 
-    #loadingText {
-      color: #8b4992;
-      font-size: 24px;
-      margin-bottom: 20px;
+    .loading-heart {
+      font-size: 3rem;
+      color: var(--rose);
+      animation: heartbeat 1.5s ease-in-out infinite;
+      margin-bottom: 2rem;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .loading-bar {
+      width: 300px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .loading-progress {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--rose), var(--pink));
+      border-radius: 50px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+    }
+
+    .loading-text {
+      color: var(--rose);
+      margin-top: 1rem;
+      font-size: 1.2rem;
       text-align: center;
     }
 
-    #loadingBar {
-      width: 300px;
-      height: 6px;
-      background: rgba(139, 73, 146, 0.2);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    #loadingProgress {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #ff6b9d, #c44569);
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-
     /* Contenedor principal */
-    #mainContainer {
+    #container {
       position: relative;
-      width: 100%;
+      width: 100vw;
       height: 100vh;
       overflow: hidden;
       opacity: 0;
-      transition: opacity 1s ease;
+      transition: opacity 1.5s ease-in;
     }
 
     /* Botón regresar */
     #returnBtn {
       position: fixed;
       top: 20px;
-      left: 20px;
-      z-index: 100;
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #ff6b9d, #c44569);
+      right: 20px;
+      background: linear-gradient(135deg, var(--rose), var(--pink));
       color: white;
       border: none;
+      padding: 12px 24px;
       border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 4px 20px rgba(196, 69, 105, 0.3);
+      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
       transition: all 0.3s ease;
+      z-index: 100;
     }
 
     #returnBtn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(196, 69, 105, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
     }
 
-    /* Pétalos */
+    /* Pétalos de fondo */
     .petal {
       position: absolute;
       width: 20px;
       height: 20px;
-      background: radial-gradient(ellipse at center, #ff6b9d, #ff8fb3);
+      background: var(--pink);
       border-radius: 50% 0 50% 0;
-      opacity: 0.8;
+      opacity: 0.7;
       pointer-events: none;
-      transform-origin: center;
+      animation: fall linear infinite;
     }
 
-    .petal.large {
-      width: 30px;
-      height: 30px;
-      background: radial-gradient(ellipse at center, #c44569, #ff6b9d);
+    @keyframes fall {
+      0% {
+        transform: translateY(-100vh) rotateZ(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.7;
+      }
+      90% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(100vh) rotateZ(360deg);
+        opacity: 0;
+      }
     }
 
-    .petal.small {
-      width: 15px;
-      height: 15px;
-      background: radial-gradient(ellipse at center, #ff8fb3, #ffb3d1);
+    /* Contenedor de fotos */
+    #photosContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Imágenes */
-    .photo-container {
+    /* Foto individual */
+    .photo {
       position: absolute;
-      opacity: 0;
-      transform: scale(0.3) rotate(10deg);
-      transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: pointer;
-      border-radius: 15px;
+      width: 200px;
+      height: 150px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      opacity: 0;
+      transform: scale(0) rotate(180deg);
+      border: 4px solid var(--white);
     }
 
-    .photo-container.visible {
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .photo:hover {
+      transform: scale(1.1) rotate(0deg);
+      z-index: 10;
+      box-shadow: 0 20px 50px rgba(255, 105, 180, 0.4);
+    }
+
+    .photo:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Animación de entrada para fotos */
+    .photo.appear {
       opacity: 1;
       transform: scale(1) rotate(0deg);
     }
 
-    .photo-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 15px;
-      transition: transform 0.3s ease;
+    /* Animación de bucle flotante */
+    .photo.floating {
+      animation: float 6s ease-in-out infinite;
     }
 
-    .photo-container:hover img {
-      transform: scale(1.05);
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-10px) rotate(2deg); }
+      50% { transform: translateY(-5px) rotate(-1deg); }
+      75% { transform: translateY(-15px) rotate(1deg); }
     }
 
-    .photo-container::before {
-      content: '';
-      position: absolute;
-      top: -5px;
-      left: -5px;
-      right: -5px;
-      bottom: -5px;
-      background: linear-gradient(45deg, #ff6b9d, #c44569, #ff8fb3);
-      border-radius: 20px;
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .photo-container:hover::before {
-      opacity: 0.7;
-    }
-
-    /* Modal */
+    /* Modal de vista previa */
     #previewModal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       display: none;
-      justify-content: center;
       align-items: center;
-      z-index: 200;
+      justify-content: center;
+      z-index: 1000;
       backdrop-filter: blur(10px);
     }
 
-    #previewContent {
-      max-width: 90vw;
-      max-height: 90vh;
-      position: relative;
+    #previewModal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 15px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalAppear 0.5s ease-out;
     }
 
-    #previewContent img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 10px;
+    @keyframes modalAppear {
+      0% { transform: scale(0.5) rotate(10deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
-    #previewClose {
+    #previewModal .close-btn {
       position: absolute;
-      top: -40px;
-      right: 0;
-      background: linear-gradient(135deg, #ff6b9d, #c44569);
+      top: 30px;
+      right: 30px;
+      background: var(--rose);
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 1.5rem;
       cursor: pointer;
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+      transition: all 0.3s ease;
     }
 
+    #previewModal .close-btn:hover {
+      transform: scale(1.1);
+      background: var(--pink);
+    }
+
+    /* Error message */
     #errorMessage {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #c44569;
-      font-size: 24px;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: white;
+      padding: 2rem;
+      border-radius: 20px;
       text-align: center;
-      z-index: 150;
+      font-size: 1.2rem;
+      box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
       display: none;
+      z-index: 1001;
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-      .photo-container {
-        width: 120px !important;
-        height: 120px !important;
+      .photo {
+        width: 150px;
+        height: 112px;
       }
-      
+
       #returnBtn {
-        top: 10px;
-        left: 10px;
-        padding: 10px 16px;
-        font-size: 13px;
+        top: 15px;
+        right: 15px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
       }
     }
   </style>
 </head>
 <body>
-  <div id="loadingContainer">
-    <div id="loadingText">Cargando...</div>
-    <div id="loadingBar">
-      <div id="loadingProgress"></div>
+  <!-- Pantalla de carga -->
+  <div id="loadingScreen">
+    <div class="loading-heart">💖</div>
+    <div class="loading-bar">
+      <div class="loading-progress" id="loadingProgress"></div>
     </div>
+    <div class="loading-text" id="loadingText">Preparando tus recuerdos románticos...</div>
   </div>
 
-  <div id="errorMessage">No se encontraron imágenes para mostrar</div>
+  <!-- Error message -->
+  <div id="errorMessage"></div>
 
-  <div id="mainContainer">
+  <!-- Contenedor principal -->
+  <div id="container">
+    <!-- Botón regresar -->
     <button id="returnBtn">← Regresar</button>
-    
-    <div id="previewModal">
-      <div id="previewContent">
-        <button id="previewClose">×</button>
-        <img id="previewImage" src="" alt="Vista previa">
-      </div>
-    </div>
+
+    <!-- Contenedor de fotos -->
+    <div id="photosContainer"></div>
+  </div>
+
+  <!-- Modal de vista previa -->
+  <div id="previewModal" id="previewModal">
+    <button class="close-btn" id="closeBtn">×</button>
+    <img id="previewImage" src="" alt="Vista previa">
   </div>
 
   <script type="module">
@@ -265,10 +329,39 @@
     const database = getDatabase(app);
 
     let imageUrls = [];
-    let loadedImages = 0;
-    let totalImages = 0;
+    let loadingProgress = 0;
 
+    // Elementos DOM
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingProgressBar = document.getElementById('loadingProgress');
+    const loadingText = document.getElementById('loadingText');
+    const container = document.getElementById('container');
+    const photosContainer = document.getElementById('photosContainer');
+    const errorMessage = document.getElementById('errorMessage');
+    const previewModal = document.getElementById('previewModal');
+    const previewImage = document.getElementById('previewImage');
+    const closeBtn = document.getElementById('closeBtn');
+    const returnBtn = document.getElementById('returnBtn');
+
+    // Actualizar barra de progreso
+    function updateProgress(percent, text = '') {
+      loadingProgress = percent;
+      loadingProgressBar.style.width = percent + '%';
+      if (text) loadingText.textContent = text;
+    }
+
+    // Mostrar error
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => loadingScreen.style.display = 'none', 1000);
+    }
+
+    // Cargar imágenes desde Firebase
     async function fetchImages() {
+      updateProgress(10, 'Conectando con Firebase...');
+      
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('id')?.trim();
       
@@ -276,248 +369,217 @@
         showError('No creaste tu proyecto. Por favor, crea tu ID primero.');
         return [];
       }
-      
+
       try {
+        updateProgress(30, 'Obteniendo tus imágenes...');
+        
         const snapshot = await get(ref(database, `usuarios/${userId}`));
+        
         if (snapshot.exists()) {
           const data = snapshot.val();
           const puertaFotos = data.puerta4Fotos || [];
           const validFotos = puertaFotos.slice(0, 7).filter(url => typeof url === 'string' && url.trim() !== '');
           
+          updateProgress(60, 'Validando imágenes...');
+          
           if (validFotos.length === 0) {
             showError('No hay imágenes en tu galería. Agrega imágenes primero.');
+            return [];
           }
+          
+          updateProgress(80, 'Preparando la magia...');
           return validFotos;
         } else {
           showError('No creaste tu proyecto. Por favor, crea tu ID primero.');
           return [];
         }
       } catch (error) {
-        showError('Error al cargar las imágenes. Intenta de nuevo.');
+        console.error("Error al consultar Firebase:", error);
+        showError('Error al cargar las imágenes. Por favor, intenta de nuevo.');
         return [];
       }
     }
 
-    function showError(message) {
-      document.getElementById('errorMessage').textContent = message;
-      document.getElementById('errorMessage').style.display = 'block';
-      hideLoading();
-    }
-
-    function updateLoadingProgress(percentage) {
-      document.getElementById('loadingProgress').style.width = percentage + '%';
+    // Crear pétalos de fondo
+    function createPetals() {
+      const colors = ['#ff69b4', '#ffc0cb', '#ffe4e1', '#ffb6c1'];
       
-      if (percentage < 30) {
-        document.getElementById('loadingText').textContent = 'Recogiendo pétalos...';
-      } else if (percentage < 70) {
-        document.getElementById('loadingText').textContent = 'Preparando tus recuerdos...';
-      } else {
-        document.getElementById('loadingText').textContent = 'Casi listo...';
-      }
-    }
-
-    function preloadImages(urls) {
-      return new Promise((resolve) => {
-        totalImages = urls.length;
-        if (totalImages === 0) {
-          resolve();
-          return;
-        }
-
-        urls.forEach((url, index) => {
-          const img = new Image();
-          img.onload = () => {
-            loadedImages++;
-            const percentage = (loadedImages / totalImages) * 100;
-            updateLoadingProgress(percentage);
-            
-            if (loadedImages === totalImages) {
-              setTimeout(() => resolve(), 500);
-            }
-          };
-          img.onerror = () => {
-            loadedImages++;
-            const percentage = (loadedImages / totalImages) * 100;
-            updateLoadingProgress(percentage);
-            
-            if (loadedImages === totalImages) {
-              setTimeout(() => resolve(), 500);
-            }
-          };
-          img.src = url;
-        });
-      });
-    }
-
-    function hideLoading() {
-      const loadingContainer = document.getElementById('loadingContainer');
-      loadingContainer.style.opacity = '0';
-      setTimeout(() => {
-        loadingContainer.style.display = 'none';
-        document.getElementById('mainContainer').style.opacity = '1';
-        if (imageUrls.length > 0) {
-          startPetalRain();
-        }
-      }, 800);
-    }
-
-    function createPetal() {
-      const petal = document.createElement('div');
-      petal.className = 'petal';
-      
-      // Tipos de pétalos aleatorios
-      const types = ['', 'large', 'small'];
-      const randomType = types[Math.floor(Math.random() * types.length)];
-      if (randomType) petal.classList.add(randomType);
-      
-      // Posición inicial aleatoria
-      petal.style.left = Math.random() * window.innerWidth + 'px';
-      petal.style.top = '-30px';
-      
-      // Rotación aleatoria
-      petal.style.transform = `rotate(${Math.random() * 360}deg)`;
-      
-      document.getElementById('mainContainer').appendChild(petal);
-      
-      // Animación de caída
-      const duration = 3000 + Math.random() * 2000;
-      const startTime = Date.now();
-      const startX = parseFloat(petal.style.left);
-      
-      function animatePetal() {
-        const elapsed = Date.now() - startTime;
-        const progress = elapsed / duration;
+      function createPetal() {
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.style.left = Math.random() * 100 + 'vw';
+        petal.style.background = colors[Math.floor(Math.random() * colors.length)];
+        petal.style.animationDuration = (Math.random() * 3 + 5) + 's';
+        petal.style.animationDelay = Math.random() * 2 + 's';
         
-        if (progress >= 1) {
-          petal.remove();
-          return;
-        }
+        // Diferentes formas de pétalos
+        const shapes = ['50% 0 50% 0', '50% 50% 50% 0', '0 50% 50% 50%'];
+        petal.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)];
         
-        // Movimiento vertical
-        const y = progress * (window.innerHeight + 50);
+        document.body.appendChild(petal);
         
-        // Movimiento horizontal ondulado
-        const x = startX + Math.sin(progress * Math.PI * 4) * 50;
-        
-        // Rotación continua
-        const rotation = progress * 720 + Math.random() * 360;
-        
-        petal.style.top = y + 'px';
-        petal.style.left = x + 'px';
-        petal.style.transform = `rotate(${rotation}deg)`;
-        
-        requestAnimationFrame(animatePetal);
-      }
-      
-      animatePetal();
-    }
-
-    function startPetalRain() {
-      // Lluvia inicial intensa
-      for (let i = 0; i < 50; i++) {
-        setTimeout(() => createPetal(), i * 100);
-      }
-      
-      // Continuar con lluvia constante
-      setInterval(() => {
-        createPetal();
-        if (Math.random() < 0.3) createPetal(); // Pétalos extra ocasionales
-      }, 200);
-      
-      // Mostrar fotos una por una
-      showPhotosSequentially();
-    }
-
-    function showPhotosSequentially() {
-      const positions = [
-        { left: '15%', top: '20%', width: '200px', height: '150px' },
-        { left: '70%', top: '15%', width: '180px', height: '180px' },
-        { left: '25%', top: '60%', width: '160px', height: '200px' },
-        { left: '60%', top: '55%', width: '190px', height: '140px' },
-        { left: '45%', top: '30%', width: '170px', height: '170px' },
-        { left: '10%', top: '75%', width: '150px', height: '180px' },
-        { left: '75%', top: '75%', width: '160px', height: '160px' }
-      ];
-
-      imageUrls.forEach((url, index) => {
+        // Remover después de la animación
         setTimeout(() => {
-          createPhotoElement(url, positions[index], index);
-        }, index * 1200 + 2000); // Delay inicial de 2 segundos
-      });
+          if (petal.parentNode) {
+            petal.parentNode.removeChild(petal);
+          }
+        }, 8000);
+      }
+      
+      // Crear pétalos continuamente
+      setInterval(createPetal, 300);
     }
 
-    function createPhotoElement(url, position, index) {
-      const container = document.createElement('div');
-      container.className = 'photo-container';
-      container.style.left = position.left;
-      container.style.top = position.top;
-      container.style.width = position.width;
-      container.style.height = position.height;
+    // Posicionar fotos en círculo
+    function getPhotoPosition(index, total) {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const radius = Math.min(window.innerWidth, window.innerHeight) * 0.25;
+      const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
+      
+      return {
+        x: centerX + Math.cos(angle) * radius - 100, // -100 para centrar la foto
+        y: centerY + Math.sin(angle) * radius - 75   // -75 para centrar la foto
+      };
+    }
+
+    // Crear elemento de foto
+    function createPhoto(url, index) {
+      const photo = document.createElement('div');
+      photo.className = 'photo';
       
       const img = document.createElement('img');
       img.src = url;
       img.alt = `Recuerdo ${index + 1}`;
       
-      container.appendChild(img);
-      document.getElementById('mainContainer').appendChild(container);
+      photo.appendChild(img);
       
-      // Animación de entrada
-      setTimeout(() => {
-        container.classList.add('visible');
-        startFloatingAnimation(container);
-      }, 100);
+      // Posicionar
+      const position = getPhotoPosition(index, imageUrls.length);
+      photo.style.left = position.x + 'px';
+      photo.style.top = position.y + 'px';
       
-      // Click para ampliar
-      container.addEventListener('click', () => openPreview(url));
+      // Añadir delay único para la animación de entrada
+      photo.style.animationDelay = (index * 0.5) + 's';
+      
+      // Click para vista previa
+      photo.addEventListener('click', () => {
+        previewImage.src = url;
+        previewModal.style.display = 'flex';
+      });
+      
+      return photo;
     }
 
-    function startFloatingAnimation(element) {
-      const startTime = Date.now();
-      const baseY = parseFloat(element.style.top);
+    // Animación de entrada de fotos
+    async function animatePhotosEntrance() {
+      const photos = photosContainer.querySelectorAll('.photo');
       
-      function animate() {
-        const elapsed = Date.now() - startTime;
-        const offset = Math.sin(elapsed * 0.001) * 8;
-        element.style.transform = `translateY(${offset}px) scale(1)`;
-        requestAnimationFrame(animate);
+      for (let i = 0; i < photos.length; i++) {
+        await new Promise(resolve => {
+          setTimeout(() => {
+            photos[i].classList.add('appear');
+            resolve();
+          }, i * 500); // 500ms entre cada foto
+        });
       }
       
-      animate();
+      // Después de que aparezcan todas, añadir animación de bucle
+      setTimeout(() => {
+        photos.forEach((photo, index) => {
+          photo.style.animationDelay = (index * 0.2) + 's';
+          photo.classList.add('floating');
+        });
+      }, 1000);
     }
 
-    function openPreview(url) {
-      document.getElementById('previewImage').src = url;
-      document.getElementById('previewModal').style.display = 'flex';
-    }
-
-    function closePreview() {
-      document.getElementById('previewModal').style.display = 'none';
+    // Inicializar la aplicación
+    async function init() {
+      updateProgress(5, 'Iniciando...');
+      
+      imageUrls = await fetchImages();
+      
+      if (imageUrls.length === 0) {
+        return;
+      }
+      
+      updateProgress(90, 'Creando la experiencia...');
+      
+      // Crear elementos de fotos
+      imageUrls.forEach((url, index) => {
+        const photo = createPhoto(url, index);
+        photosContainer.appendChild(photo);
+      });
+      
+      // Precargar imágenes
+      let loadedImages = 0;
+      const totalImages = imageUrls.length;
+      
+      const loadPromises = imageUrls.map(url => {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => {
+            loadedImages++;
+            updateProgress(90 + (loadedImages / totalImages) * 10, 
+              `Cargando imágenes... ${loadedImages}/${totalImages}`);
+            resolve();
+          };
+          img.onerror = resolve;
+          img.src = url;
+        });
+      });
+      
+      await Promise.all(loadPromises);
+      
+      updateProgress(100, '¡Listo! Disfrutando tus recuerdos...');
+      
+      // Ocultar pantalla de carga y mostrar contenido
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        container.style.opacity = '1';
+        
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          createPetals();
+          animatePhotosEntrance();
+        }, 1000);
+      }, 500);
     }
 
     // Event listeners
-    document.getElementById('previewClose').addEventListener('click', closePreview);
-    document.getElementById('previewModal').addEventListener('click', (e) => {
-      if (e.target.id === 'previewModal') closePreview();
+    closeBtn.addEventListener('click', () => {
+      previewModal.style.display = 'none';
     });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closePreview();
+
+    previewModal.addEventListener('click', (e) => {
+      if (e.target === previewModal) {
+        previewModal.style.display = 'none';
+      }
     });
-    document.getElementById('returnBtn').addEventListener('click', () => {
+
+    returnBtn.addEventListener('click', () => {
       window.parent.postMessage({ type: 'doorClosed' }, '*');
     });
 
-    // Inicializar
-    (async function() {
-      updateLoadingProgress(10);
-      imageUrls = await fetchImages();
-      
-      if (imageUrls.length > 0) {
-        updateLoadingProgress(30);
-        await preloadImages(imageUrls);
-        updateLoadingProgress(100);
-        setTimeout(hideLoading, 500);
+    // Responsive
+    window.addEventListener('resize', () => {
+      const photos = photosContainer.querySelectorAll('.photo');
+      photos.forEach((photo, index) => {
+        const position = getPhotoPosition(index, photos.length);
+        photo.style.left = position.x + 'px';
+        photo.style.top = position.y + 'px';
+      });
+    });
+
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        previewModal.style.display = 'none';
       }
-    })();
+    });
+
+    // Iniciar la aplicación
+    init();
   </script>
 </body>
 </html>
