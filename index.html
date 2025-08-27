@@ -536,7 +536,8 @@
         if (gifState === 'initial' && currentDoorIndex === 0) {
           gifState = 'second';
           gifImage.src = 'https://media.tenor.com/CNJSyzMIkskAAAAj/bubu-dudu-sseeyall.gif';
-          gifText.textContent = `Esto te lo dedico para ti ${name2}, aquí va nuestra vida que vivimos.`;
+         gifText.innerHTML = `Esto te lo dedico para ti ${name2}.<br><br>Aquí va nuestra vida que vivimos.`;
+
           console.log('Clic en primer texto, mostrando segundo GIF y texto');
         } else if (gifState === 'second' && currentDoorIndex === 0) {
           gifState = 'done';
@@ -808,3 +809,4 @@
   </script>
 </body>
 </html>
+
