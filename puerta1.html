@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Carrusel 2D</title>
+  <title>Sala Romántica — Carrusel Estilo TikTok</title>
   <style>
     :root {
       --rose-1: #ff8ab5;
@@ -11,7 +11,8 @@
       --lavender: #e0c7ff;
       --glass: rgba(255, 255, 255, 0.15);
       --btn-bg: linear-gradient(180deg, #ff99cc, #ffe6f0);
-      --bg-gradient: radial-gradient(circle at 50% 20%, rgba(255, 150, 180, 0.25), transparent 50%, rgba(30, 15, 50, 0.95));
+      --glow-btn: linear-gradient(180deg, #ff66b2, #ff99cc, #ffe6f0);
+      --bg-gradient: radial-gradient(circle at 50% 20%, rgba(255, 150, 180, 0.3), transparent 50%, rgba(30, 15, 50, 0.95));
     }
     html, body {
       height: 100%;
@@ -29,52 +30,81 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      touch-action: pan-x;
+      touch-action: pan-y;
     }
     #carousel {
       display: flex;
-      transition: transform 0.5s ease;
+      flex-direction: column;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       height: 100%;
       align-items: center;
     }
     .carousel-item {
       flex: 0 0 auto;
-      width: clamp(200px, 60vw, 300px);
-      height: clamp(150px, 40vh, 200px);
-      margin: 0 10px;
-      position: relative;
+      width: clamp(250px, 80vw, 360px);
+      height: clamp(400px, 70vh, 500px);
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: opacity 0.4s ease, transform 0.4s ease;
       cursor: pointer;
-      transition: transform 0.3s ease, opacity 0.3s ease;
     }
     .carousel-item img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
       display: block;
     }
     .carousel-item .frame {
       position: absolute;
-      inset: -2px;
-      border: 2px solid #2a0a20;
-      border-radius: 14px;
-      box-shadow: 0 0 15px rgba(255, 120, 180, 0.3);
+      inset: -3px;
+      border: 3px solid #2a0a20;
+      border-radius: 18px;
+      box-shadow: 0 0 20px rgba(255, 120, 180, 0.4);
       pointer-events: none;
     }
     .carousel-item .glow {
       position: absolute;
-      inset: -10px;
-      background: radial-gradient(circle, rgba(255, 120, 180, 0.15), transparent 60%);
+      inset: -12px;
+      background: radial-gradient(circle, rgba(255, 120, 180, 0.2), transparent 60%);
       pointer-events: none;
     }
     .carousel-item.active {
-      transform: scale(1.1);
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
       z-index: 10;
     }
-    .carousel-item:not(.active) {
-      opacity: 0.7;
-      transform: scale(0.9);
+    .carousel-item.next {
+      opacity: 0.3;
+      transform: translateY(calc(-50% + 100vh)) scale(0.9);
+      z-index: 5;
+    }
+    .carousel-item.prev {
+      opacity: 0.3;
+      transform: translateY(calc(-50% - 100vh)) scale(0.9);
+      z-index: 5;
+    }
+    #next-label {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--rose-2);
+      font-size: clamp(12px, 3vw, 14px);
+      text-shadow: 0 0 8px rgba(255, 120, 180, 0.6);
+      z-index: 15;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: var(--glass);
+      backdrop-filter: blur(4px);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+      50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
     }
     #overlay {
       position: absolute;
@@ -135,14 +165,18 @@
       transform: translateY(0);
     }
     .btn-ghost {
-      background: transparent;
-      border: 1px solid rgba(255, 230, 240, 0.2);
-      color: var(--rose-2);
-      padding: 7px 12px;
+      background: var(--glow-btn);
+      color: #2a0a20;
+      box-shadow: 0 0 20px rgba(255, 100, 150, 0.5), inset 0 0 10px rgba(255, 100, 150, 0.3);
+      animation: glow 1.5s ease-in-out infinite;
     }
     .btn-ghost:hover {
-      background: rgba(255, 230, 240, 0.08);
       transform: translateY(-2px);
+      box-shadow: 0 0 30px rgba(255, 100, 150, 0.6);
+    }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 100, 150, 0.5), inset 0 0 10px rgba(255, 100, 150, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(255, 100, 150, 0.7), inset 0 0 15px rgba(255, 100, 150, 0.4); }
     }
     .btn:focus {
       outline: 2px solid rgba(255, 120, 180, 0.25);
@@ -154,7 +188,7 @@
       transform: scale(0);
       animation: rip 0.5s ease-out;
       pointer-events: none;
-      background: rgba(255, 230, 240, 0.25);
+      background: rgba(255, 230, 240, 0.3);
     }
     @keyframes rip {
       to { transform: scale(2.5); opacity: 0; }
@@ -175,9 +209,9 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      bottom: 15px;
+      bottom: 80px;
       color: var(--rose-2);
-      z-index: 5;
+      z-index: 15;
       font-size: clamp(9px, 2.5vw, 10px);
       padding: 6px 12px;
       border-radius: 999px;
@@ -229,7 +263,7 @@
       inset: 0;
       pointer-events: none;
       z-index: 30;
-      background: radial-gradient(50% 50% at 50% 40%, rgba(255, 150, 180, 0.12), transparent 50%), linear-gradient(180deg, rgba(255, 240, 245, 0.05), transparent 70%);
+      background: radial-gradient(50% 50% at 50% 40%, rgba(255, 150, 180, 0.15), transparent 50%), linear-gradient(180deg, rgba(255, 240, 245, 0.06), transparent 70%);
     }
     #errorMessage {
       position: absolute;
@@ -283,27 +317,26 @@
     }
     .heart-particle {
       position: absolute;
-      width: 20px;
-      height: 20px;
-      background: radial-gradient(circle, rgba(255, 140, 180, 0.9), transparent 70%);
-      clip-path: path('M10,6 C12,2 16,6 10,12 C4,6 8,2 10,6 Z');
-      animation: float 8s linear infinite;
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(circle, rgba(255, 140, 180, 0.95), transparent 70%);
+      clip-path: path('M12,7 C14,3 18,7 12,13 C6,7 10,3 12,7 Z');
+      animation: float 6s linear infinite;
       opacity: 0;
     }
     @keyframes float {
-      0% { opacity: 0; transform: translateY(0) scale(0.5); }
-      10% { opacity: 0.8; }
-      90% { opacity: 0.8; }
-      100% { opacity: 0; transform: translateY(-100vh) scale(1); }
+      0% { opacity: 0; transform: translateY(0) scale(0.6) rotate(0deg); }
+      10% { opacity: 0.9; }
+      90% { opacity: 0.9; }
+      100% { opacity: 0; transform: translateY(-100vh) scale(1.2) rotate(360deg); }
     }
     @media (max-width: 720px) {
       #carousel-container {
         height: 80vh;
       }
       .carousel-item {
-        width: clamp(160px, 50vw, 240px);
-        height: clamp(120px, 30vh, 160px);
-        margin: 0 8px;
+        width: clamp(200px, 70vw, 300px);
+        height: clamp(300px, 60vh, 400px);
       }
       #overlay {
         left: 8px;
@@ -345,8 +378,12 @@
         font-size: clamp(0.6rem, 2.5vw, 0.8rem);
       }
       .heart-particle {
-        width: 15px;
-        height: 15px;
+        width: 18px;
+        height: 18px;
+      }
+      #next-label {
+        bottom: 70px;
+        font-size: clamp(11px, 2.8vw, 12px);
       }
     }
     @media (min-resolution: 2dppx) {
@@ -364,12 +401,13 @@
   </div>
   <div id="carousel-container">
     <div id="carousel"></div>
+    <div id="next-label">Ver el siguiente</div>
   </div>
   <div id="romOverlay"></div>
   <div id="heart-particles"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Carrusel 2D</h3>
-    <p>Desliza para navegar. Toca una foto para ampliarla.</p>
+    <h3>Sala Romántica — Estilo TikTok</h3>
+    <p>Desliza hacia arriba o abajo para navegar. Toca para ampliar.</p>
     <div class="controls">
       <button id="prevBtn" class="btn">Anterior</button>
       <button id="nextBtn" class="btn">Siguiente</button>
@@ -452,7 +490,7 @@
       imageUrls = await fetchImages();
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
       const TOTAL_IMAGES = 7;
-      const ITEM_WIDTH = isMobile ? 180 : 320;
+      const ITEM_HEIGHT = isMobile ? 320 : 500;
       const carousel = document.getElementById('carousel');
       const heartParticles = document.getElementById('heart-particles');
       let currentIndex = 0;
@@ -507,13 +545,21 @@
         carousel.appendChild(item);
       }
       function updateCarousel() {
-        const offset = -targetIndex * (ITEM_WIDTH + 20);
-        carousel.style.transform = `translateX(${offset}px)`;
         const items = carousel.querySelectorAll('.carousel-item');
         items.forEach((item, idx) => {
-          const dist = Math.abs(idx - targetIndex);
-          item.classList.toggle('active', dist < 0.5);
+          const dist = idx - targetIndex;
+          if (Math.abs(dist) < 0.5) {
+            item.classList.add('active');
+            item.classList.remove('prev', 'next');
+          } else if (dist > 0) {
+            item.classList.remove('active', 'prev');
+            item.classList.add('next');
+          } else {
+            item.classList.remove('active', 'next');
+            item.classList.add('prev');
+          }
         });
+        carousel.style.transform = `translateY(${-(targetIndex * window.innerHeight)}px)`;
       }
       if (imageUrls.length > 0) {
         for (let i = 0; i < TOTAL_IMAGES; i++) {
@@ -526,36 +572,36 @@
         particle.className = 'heart-particle';
         const x = Math.random() * window.innerWidth;
         particle.style.left = `${x}px`;
-        particle.style.animationDelay = `${Math.random() * 2}s`;
+        particle.style.animationDelay = `${Math.random() * 1.5}s`;
         heartParticles.appendChild(particle);
-        setTimeout(() => particle.remove(), 8000);
+        setTimeout(() => particle.remove(), 6000);
       }
-      setInterval(spawnHeartParticle, isMobile ? 800 : 400);
-      let isDragging = false, startX = 0, startIndex = 0;
+      setInterval(spawnHeartParticle, isMobile ? 600 : 300);
+      let isDragging = false, startY = 0, startIndex = 0;
       function onPointerDown(e) {
         isDragging = true;
-        startX = getClientX(e);
+        startY = getClientY(e);
         startIndex = targetIndex;
         carousel.style.transition = 'none';
       }
       function onPointerMove(e) {
         if (!isDragging) return;
-        const x = getClientX(e);
-        const dx = (x - startX) / ITEM_WIDTH;
-        targetIndex = startIndex - dx;
+        const y = getClientY(e);
+        const dy = (y - startY) / window.innerHeight;
+        targetIndex = startIndex - dy * 2;
         updateCarousel();
       }
       function onPointerUp() {
         if (!isDragging) return;
         isDragging = false;
-        targetIndex = Math.round(targetIndex);
-        carousel.style.transition = 'transform 0.5s ease';
+        targetIndex = Math.round(Math.max(0, Math.min(TOTAL_IMAGES - 1, targetIndex)));
+        carousel.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
         updateCarousel();
       }
-      function getClientX(e) {
-        if (e.touches && e.touches.length) return e.touches[0].clientX;
-        if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
-        return e.clientX;
+      function getClientY(e) {
+        if (e.touches && e.touches.length) return e.touches[0].clientY;
+        if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientY;
+        return e.clientY;
       }
       carousel.addEventListener('pointerdown', onPointerDown, { passive: true });
       carousel.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -578,15 +624,15 @@
           const dist = getTouchDist(e);
           if (pinchStartDist > 0) {
             const scale = pinchStartScale * (dist / pinchStartDist);
-            const items = carousel.querySelectorAll('.carousel-item');
-            items.forEach(item => {
-              item.style.transform = `scale(${Math.min(Math.max(scale, 0.8), 1.3)})`;
-            });
+            const activeItem = carousel.querySelector('.carousel-item.active');
+            if (activeItem) {
+              activeItem.style.transform = `translateY(-50%) scale(${Math.min(Math.max(scale, 0.8), 1.4)})`;
+            }
           }
         }
       }, { passive: true });
       carousel.addEventListener('click', (e) => {
-        const target = e.target.closest('.carousel-item');
+        const target = e.target.closest('.carousel-item.active');
         if (target) {
           const url = target.querySelector('img').src;
           openPreview(url);
@@ -628,14 +674,14 @@
       const toggleBtn = document.getElementById('toggleAuto');
       prevBtn.addEventListener('click', (e) => {
         createRipple(prevBtn, e.clientX, e.clientY);
-        targetIndex += 1;
-        carousel.style.transition = 'transform 0.5s ease';
+        targetIndex = Math.min(TOTAL_IMAGES - 1, targetIndex + 1);
+        carousel.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
         updateCarousel();
       });
       nextBtn.addEventListener('click', (e) => {
         createRipple(nextBtn, e.clientX, e.clientY);
-        targetIndex -= 1;
-        carousel.style.transition = 'transform 0.5s ease';
+        targetIndex = Math.max(0, targetIndex - 1);
+        carousel.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
         updateCarousel();
       });
       function toggleAutoSlide() {
@@ -657,8 +703,8 @@
       function animate() {
         requestAnimationFrame(animate);
         if (autoSlide) {
-          targetIndex -= 0.02;
-          carousel.style.transition = 'transform 0.5s ease';
+          targetIndex = (targetIndex + 0.02) % TOTAL_IMAGES;
+          carousel.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
           updateCarousel();
         }
       }
