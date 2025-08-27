@@ -19,13 +19,12 @@ html,body{height:100%;font-family:Inter,sans-serif;color:#fff;background:radial-
 .back-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,157,.5)}
 .instruction{font-size:12px;color:#ffdfe8;text-align:center;opacity:.9;max-width:200px;line-height:1.3}
 
-/* Título flotante */
-.title{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;background:rgba(255,255,255,.05);padding:15px 25px;border-radius:20px;backdrop-filter:blur(10px)}
-.title h1{font-size:22px;background:linear-gradient(135deg,var(--pink),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px}
-.title p{font-size:13px;opacity:.8}
+/* Fireworks para entrada */
+.firework{position:absolute;width:4px;height:4px;background:var(--pink);border-radius:50%;pointer-events:none}
+.firework-trail{position:absolute;width:2px;height:20px;background:linear-gradient(to top,var(--glow),transparent);border-radius:50%}
 
 /* Galería principal */
-.container{padding:160px 15px 80px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{padding:80px 15px 80px;min-height:100vh;display:flex;align-items:center;justify-content:center}
 .gallery{width:100%;max-width:450px;display:grid;grid-template-columns:1fr 1fr;gap:15px;position:relative}
 
 /* Tarjetas de fotos con animaciones automáticas */
@@ -88,12 +87,11 @@ html,body{height:100%;font-family:Inter,sans-serif;color:#fff;background:radial-
 .spinner{width:40px;height:40px;border:3px solid rgba(255,158,199,.3);border-top:3px solid var(--pink);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 15px}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-/* Entrada suave */
-.card{opacity:0;transform:translateY(20px);animation:fadeInUp .8s ease forwards}
-.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}
-.card:nth-child(4){animation-delay:.4s}.card:nth-child(5){animation-delay:.5s}.card:nth-child(6){animation-delay:.6s}
-.card:nth-child(7){animation-delay:.7s}
-@keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+/* Animación de revelación */
+@keyframes revealCard{0%{transform:scale(0) rotate(180deg);opacity:0}60%{transform:scale(1.1) rotate(-10deg);opacity:1}100%{transform:scale(1) rotate(0deg);opacity:1}}
+
+/* Entrada suave - inicialmente invisibles */
+.card{opacity:0;transform:scale(0);transition:all .8s cubic-bezier(.23,1,.32,1)}
 
 .credits{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,223,232,.6);text-align:center}
 
@@ -104,7 +102,6 @@ html,body{height:100%;font-family:Inter,sans-serif;color:#fff;background:radial-
 <div class="loading" id="loading"><div class="loading-content"><div class="spinner"></div><h3>Cargando momentos románticos...</h3></div></div>
 <div class="particles" id="particles"></div>
 <div class="top-bar"><button class="back-btn" id="backBtn">← Regresar</button><div class="instruction">Presiona regresar para ver el siguiente ✨</div></div>
-<div class="title"><h1>💕 Galería Romántica</h1><p>Animaciones automáticas</p></div>
 <div class="hearts" id="hearts"></div>
 <div class="container"><div class="gallery" id="gallery"></div></div>
 <button class="surprise-btn" id="surpriseBtn">💖</button>
@@ -121,7 +118,14 @@ const app=initializeApp(firebaseConfig);const db=getDatabase(app);
 let galleryData=[];let spotlightIndex=0;
 const loading=document.getElementById('loading');const gallery=document.getElementById('gallery');const modal=document.getElementById('modal');const modalImg=document.getElementById('modalImg');
 
-function createParticles(){const container=document.getElementById('particles');for(let i=0;i<15;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.top=Math.random()*100+'%';p.style.animationDelay=Math.random()*12+'s';p.style.animationDuration=(8+Math.random()*6)+'s';container.appendChild(p)}}
+function launchFirework(targetX,targetY,cardIndex){const container=document.getElementById('particles');const startX=Math.random()*window.innerWidth;const startY=window.innerHeight+20;const fw=document.createElement('div');fw.className='firework';fw.style.left=startX+'px';fw.style.top=startY+'px';fw.style.background=`hsl(${320+Math.random()*60},80%,70%)`;container.appendChild(fw);
+const trail=document.createElement('div');trail.className='firework-trail';trail.style.left=startX+'px';trail.style.top=startY+'px';container.appendChild(trail);
+const duration=1200;const startTime=Date.now();function animate(){const elapsed=Date.now()-startTime;const progress=elapsed/duration;if(progress>=1){fw.remove();trail.remove();explodeAndReveal(targetX,targetY,cardIndex);return}
+const currentX=startX+(targetX-startX)*progress;const currentY=startY+(targetY-startY)*progress;fw.style.left=currentX+'px';fw.style.top=currentY+'px';trail.style.left=currentX+'px';trail.style.top=currentY+'px';requestAnimationFrame(animate)}animate()}
+
+function explodeAndReveal(x,y,cardIndex){const container=document.getElementById('particles');for(let i=0;i<15;i++){const spark=document.createElement('div');spark.style.position='absolute';spark.style.width='3px';spark.style.height='3px';spark.style.background=`hsl(${300+Math.random()*80},85%,70%)`;spark.style.borderRadius='50%';spark.style.left=x+'px';spark.style.top=y+'px';spark.style.pointerEvents='none';container.appendChild(spark);
+const angle=Math.random()*Math.PI*2;const speed=2+Math.random()*4;const vx=Math.cos(angle)*speed;const vy=Math.sin(angle)*speed;let opacity=1;function animateSpark(){spark.style.left=parseFloat(spark.style.left)+vx+'px';spark.style.top=parseFloat(spark.style.top)+vy+'px';opacity-=0.02;spark.style.opacity=opacity;if(opacity<=0){spark.remove();return}requestAnimationFrame(animateSpark)}animateSpark()}
+setTimeout(()=>{const card=document.querySelectorAll('.card')[cardIndex];if(card){card.style.opacity='1';card.style.transform='scale(0)';card.style.animation='revealCard .8s cubic-bezier(.68,-.55,.265,1.55) forwards'}},200)}
 
 function createHearts(){const container=document.getElementById('hearts');const heartTypes=['💖','💕','💗','💘','💝','💞','❤️'];for(let i=0;i<6;i++){const h=document.createElement('div');h.className='heart';h.textContent=heartTypes[Math.floor(Math.random()*heartTypes.length)];h.style.left=Math.random()*100+'%';h.style.animationDelay=Math.random()*8+'s';h.style.animationDuration=(6+Math.random()*4)+'s';container.appendChild(h);setTimeout(()=>{if(h.parentNode)h.parentNode.removeChild(h)},10000)}}
 
@@ -130,12 +134,11 @@ async function fetchImages(userId){try{const snap=await get(ref(db,`usuarios/${u
 function buildGallery(images){gallery.innerHTML='';galleryData=[];while(galleryData.length<7){images.forEach(img=>{if(galleryData.length<7)galleryData.push(img)});if(images.length===0)break}
 if(galleryData.length===0){for(let i=1;i<=7;i++)galleryData.push(`https://picsum.photos/600/800?random=${i}`)}
 
-galleryData.forEach((url,i)=>{const card=document.createElement('div');card.className='card';card.innerHTML=`<img src="${url}" alt="Foto ${i+1}" loading="lazy"/>`;card.addEventListener('click',()=>openModal(i));gallery.appendChild(card);
+galleryData.forEach((url,i)=>{const card=document.createElement('div');card.className='card';card.innerHTML=`<img src="${url}" alt="Foto ${i+1}" loading="lazy"/>`;card.addEventListener('click',()=>openModal(i));gallery.appendChild(card);setTimeout(()=>{const animations=['auto-zoom','auto-float','auto-glow'];const randomAnim=animations[Math.floor(Math.random()*animations.length)];card.classList.add(randomAnim);card.querySelector('img').style.animationDelay=Math.random()*3+'s';card.querySelector('img').style.animationDuration=(6+Math.random()*4)+'s'},2000+i*800)});
 
-// Aplicar animaciones automáticas aleatorias
-setTimeout(()=>{const animations=['auto-zoom','auto-float','auto-glow'];const randomAnim=animations[Math.floor(Math.random()*animations.length)];card.classList.add(randomAnim);card.querySelector('img').style.animationDelay=Math.random()*3+'s';card.querySelector('img').style.animationDuration=(6+Math.random()*4)+'s'},500+i*100)});
+startFireworkSequence();setTimeout(()=>{startSpotlight();startAutoEffects()},8000)}
 
-startSpotlight();startAutoEffects()}
+function startFireworkSequence(){const cards=document.querySelectorAll('.card');cards.forEach((card,i)=>{setTimeout(()=>{const rect=card.getBoundingClientRect();const targetX=rect.left+rect.width/2;const targetY=rect.top+rect.height/2;launchFirework(targetX,targetY,i)},i*800+1000)})}
 
 function startSpotlight(){const cards=document.querySelectorAll('.card');function cycle(){cards.forEach((card,i)=>{card.classList.toggle('spotlight',i===spotlightIndex)});spotlightIndex=(spotlightIndex+1)%cards.length}
 cycle();setInterval(cycle,3500)}
@@ -149,8 +152,8 @@ function triggerSurprise(){createHearts();const cards=document.querySelectorAll(
 
 document.getElementById('closeModal').addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});document.getElementById('backBtn').addEventListener('click',()=>{window.parent.postMessage({type:'doorClosed'},'*')});document.getElementById('surpriseBtn').addEventListener('click',triggerSurprise);
 
-async function init(){createParticles();const urlParams=new URLSearchParams(window.location.search);const userId=urlParams.get('id')?.trim();let images=[];if(userId)images=await fetchImages(userId);if(images.length===0)images=Array.from({length:7},(_,i)=>`https://picsum.photos/600/800?random=${i+10}`);
-buildGallery(images);setTimeout(()=>{loading.style.opacity='0';setTimeout(()=>loading.style.display='none',500)},1000)}
+async function init(){const urlParams=new URLSearchParams(window.location.search);const userId=urlParams.get('id')?.trim();let images=[];if(userId)images=await fetchImages(userId);if(images.length===0)images=Array.from({length:7},(_,i)=>`https://picsum.photos/600/800?random=${i+10}`);
+setTimeout(()=>{loading.style.opacity='0';setTimeout(()=>{loading.style.display='none';buildGallery(images)},500)},1500)}
 
 init();document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 </script>
