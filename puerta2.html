@@ -3,62 +3,480 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Galería Romántica — Animaciones en Bucle (móvil)</title>
+  <title>Galería Romántica — Móvil Mejorada</title>
   <style>
-    :root{--bg-1:#040006;--bg-2:#12041a;--accent-a:#ffd1e6;--accent-b:#a6f0ff}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;color:#fff;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));-webkit-font-smoothing:antialiased;touch-action:manipulation}
+    :root{
+      --bg-1: #0a0511; 
+      --bg-2: #1a0f2e; 
+      --accent-a: #ff9ec7; 
+      --accent-b: #87ceeb;
+      --pink-glow: #ff6b9d;
+      --blue-glow: #4ecdc4;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: #fff;
+      background: radial-gradient(ellipse at center top, var(--bg-2) 0%, var(--bg-1) 100%);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      touch-action: manipulation;
+    }
 
-    /* cinematic background */
-    .bg-layers{position:fixed;inset:0;pointer-events:none;z-index:0}
-    .bokeh{position:absolute;filter:blur(46px);opacity:0.12}
-    .bokeh.b1{width:540px;height:340px;left:-8%;top:6%;background:radial-gradient(circle at 20% 30%, #ffd1e6 0%, transparent 45%), radial-gradient(circle at 80% 70%, #a6f0ff 0%, transparent 40%)}
+    /* Fondo con partículas flotantes */
+    .bg-particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
 
-    /* controls */
-    .overlay{position:fixed;left:12px;top:12px;z-index:140;padding:10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter:blur(6px)}
-    .overlay h2{margin:0;font-size:14px;color:var(--accent-a)}
-    .controls{display:flex;gap:8px;margin-top:8px}
-    .btn{padding:8px 12px;border-radius:12px;border:0;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#ffc8e0,#9ff3ff);color:#111}
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: radial-gradient(circle, var(--accent-a) 0%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float 8s infinite ease-in-out;
+    }
 
-    /* responsive grid, mobile-first */
-    .wrap{position:relative;z-index:100;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:14px}
-    .gallery{width:100%;max-width:980px;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:220px;gap:12px}
-    @media(min-width:720px){.gallery{grid-template-columns:repeat(4,1fr);gap:18px}}
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+      50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+    }
 
-    .card{position:relative;border-radius:16px;overflow:visible;display:flex;align-items:center;justify-content:center}
-    .polaroid{position:relative;width:100%;height:100%;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 24px 80px rgba(0,0,0,0.6);transform-origin:center}
-    .polaroid .imgwrap{position:absolute;inset:0}
-    .polaroid img{width:100%;height:100%;object-fit:cover;display:block;will-change:transform,filter}
+    /* Efecto de vignette más suave */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 20%, rgba(10,5,17,0.4) 80%);
+    }
 
-    /* overlay vignette & film grain */
-    .polaroid::after{content:'';position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 40px 140px rgba(0,0,0,0.45);pointer-events:none}
+    /* Header romántico */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(26,15,46,0.9) 0%, transparent 100%);
+      backdrop-filter: blur(20px);
+      text-align: center;
+    }
 
-    /* heart burst for each card */
-    .heart-burst{position:absolute;left:50%;top:50%;transform:translate(-50%,-40%);pointer-events:none;z-index:60}
-    .heart-burst .h{position:absolute;font-size:12px;opacity:0;transform:translateY(0) scale(0.8);transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .9s}
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      text-shadow: 0 0 30px rgba(255, 158, 199, 0.3);
+    }
 
-    /* modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.95));z-index:900;padding:18px}
-    .modal.show{display:flex}
-    .modal img{max-width:94vw;max-height:86vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.8)}
+    .header p {
+      font-size: 14px;
+      opacity: 0.8;
+      color: #ffdfe8;
+    }
 
-    .credits{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:120;font-size:12px;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);color:#ffdfe8}
+    /* Contenedor principal */
+    .container {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      padding: 120px 16px 100px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-    /* performance: reduce motion if user prefers */
-    @media (prefers-reduced-motion: reduce){ .polaroid img, .polaroid{animation:none!important;transition:none!important} }
+    /* Galería principal */
+    .gallery {
+      width: 100%;
+      max-width: 500px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    /* Tarjetas de fotos */
+    .photo-card {
+      position: relative;
+      aspect-ratio: 3/4;
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      backdrop-filter: blur(10px);
+      box-shadow: 
+        0 8px 32px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.1);
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      cursor: pointer;
+    }
+
+    .photo-card:nth-child(1) { grid-row: span 1; }
+    .photo-card:nth-child(2) { grid-row: span 1; }
+    .photo-card:nth-child(3) { grid-column: span 2; aspect-ratio: 16/9; }
+    .photo-card:nth-child(4) { grid-row: span 1; }
+    .photo-card:nth-child(5) { grid-row: span 1; }
+    .photo-card:nth-child(6) { grid-column: span 2; aspect-ratio: 16/9; }
+    .photo-card:nth-child(7) { grid-column: span 2; aspect-ratio: 3/2; }
+
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.8s ease-out, filter 0.6s ease;
+      will-change: transform;
+    }
+
+    /* Efectos hover/focus */
+    .photo-card:hover,
+    .photo-card.active {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 20px 40px rgba(255, 107, 157, 0.2),
+        0 8px 32px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(255,255,255,0.2);
+    }
+
+    .photo-card:hover img,
+    .photo-card.active img {
+      transform: scale(1.1);
+      filter: brightness(1.1) saturate(1.2);
+    }
+
+    /* Overlay con gradiente romántico */
+    .photo-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, 
+        rgba(255, 158, 199, 0.1) 0%, 
+        transparent 30%, 
+        transparent 70%, 
+        rgba(135, 206, 235, 0.1) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 1;
+    }
+
+    .photo-card:hover::before,
+    .photo-card.active::before {
+      opacity: 1;
+    }
+
+    /* Brillo sutil */
+    .photo-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255,255,255,0.1) 50%, 
+        transparent 70%);
+      transform: rotate(45deg);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+
+    .photo-card:hover::after {
+      opacity: 1;
+      animation: shine 2s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    /* Botones de control */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink-glow), var(--blue-glow));
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Modal mejorado */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, 
+        rgba(10,5,17,0.95) 0%, 
+        rgba(26,15,46,0.95) 100%);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 90vw;
+      max-height: 80vh;
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+
+    .modal img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 20px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      z-index: 1001;
+    }
+
+    /* Efectos de partículas de corazones */
+    .hearts-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .heart {
+      position: absolute;
+      color: var(--pink-glow);
+      font-size: 20px;
+      opacity: 0.7;
+      animation: floatHeart 6s linear infinite;
+    }
+
+    @keyframes floatHeart {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.7;
+      }
+      90% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Animaciones de entrada */
+    .photo-card {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .photo-card:nth-child(1) { animation-delay: 0.1s; }
+    .photo-card:nth-child(2) { animation-delay: 0.2s; }
+    .photo-card:nth-child(3) { animation-delay: 0.3s; }
+    .photo-card:nth-child(4) { animation-delay: 0.4s; }
+    .photo-card:nth-child(5) { animation-delay: 0.5s; }
+    .photo-card:nth-child(6) { animation-delay: 0.6s; }
+    .photo-card:nth-child(7) { animation-delay: 0.7s; }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .gallery {
+        max-width: 800px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      
+      .photo-card:nth-child(3) { grid-column: span 1; aspect-ratio: 3/4; }
+      .photo-card:nth-child(6) { grid-column: span 1; aspect-ratio: 3/4; }
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      z-index: 9999;
+    }
+
+    .loading-text {
+      text-align: center;
+      color: var(--accent-a);
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 158, 199, 0.3);
+      border-top: 3px solid var(--accent-a);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .credits {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(255, 223, 232, 0.7);
+      text-align: center;
+      z-index: 100;
+    }
+
+    /* Kenburns effect suave */
+    @keyframes kenburns {
+      0% { 
+        transform: scale(1) translate(0, 0); 
+        filter: brightness(1) contrast(1); 
+      }
+      50% { 
+        transform: scale(1.05) translate(-2px, -3px); 
+        filter: brightness(1.05) contrast(1.1); 
+      }
+      100% { 
+        transform: scale(1) translate(0, 0); 
+        filter: brightness(1) contrast(1); 
+      }
+    }
+
+    .photo-card img.kenburns {
+      animation: kenburns 8s ease-in-out infinite;
+    }
   </style>
 </head>
 <body>
-  <div class="bg-layers" aria-hidden="true"><div class="bokeh b1"></div></div>
-  <div class="overlay" role="region" aria-label="Controles"><h2>Galería Romántica v23</h2><div class="controls"><button id="backBtn" class="btn">Regresar</button><button id="surpriseBtn" class="btn">Sorpresa</button></div></div>
+  <!-- Loading Screen -->
+  <div class="loading" id="loading">
+    <div class="loading-text">
+      <div class="loading-spinner"></div>
+      <h2>Cargando momentos románticos...</h2>
+      <p>Preparando tus recuerdos especiales</p>
+    </div>
+  </div>
 
-  <main class="wrap"><section class="gallery" id="gallery" aria-label="Galería de imágenes"></section></main>
+  <!-- Partículas de fondo -->
+  <div class="bg-particles" id="bgParticles"></div>
 
-  <div class="credits">Animación automática en bucle • Toca para ampliar</div>
+  <!-- Header -->
+  <div class="header">
+    <h1>✨ Galería Romántica ✨</h1>
+    <p>Momentos especiales para recordar</p>
+  </div>
 
-  <div class="modal" id="modal" aria-hidden="true"><img id="modalImg" src="" alt="vista ampliada" /><button id="closeModal" style="position:absolute;right:18px;top:18px;padding:8px 10px;border-radius:8px;background:linear-gradient(180deg,#ffd1e6,#a6f0ff);border:0;color:#111;font-weight:700;z-index:950">Cerrar</button></div>
+  <!-- Contenedor de corazones flotantes -->
+  <div class="hearts-container" id="heartsContainer"></div>
 
-  <canvas id="fxCanvas" style="pointer-events:none;position:fixed;left:0;top:0;width:100%;height:100%;z-index:600"></canvas>
+  <!-- Contenido principal -->
+  <div class="container">
+    <div class="gallery" id="gallery">
+      <!-- Las fotos se cargarán aquí dinámicamente -->
+    </div>
+    
+    <div class="controls">
+      <button class="btn btn-secondary" id="backBtn">← Regresar</button>
+      <button class="btn btn-primary" id="surpriseBtn">💖 Sorpresa</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModal">×</button>
+      <img id="modalImg" src="" alt="Vista ampliada" />
+    </div>
+  </div>
+
+  <!-- Créditos -->
+  <div class="credits">
+    Toca cualquier foto para verla en grande 💕
+  </div>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
@@ -73,127 +491,255 @@
       appId: "1:630660710506:web:90d34150c9f21f668eca13",
       measurementId: "G-ETFDVEHML1"
     };
+
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
+    let galleryData = [];
+    let currentFocusIndex = 0;
+
+    // Elementos del DOM
+    const loading = document.getElementById('loading');
     const gallery = document.getElementById('gallery');
     const modal = document.getElementById('modal');
     const modalImg = document.getElementById('modalImg');
     const closeModal = document.getElementById('closeModal');
+    const backBtn = document.getElementById('backBtn');
     const surpriseBtn = document.getElementById('surpriseBtn');
 
-    // loader (minimal, reused) - quick
-    const loaderBar = (function(){ const d=document.createElement('div'); d.style.position='fixed'; d.style.left='50%'; d.style.top='50%'; d.style.transform='translate(-50%,-50%)'; d.style.zIndex='800'; d.style.padding='8px 12px'; d.style.borderRadius='12px'; d.style.background='linear-gradient(180deg,rgba(0,0,0,0.5),rgba(0,0,0,0.65))'; d.style.color='#ffdfe8'; d.style.fontWeight='700'; d.textContent='Cargando...'; document.body.appendChild(d); return d; })();
+    // Función para crear partículas de fondo
+    function createBackgroundParticles() {
+      const container = document.getElementById('bgParticles');
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 8 + 's';
+        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        container.appendChild(particle);
+      }
+    }
 
-    function removeLoader(){ loaderBar && loaderBar.remove(); }
+    // Función para crear corazones flotantes
+    function createFloatingHearts() {
+      const container = document.getElementById('heartsContainer');
+      const hearts = ['💖', '💕', '💗', '💘', '💝', '💞'];
+      
+      for (let i = 0; i < 5; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.animationDelay = Math.random() * 6 + 's';
+        heart.style.animationDuration = (8 + Math.random() * 4) + 's';
+        container.appendChild(heart);
+        
+        // Remover después de la animación
+        setTimeout(() => {
+          if (heart.parentNode) {
+            heart.parentNode.removeChild(heart);
+          }
+        }, 12000);
+      }
+    }
 
-    async function fetchImages(userId){ try{ const s = await get(ref(database, `usuarios/${userId}`)); if(!s.exists()) return []; const val = s.val(); const arr = val.puerta2Fotos || val.puertaFotos || val.fotos || val.images || []; if(!Array.isArray(arr)) return []; return arr.filter(u=>typeof u==='string'&&u.trim()); }catch(e){ console.error(e); return []; } }
+    // Obtener imágenes de Firebase
+    async function fetchImagesFromFirebase(userId) {
+      try {
+        const snapshot = await get(ref(database, `usuarios/${userId}`));
+        if (!snapshot.exists()) return [];
+        
+        const data = snapshot.val();
+        const images = data.puerta2Fotos || data.puertaFotos || data.fotos || data.images || [];
+        
+        return Array.isArray(images) ? images.filter(url => url && url.trim()) : [];
+      } catch (error) {
+        console.error('Error al obtener imágenes:', error);
+        return [];
+      }
+    }
 
-    function preload(urls, onProgress){ return new Promise((res)=>{ const loaded=[]; let done=0; const total=urls.length||0; if(total===0){ onProgress(100); res([]); return; } urls.forEach((u)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) res(loaded); }; i.onerror=()=>{ done++; onProgress(done/total*100); loaded.push(u); if(done===total) res(loaded); }; i.src=u; }); }); }
+    // Precargar imágenes
+    function preloadImages(urls) {
+      return Promise.all(urls.map(url => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(url);
+          img.onerror = () => resolve(url); // Incluir aunque falle
+          img.src = url;
+        });
+      }));
+    }
 
-    // MAIN: build 7 cards and give each a rich looped animation + per-loop heart burst
-    function buildGallery(urls){ const final=[]; let i=0; if(urls.length===0) urls=['https://picsum.photos/900/640?random=201','https://picsum.photos/900/640?random=202']; while(final.length<7){ final.push(urls[i%urls.length]); i++; } gallery.innerHTML=''; final.forEach((src, idx)=>{ const card=document.createElement('div'); card.className='card'; const pol=document.createElement('div'); pol.className='polaroid'; const imgwrap=document.createElement('div'); imgwrap.className='imgwrap'; const img=document.createElement('img'); img.src=src; img.alt=`Foto ${idx+1}`; img.loading='lazy'; imgwrap.appendChild(img); pol.appendChild(imgwrap);
+    // Construir galería
+    function buildGallery(images) {
+      gallery.innerHTML = '';
+      galleryData = [];
 
-      // heart burst container
-      const burst=document.createElement('div'); burst.className='heart-burst'; pol.appendChild(burst);
+      // Asegurar que tengamos exactamente 7 imágenes
+      while (galleryData.length < 7) {
+        images.forEach(img => {
+          if (galleryData.length < 7) {
+            galleryData.push(img);
+          }
+        });
+        if (images.length === 0) break;
+      }
 
-      // add pol to card and card to grid
-      card.appendChild(pol); gallery.appendChild(card);
+      // Si no hay imágenes suficientes, usar placeholders
+      if (galleryData.length === 0) {
+        for (let i = 1; i <= 7; i++) {
+          galleryData.push(`https://picsum.photos/600/800?random=${i}`);
+        }
+      }
 
-      // Create a complex WAAPI timeline that simulates TikTok-like short: kenburns + small tilt + brightness swing
-      const duration = 7000 + Math.floor(Math.random()*5000); // 7-12s
-      const keyframes = [
-        { transform: 'scale(1) translate3d(0,0,0) rotate(0deg)', filter: 'brightness(1) contrast(1)', offset:0 },
-        { transform: 'scale(1.06) translate3d(-6px,-10px,0) rotate(-0.6deg)', filter: 'brightness(1.06) contrast(1.03)', offset:0.45 },
-        { transform: 'scale(1.02) translate3d(4px,6px,0) rotate(0.4deg)', filter: 'brightness(0.98) contrast(0.98)', offset:0.75 },
-        { transform: 'scale(1) translate3d(0,0,0) rotate(0deg)', filter: 'brightness(1) contrast(1)', offset:1 }
-      ];
-      const imgAnim = img.animate(keyframes, { duration, iterations: Infinity, easing: 'ease-in-out', delay: idx*200 });
+      // Crear tarjetas de fotos
+      galleryData.forEach((imageUrl, index) => {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.innerHTML = `<img src="${imageUrl}" alt="Foto ${index + 1}" loading="lazy" />`;
+        
+        // Añadir efecto kenburns aleatorio
+        setTimeout(() => {
+          const img = card.querySelector('img');
+          img.classList.add('kenburns');
+          img.style.animationDelay = Math.random() * 3 + 's';
+          img.style.animationDuration = (6 + Math.random() * 4) + 's';
+        }, 500);
 
-      // small subtle frame glow loop using WAAPI on the pol container
-      pol.animate([{ boxShadow: '0 18px 60px rgba(0,0,0,0.6)' }, { boxShadow: '0 28px 110px rgba(255,150,200,0.12)' }, { boxShadow: '0 18px 60px rgba(0,0,0,0.6)' }], { duration: 5600 + idx*300, iterations: Infinity, easing: 'ease-in-out' });
-
-      // every time the image completes a loop-ish (approx), spawn a heart burst to feel alive
-      const burstInterval = Math.max(3500, Math.floor(duration*0.6));
-      let burstTimer = setInterval(()=> spawnBurst(burst), burstInterval + Math.floor(Math.random()*1200));
-
-      // tap interaction: quick pulse + extra hearts
-      pol.addEventListener('click', ()=>{ // quick pulse
-        img.animate([{ transform: 'scale(1.04)' }, { transform: 'scale(1)' }], { duration: 420, easing:'cubic-bezier(.2,.9,.3,1)' }); spawnBurst(burst, 10);
+        // Evento click para abrir modal
+        card.addEventListener('click', () => openModal(index));
+        
+        gallery.appendChild(card);
       });
 
-      // accessibility: open modal on double-tap for view (mobile)
-      let lastTap = 0; pol.addEventListener('touchend', (e)=>{ const now = Date.now(); if(now - lastTap < 320){ openModal(idx); } lastTap = now; }, {passive:true});
+      // Iniciar ciclo de enfoque
+      startFocusCycle();
+    }
 
-      // cleanup if needed later
-      pol.dataset._burstTimer = burstTimer;
-    });
-  }
-
-    // spawn small hearts inside a container element (card)');
-
-    function spawnBurst(container, count = 6){
-      // create a burst of small hearts that float upward and fade
-      for(let i=0;i<count;i++){
-        const h = document.createElement('div');
-        h.className = 'h';
-        h.textContent = '❤';
-        const size = 10 + Math.random()*18; h.style.fontSize = size + 'px';
-        h.style.left = (50 + (Math.random()-0.5)*40) + '%';
-        h.style.top = (48 + (Math.random()-0.5)*18) + '%';
-        container.appendChild(h);
-        // animate using requestAnimationFrame + CSS transitions
-        requestAnimationFrame(()=>{
-          const dx = (Math.random()-0.5) * 60; const dy = -50 - Math.random()*80; const rot = (Math.random()-0.5)*80;
-          h.style.opacity = '1';
-          h.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(1)`;
+    // Ciclo de enfoque automático
+    function startFocusCycle() {
+      const cards = document.querySelectorAll('.photo-card');
+      
+      function cycleFocus() {
+        cards.forEach((card, index) => {
+          card.classList.toggle('active', index === currentFocusIndex);
         });
-        // remove after done
-        setTimeout(()=>{ h.style.opacity = '0'; }, 900);
-        setTimeout(()=>{ h.remove(); }, 1600 + Math.random()*400);
+        
+        currentFocusIndex = (currentFocusIndex + 1) % cards.length;
       }
+      
+      // Inicial
+      cycleFocus();
+      
+      // Repetir cada 4 segundos
+      setInterval(cycleFocus, 4000);
     }
 
-    // Modal handlers
-    function openModal(index){ currentModalIndex = index; modalImg.src = gallery.querySelectorAll('img')[index].src; modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow = 'hidden'; if(window._surpriseInterval) clearInterval(window._surpriseInterval); }
-    function closeModalFn(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); modalImg.src = ''; document.body.style.overflow = ''; if(window._surpriseInterval) clearInterval(window._surpriseInterval); window._surpriseInterval = setInterval(()=> triggerSurprise(), 12000 + Math.floor(Math.random()*6000)); }
+    // Abrir modal
+    function openModal(index) {
+      modalImg.src = galleryData[index];
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Cerrar modal
+    function closeModalFn() {
+      modal.classList.remove('show');
+      modalImg.src = '';
+      document.body.style.overflow = '';
+    }
+
+    // Efecto sorpresa
+    function triggerSurprise() {
+      // Crear corazones
+      createFloatingHearts();
+      
+      // Efecto de brillo en todas las fotos
+      const cards = document.querySelectorAll('.photo-card');
+      cards.forEach((card, index) => {
+        setTimeout(() => {
+          card.style.transform = 'scale(1.05)';
+          card.style.boxShadow = '0 20px 40px rgba(255, 107, 157, 0.4)';
+          
+          setTimeout(() => {
+            card.style.transform = '';
+            card.style.boxShadow = '';
+          }, 800);
+        }, index * 100);
+      });
+    }
+
+    // Event listeners
     closeModal.addEventListener('click', closeModalFn);
-    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModalFn(); });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModalFn();
+    });
+    
+    backBtn.addEventListener('click', () => {
+      window.parent.postMessage({ type: 'doorClosed' }, '*');
+    });
+    
+    surpriseBtn.addEventListener('click', triggerSurprise);
 
-    // Surprise: fireworks + hearts on all cards
-    function triggerSurprise(){ // fireworks
-      const W = innerWidth, H = innerHeight;
-      for(let i=0;i<3;i++){
-        const x = Math.random()*(W*0.7)+W*0.15; const y = Math.random()*(H*0.35)+H*0.15; launchFirework(x,y);
+    // Inicialización
+    async function init() {
+      // Crear efectos de fondo
+      createBackgroundParticles();
+      
+      // Obtener ID de usuario
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('id')?.trim();
+      
+      let images = [];
+      if (userId) {
+        images = await fetchImagesFromFirebase(userId);
       }
-      // hearts on each visible card
-      document.querySelectorAll('.heart-burst').forEach(b => spawnBurst(b, 6));
+      
+      // Si no hay imágenes, usar placeholders románticos
+      if (images.length === 0) {
+        images = [
+          'https://picsum.photos/600/800?random=1',
+          'https://picsum.photos/600/800?random=2',
+          'https://picsum.photos/600/800?random=3',
+          'https://picsum.photos/600/800?random=4',
+          'https://picsum.photos/600/800?random=5',
+          'https://picsum.photos/600/800?random=6',
+          'https://picsum.photos/600/800?random=7'
+        ];
+      }
+      
+      // Precargar y construir galería
+      const preloadedImages = await preloadImages(images);
+      buildGallery(preloadedImages);
+      
+      // Ocultar loading
+      setTimeout(() => {
+        loading.style.opacity = '0';
+        setTimeout(() => {
+          loading.style.display = 'none';
+        }, 500);
+      }, 1000);
+      
+      // Efectos automáticos
+      setTimeout(() => {
+        createFloatingHearts();
+      }, 2000);
+      
+      // Corazones cada 15 segundos
+      setInterval(createFloatingHearts, 15000);
     }
-    surpriseBtn.addEventListener('click', ()=> triggerSurprise());
 
-    // Fireworks canvas (lighter weight than before)
-    const fxCanvas = document.getElementById('fxCanvas'); const ctx = fxCanvas.getContext('2d'); let W = fxCanvas.width = innerWidth; let H = fxCanvas.height = innerHeight; window.addEventListener('resize', ()=>{ W = fxCanvas.width = innerWidth; H = fxCanvas.height = innerHeight; });
-    const particles = [];
-    function launchFirework(x,y){ const count = 20 + Math.floor(Math.random()*28); const hue = Math.floor(Math.random()*60)+300; for(let i=0;i<count;i++){ const a = Math.random()*Math.PI*2; const s = 2 + Math.random()*5; particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 0.8 + Math.random()*1.2, age:0, hue }); } }
-    function tickFX(dt){ ctx.clearRect(0,0,W,H); for(let i=particles.length-1;i>=0;i--){ const p = particles[i]; p.age += dt; if(p.age >= p.life){ particles.splice(i,1); continue; } p.vy += 0.06; p.vx *= 0.998; p.vy *= 0.998; p.x += p.vx; p.y += p.vy; const t = p.age / p.life; ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `hsla(${p.hue},85%,65%,${1 - t})`; ctx.beginPath(); ctx.arc(p.x, p.y, 2.6*(1 - t) + 0.8, 0, Math.PI*2); ctx.fill(); } }
-    let last = performance.now(); function loopFX(){ const now = performance.now(); const dt = (now - last)/1000; last = now; tickFX(dt); requestAnimationFrame(loopFX); } loopFX();
+    // Iniciar aplicación
+    init();
 
-    // initial load: read id -> fetch -> preload -> build
-    (async function init(){
-      const params = new URLSearchParams(location.search); const userId = params.get('id')?.trim();
-      let urls = [];
-      if(userId){ urls = await fetchImages(userId); }
-      if(!urls || urls.length === 0) urls = ['https://picsum.photos/900/640?random=401','https://picsum.photos/900/640?random=402'];
-      // preload and show loader progress
-      await preload(urls, (p)=>{ loaderBar.textContent = 'Cargando ' + Math.round(p) + '%'; });
-      removeLoader();
-      buildGallery(urls);
-      // start automatic surprise loop gently
-      window._surpriseInterval = setInterval(()=> triggerSurprise(), 12000 + Math.floor(Math.random()*8000));
-    })();
-
-    // small helper: pause animations when modal open
-    document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ if(window._surpriseInterval) clearInterval(window._surpriseInterval); } else { if(!window._surpriseInterval) window._surpriseInterval = setInterval(()=> triggerSurprise(), 12000 + Math.floor(Math.random()*8000)); } });
+    // Soporte para teclado
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModalFn();
+    });
 
   </script>
-}]}
+</body>
+</html>
