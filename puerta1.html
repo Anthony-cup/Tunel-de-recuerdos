@@ -3,10 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Polaroid (Jardín de Luces · Animación fluida)</title>
+  <title>Sala Romántica — Polaroid (Jardín de Luces · Versión Animada)</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --rose-1:#ff7fbf; --rose-2:#ffdfe9; --card-w:clamp(220px,62vw,360px); --card-h:clamp(320px,58vh,420px); }
+    :root{
+      --rose-1:#ff7fbf; --rose-2:#ffdfe9; --glow: rgba(255,120,180,0.18);
+      --card-w:clamp(220px,62vw,360px); --card-h:clamp(320px,58vh,420px);
+    }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:radial-gradient(900px 460px at 14% 16%, rgba(255,120,170,0.06), transparent 8%),linear-gradient(180deg,#050006,#0b0210 65%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
 
@@ -14,34 +17,42 @@
     #fireworksCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
     /* ambience & sparkles layer */
-    #ambience{position:fixed;inset:0;z-index:1;pointer-events:none}
+    #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.03), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.02), transparent)}
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdce7);opacity:0.0;filter:blur(1px);}
 
     /* main stage */
     #stage{position:relative;z-index:5;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
 
     /* ring container */
     #ring-container{position:relative;width:min(88vw,1100px);height:min(78vh,800px);display:block}
+
+    /* central spotlight */
     #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;height:44%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%);filter:blur(18px);z-index:10;pointer-events:none}
 
     /* ring slots and polaroids */
-    .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center;will-change:left,top,transform;transition:left 700ms cubic-bezier(.22,.9,.35,1), top 700ms cubic-bezier(.22,.9,.35,1), transform 700ms cubic-bezier(.22,.9,.35,1), opacity 500ms}
-    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.22,.9,.35,1),filter 500ms ease,opacity 450ms ease}
+    .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center}
+    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease,filter 400ms ease}
     .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px;display:block}
     .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700}
 
-    /* new gentle crossfade + float for active transitions */
-    .ring-slot .polaroid {opacity:0.95;}
-    .ring-slot .polaroid.img-fade { transition: opacity 700ms cubic-bezier(.22,.9,.35,1), transform 700ms cubic-bezier(.22,.9,.35,1); }
-    .polaroid.active{transform:scale(1.06) translateY(-6px);box-shadow:0 40px 120px rgba(255,120,180,0.18),0 0 80px rgba(255,140,190,0.06);filter:brightness(1.02);opacity:1}
-    .polaroid.dim{filter:blur(0.8px) saturate(.92) brightness(.95);opacity:0.86}
+    /* shimmer effect across active card */
+    .polaroid::after{content:'';position:absolute;left:-40%;top:0;width:140%;height:100%;pointer-events:none;transform:skewX(-18deg);opacity:0;transition:opacity .3s}
+    .polaroid.active::after{background:linear-gradient(90deg,rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 60%);animation:shine 1.2s linear infinite;opacity:1}
+    @keyframes shine{0%{transform:translateX(-100%) skewX(-18deg)}100%{transform:translateX(100%) skewX(-18deg)}}
 
-    /* smooth small parallax when pointer moves */
-    .polaroid { transform-origin:center center; }
-    .polaroid .inner { width:100%;height:100%;display:flex;flex-direction:column }
+    /* glow ring behind active card */
+    .polaroid.active{box-shadow:0 40px 120px rgba(255,120,180,0.18),0 0 80px rgba(255,140,190,0.06);filter:drop-shadow(0 12px 30px rgba(255,120,180,0.12));transform:scale(1.06)}
 
-    /* subtle glow animation on active */
-    @keyframes softGlow{0%{box-shadow:0 30px 80px rgba(255,120,180,0.06)}50%{box-shadow:0 40px 100px rgba(255,120,180,0.12)}100%{box-shadow:0 30px 80px rgba(255,120,180,0.06)}}
-    .polaroid.active { animation: softGlow 3.5s ease-in-out infinite; }
+    /* floating / bobbing variations */
+    @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+    .ring-slot{animation: bob 6s ease-in-out infinite;}
+    .ring-slot[data-idx='0']{animation-delay:0s}
+    .ring-slot[data-idx='1']{animation-delay:0.4s}
+    .ring-slot[data-idx='2']{animation-delay:0.9s}
+    .ring-slot[data-idx='3']{animation-delay:1.3s}
+    .ring-slot[data-idx='4']{animation-delay:1.7s}
+    .ring-slot[data-idx='5']{animation-delay:2.1s}
+    .ring-slot[data-idx='6']{animation-delay:2.6s}
 
     /* center card */
     .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 120px rgba(255,110,160,0.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
@@ -49,14 +60,18 @@
     .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px}
     .center-card .caption{height:56px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:800}
 
-    /* particles (petals) style */
+    /* particles (petals) style (CSS fallback) */
     .petal{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff, #ffd1e8);pointer-events:none;transform:translateY(0);opacity:0}
 
-    /* controls: only pause and regresar (no title/text) */
-    #controls{position:fixed;left:12px;top:12px;z-index:60;padding:8px;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5);display:flex;gap:8px}
+    /* controls */
+    #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
+    #controls h3{margin:0;font-family:'Playfair Display',serif;color:var(--rose-1)}
+    #controls p{margin:6px 0 0 0;font-size:13px;color:rgba(255,240,245,0.95)}
+    .controls-row{display:flex;gap:8px;margin-top:8px}
     .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
 
+    /* responsive tweaks */
     @media (max-width:720px){ .center-card{width:86vw;height:62vh} :root{--card-w:70vw;--card-h:54vh} }
 
     /* preview modal fallback */
@@ -76,17 +91,22 @@
       <div id="ring-slots"></div>
       <div id="centerCard" class="center-card" role="dialog" aria-hidden="true">
         <img id="centerImg" src="" alt="Recuerdo grande">
-        <div class="caption" id="centerCaption"></div>
+        <div class="caption" id="centerCaption">Toca una foto para verla</div>
       </div>
     </div>
   </div>
 
   <div id="controls">
-    <button id="autoplayBtn" class="btn">Pausa</button>
-    <button id="returnBtn" class="btn ghost">Regresar</button>
+    <h3>Jardín de Luces — Sala Romántica</h3>
+    <p>Ahora con fuegos de corazones y animaciones románticas para las 7 fotos.</p>
+    <div class="controls-row">
+      <button id="autoplayBtn" class="btn">Pausa</button>
+      <button id="fireBtn" class="btn ghost">Fuegos</button>
+      <button id="returnBtn" class="btn ghost">Regresar</button>
+    </div>
   </div>
 
-  <div id="loading"></div>
+  <div id="loading">Cargando...</div>
   <div id="previewModal" aria-hidden="true">
     <img id="previewBig" src="" alt="Vista previa grande">
   </div>
@@ -115,6 +135,7 @@
     const centerCaption = document.getElementById('centerCaption');
     const loading = document.getElementById('loading');
     const autoplayBtn = document.getElementById('autoplayBtn');
+    const fireBtn = document.getElementById('fireBtn');
     const returnBtn = document.getElementById('returnBtn');
     const previewModal = document.getElementById('previewModal');
     const previewBig = document.getElementById('previewBig');
@@ -129,43 +150,28 @@
     async function fetchImages(){
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id')?.trim();
-      if (!id){ return []; }
+      if (!id){ loading.textContent = 'Falta ?id=TU_ID en la URL'; return []; }
       try{
         const snap = await get(ref(database, `usuarios/${id}`));
-        if (!snap.exists()){ return []; }
+        if (!snap.exists()){ loading.textContent = 'ID no encontrado.'; return []; }
         const data = snap.val();
         let all = [];
         for(let i=1;i<=5;i++){ const fotos = data[`puerta${i}Fotos`] || []; all = all.concat(fotos.filter(u=>typeof u==='string' && u.trim())); }
         let valid = all.slice(0,TOTAL);
-        if (valid.length===0){ return []; }
+        if (valid.length===0){ loading.textContent='No hay imágenes.'; return []; }
         while(valid.length<TOTAL) valid = valid.concat(valid.slice(0,Math.min(valid.length,TOTAL-valid.length)));
         return valid.slice(0,TOTAL);
-      }catch(e){ console.error(e); return []; }
+      }catch(e){ console.error(e); loading.textContent='Error al cargar imágenes.'; return []; }
     }
 
     function createSlot(url, i){
       const slot = document.createElement('div'); slot.className='ring-slot'; slot.dataset.idx = i;
-      // add gentle transition delay for staggered fluid motion
-      slot.style.transitionDelay = `${(i % TOTAL) * 45}ms`;
-
-      const card = document.createElement('div'); card.className='polaroid img-fade';
-      const inner = document.createElement('div'); inner.className='inner';
+      const card = document.createElement('div'); card.className='polaroid';
       const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${i+1}`; img.loading='lazy';
-      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = ``;
-      inner.appendChild(img); inner.appendChild(cap);
-      card.appendChild(inner);
+      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${i+1}`;
+      card.appendChild(img); card.appendChild(cap);
       slot.appendChild(card);
       ring.appendChild(slot);
-
-      // pointer parallax for more fluid interactivity
-      card.addEventListener('pointermove', (ev)=>{
-        if (!card.classList.contains('active')) return;
-        const r = card.getBoundingClientRect();
-        const dx = (ev.clientX - (r.left + r.width/2)) / (r.width/2);
-        const dy = (ev.clientY - (r.top + r.height/2)) / (r.height/2);
-        card.style.transform = `scale(1.06) translateY(-6px) rotateX(${ -dy * 4 }deg) rotateY(${ dx * 6 }deg)`;
-      });
-      card.addEventListener('pointerleave', ()=>{ if (card.classList.contains('active')) card.style.transform='scale(1.06) translateY(-6px)'; });
 
       // click behaviour
       card.addEventListener('click', ()=>{ focus(i); openPreview(url); spawnPetalBurstAtSlot(slot); triggerLocalizedFirework(slot); });
@@ -187,19 +193,16 @@
         const angle = ( (idx - current) / TOTAL ) * Math.PI * 2 + rotation;
         const x = cx + Math.cos(angle) * radius;
         const y = cy + Math.sin(angle) * (radius * 0.78);
-        // animate position & transform smoothly via CSS transitions
         slot.style.left = x + 'px'; slot.style.top = y + 'px';
-        const t = angle * 12;
         const scale = idx===current ? 1.06 : 0.86 + (1 - (Math.abs((idx-current+TOTAL)%TOTAL) / TOTAL) * 0.18);
-        slot.style.transform = `translate(-50%,-50%) rotate(${t}deg) scale(${scale})`;
+        slot.style.transform = `translate(-50%,-50%) rotate(${angle * 12}deg) scale(${scale})`;
         slot.style.zIndex = (idx===current?120:30 + ((idx - current + TOTAL) % TOTAL));
         const card = slot.querySelector('.polaroid');
-        if (idx===current){ card.classList.add('active'); card.classList.remove('dim'); } else { card.classList.remove('active'); card.classList.add('dim'); card.style.transform = '';
-        }
+        if (idx===current){ card.classList.add('active'); } else { card.classList.remove('active'); }
       });
     }
 
-    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = ``; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
+    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = `Recuerdo ${i+1}`; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
 
     function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
@@ -213,6 +216,7 @@
 
     autoplayBtn.addEventListener('click', ()=>{ autoplay = !autoplay; if (autoplay) startAutoplay(); else stopAutoplay(); });
     returnBtn.addEventListener('click', ()=>{ window.parent.postMessage({type:'doorClosed'}, '*'); });
+    fireBtn.addEventListener('click', ()=>{ fireworksOn = !fireworksOn; fireBtn.textContent = fireworksOn ? 'Fuegos' : 'Fuegos (off)'; });
 
     // preview
     function openPreview(url){ previewBig.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden', 'false'); }
@@ -246,6 +250,7 @@
       ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
 
     function updateFireworks(){ ctx.clearRect(0,0,cw,ch);
+      // spawn more often but controlled
       if (fireworksOn && Math.random() < 0.04) launchRandomFirework();
       for(let i=fireworks.length-1;i>=0;i--){ const fw = fireworks[i]; fw.life++;
         if (fw.life===1) createParticles(fw);
@@ -257,6 +262,7 @@
       }
     }
 
+    // localized firework at slot center
     function triggerLocalizedFirework(slot){ const rc = slot.getBoundingClientRect(); const x = rc.left + rc.width/2; const y = rc.top + rc.height/2; launchFireworkAt(x, y - 30, 1.4); }
 
     // main loop
@@ -265,7 +271,9 @@
     // init
     (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown
       // preload
-      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*700); } }; }
+      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); // initial soft fireworks
+                  for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*700);
+                } }; }
     })();
 
     // expose helpers for debugging
