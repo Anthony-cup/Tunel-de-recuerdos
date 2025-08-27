@@ -26,7 +26,7 @@
       touch-action: manipulation;
     }
 
-    /* Fondo con partículas flotantes */
+    /* Fondo con partículas flotantes más románticas */
     .bg-particles {
       position: fixed;
       inset: 0;
@@ -36,57 +36,152 @@
 
     .particle {
       position: absolute;
-      width: 3px;
-      height: 3px;
-      background: radial-gradient(circle, var(--accent-a) 0%, transparent 70%);
       border-radius: 50%;
-      opacity: 0.6;
-      animation: float 8s infinite ease-in-out;
+      opacity: 0.4;
+      animation: float 12s infinite ease-in-out;
+    }
+
+    .particle.heart {
+      width: 6px;
+      height: 6px;
+      background: radial-gradient(circle, var(--pink-glow) 0%, transparent 70%);
+    }
+
+    .particle.star {
+      width: 4px;
+      height: 4px;
+      background: radial-gradient(circle, var(--accent-b) 0%, transparent 70%);
     }
 
     @keyframes float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
-      50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+      0%, 100% { 
+        transform: translateY(0px) translateX(0px) rotate(0deg) scale(0.8); 
+        opacity: 0.2; 
+      }
+      25% { 
+        transform: translateY(-15px) translateX(10px) rotate(90deg) scale(1); 
+        opacity: 0.6; 
+      }
+      50% { 
+        transform: translateY(-25px) translateX(-5px) rotate(180deg) scale(1.2); 
+        opacity: 0.8; 
+      }
+      75% { 
+        transform: translateY(-10px) translateX(-15px) rotate(270deg) scale(1); 
+        opacity: 0.6; 
+      }
     }
 
-    /* Efecto de vignette más suave */
+    /* Efecto de vignette cinematográfico */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       z-index: 2;
       pointer-events: none;
-      background: radial-gradient(ellipse at center, transparent 20%, rgba(10,5,17,0.4) 80%);
+      background: radial-gradient(ellipse at center, transparent 15%, rgba(10,5,17,0.3) 70%, rgba(10,5,17,0.7) 95%);
     }
 
-    /* Header romántico */
-    .header {
+    /* Header con botones en esquinas */
+    .top-bar {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      z-index: 100;
-      padding: 20px;
-      background: linear-gradient(180deg, rgba(26,15,46,0.9) 0%, transparent 100%);
+      z-index: 200;
+      padding: 15px 20px;
+      background: linear-gradient(180deg, rgba(26,15,46,0.95) 0%, transparent 100%);
       backdrop-filter: blur(20px);
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
     }
 
-    .header h1 {
-      font-size: 24px;
+    .back-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, rgba(255,158,199,0.9), rgba(135,206,235,0.9));
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255,158,199,0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-bottom: 8px;
+    }
+
+    .back-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(255,158,199,0.5);
+    }
+
+    .instruction-text {
+      font-size: 11px;
+      color: rgba(255,223,232,0.8);
+      max-width: 200px;
+      line-height: 1.3;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .surprise-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .surprise-btn {
+      background: linear-gradient(135deg, var(--pink-glow), #ff4757);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-bottom: 8px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255,71,87,0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(255,71,87,0.5); }
+    }
+
+    .surprise-btn:hover {
+      animation: none;
+      transform: translateY(-3px) scale(1.08);
+      box-shadow: 0 12px 30px rgba(255,71,87,0.6);
+    }
+
+    /* Título central flotante */
+    .title-section {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .title-section h1 {
+      font-size: 20px;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+      background: linear-gradient(135deg, var(--accent-a), var(--accent-b), #ffd700);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 8px;
-      text-shadow: 0 0 30px rgba(255, 158, 199, 0.3);
+      text-shadow: 0 0 30px rgba(255,158,199,0.4);
+      animation: titleGlow 4s ease-in-out infinite;
     }
 
-    .header p {
-      font-size: 14px;
-      opacity: 0.8;
-      color: #ffdfe8;
+    @keyframes titleGlow {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,158,199,0.3)); }
+      50% { filter: drop-shadow(0 0 15px rgba(255,158,199,0.6)); }
     }
 
     /* Contenedor principal */
@@ -94,35 +189,37 @@
       position: relative;
       z-index: 10;
       min-height: 100vh;
-      padding: 120px 16px 100px 16px;
+      padding: 120px 16px 80px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* Galería principal */
+    /* Galería con efectos cinematográficos */
     .gallery {
       width: 100%;
       max-width: 500px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 18px;
       margin-bottom: 30px;
+      perspective: 1000px;
     }
 
-    /* Tarjetas de fotos */
+    /* Tarjetas con efectos de cámara avanzados */
     .photo-card {
       position: relative;
       aspect-ratio: 3/4;
-      border-radius: 20px;
+      border-radius: 22px;
       overflow: hidden;
-      background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-      backdrop-filter: blur(10px);
+      background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      backdrop-filter: blur(15px);
       box-shadow: 
-        0 8px 32px rgba(0,0,0,0.4),
-        inset 0 1px 2px rgba(255,255,255,0.1);
-      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        0 10px 40px rgba(0,0,0,0.4),
+        inset 0 1px 2px rgba(255,255,255,0.15);
+      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
       cursor: pointer;
+      transform-style: preserve-3d;
     }
 
     .photo-card:nth-child(1) { grid-row: span 1; }
@@ -137,115 +234,122 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.8s ease-out, filter 0.6s ease;
-      will-change: transform;
+      transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform, filter;
+      transform-origin: center center;
     }
 
-    /* Efectos hover/focus */
-    .photo-card:hover,
-    .photo-card.active {
-      transform: translateY(-8px) scale(1.02);
+    /* Efectos automáticos de cámara */
+    .photo-card.camera-focus {
+      transform: translateY(-12px) scale(1.04) rotateX(5deg);
       box-shadow: 
-        0 20px 40px rgba(255, 107, 157, 0.2),
-        0 8px 32px rgba(0,0,0,0.6),
-        inset 0 1px 2px rgba(255,255,255,0.2);
+        0 25px 60px rgba(255, 107, 157, 0.25),
+        0 15px 40px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(255,255,255,0.25);
+      z-index: 50;
     }
 
-    .photo-card:hover img,
-    .photo-card.active img {
-      transform: scale(1.1);
+    .photo-card.camera-focus img {
+      transform: scale(1.15) rotate(1deg);
+      filter: brightness(1.15) saturate(1.3) contrast(1.1);
+    }
+
+    .photo-card.camera-blur {
+      filter: blur(1px);
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+
+    .photo-card.camera-zoom img {
+      transform: scale(1.2) translate(3px, -2px);
       filter: brightness(1.1) saturate(1.2);
     }
 
-    /* Overlay con gradiente romántico */
+    /* Overlay cinematográfico */
     .photo-card::before {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(135deg, 
-        rgba(255, 158, 199, 0.1) 0%, 
-        transparent 30%, 
-        transparent 70%, 
-        rgba(135, 206, 235, 0.1) 100%);
+        rgba(255, 158, 199, 0.15) 0%, 
+        transparent 25%, 
+        transparent 75%, 
+        rgba(135, 206, 235, 0.15) 100%);
       opacity: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.6s ease;
       z-index: 1;
     }
 
-    .photo-card:hover::before,
-    .photo-card.active::before {
+    .photo-card.camera-focus::before {
       opacity: 1;
     }
 
-    /* Brillo sutil */
+    /* Efecto de destello de cámara */
     .photo-card::after {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
+      top: -100%;
+      left: -100%;
+      width: 300%;
+      height: 300%;
       background: linear-gradient(45deg, 
-        transparent 30%, 
-        rgba(255,255,255,0.1) 50%, 
-        transparent 70%);
+        transparent 40%, 
+        rgba(255,255,255,0.3) 50%, 
+        transparent 60%);
       transform: rotate(45deg);
       opacity: 0;
-      transition: opacity 0.6s ease;
+      transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }
 
-    .photo-card:hover::after {
+    .photo-card.camera-flash::after {
       opacity: 1;
-      animation: shine 2s ease-in-out infinite;
+      animation: cameraFlash 2s ease-out;
     }
 
-    @keyframes shine {
-      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    @keyframes cameraFlash {
+      0% { 
+        transform: translateX(-150%) translateY(-150%) rotate(45deg) scale(0.8); 
+        opacity: 0; 
+      }
+      10% { 
+        opacity: 0.8; 
+      }
+      100% { 
+        transform: translateX(150%) translateY(150%) rotate(45deg) scale(1.2); 
+        opacity: 0; 
+      }
     }
 
-    /* Botones de control */
-    .controls {
-      display: flex;
-      gap: 16px;
-      margin-top: 20px;
+    /* Efectos de Ken Burns automáticos más suaves */
+    @keyframes kenburns-romantic {
+      0% { 
+        transform: scale(1) translate(0, 0) rotate(0deg); 
+        filter: brightness(1) contrast(1) saturate(1); 
+      }
+      25% { 
+        transform: scale(1.08) translate(-4px, -6px) rotate(0.5deg); 
+        filter: brightness(1.08) contrast(1.05) saturate(1.15); 
+      }
+      50% { 
+        transform: scale(1.12) translate(2px, -8px) rotate(-0.3deg); 
+        filter: brightness(1.12) contrast(1.08) saturate(1.25); 
+      }
+      75% { 
+        transform: scale(1.06) translate(-2px, 4px) rotate(0.2deg); 
+        filter: brightness(1.06) contrast(1.03) saturate(1.1); 
+      }
+      100% { 
+        transform: scale(1) translate(0, 0) rotate(0deg); 
+        filter: brightness(1) contrast(1) saturate(1); 
+      }
     }
 
-    .btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
+    .photo-card img.kenburns-active {
+      animation: kenburns-romantic 10s ease-in-out infinite;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--pink-glow), var(--blue-glow));
-      color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 107, 157, 0.4);
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-    }
-
-    /* Modal mejorado */
+    /* Modal cinematográfico */
     .modal {
       position: fixed;
       inset: 0;
@@ -253,52 +357,85 @@
       align-items: center;
       justify-content: center;
       background: linear-gradient(135deg, 
-        rgba(10,5,17,0.95) 0%, 
-        rgba(26,15,46,0.95) 100%);
-      backdrop-filter: blur(20px);
+        rgba(10,5,17,0.98) 0%, 
+        rgba(26,15,46,0.98) 100%);
+      backdrop-filter: blur(25px);
       z-index: 1000;
       padding: 20px;
     }
 
     .modal.show {
       display: flex;
+      animation: modalAppear 0.6s ease-out;
+    }
+
+    @keyframes modalAppear {
+      from { 
+        opacity: 0; 
+        backdrop-filter: blur(0px); 
+      }
+      to { 
+        opacity: 1; 
+        backdrop-filter: blur(25px); 
+      }
     }
 
     .modal-content {
-      max-width: 90vw;
-      max-height: 80vh;
+      max-width: 92vw;
+      max-height: 85vh;
       position: relative;
-      border-radius: 20px;
+      border-radius: 25px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      box-shadow: 
+        0 25px 80px rgba(0,0,0,0.8),
+        0 0 60px rgba(255,158,199,0.2);
+      animation: modalContentAppear 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalContentAppear {
+      from { 
+        transform: scale(0.8) translateY(50px); 
+        opacity: 0; 
+      }
+      to { 
+        transform: scale(1) translateY(0); 
+        opacity: 1; 
+      }
     }
 
     .modal img {
       width: 100%;
       height: 100%;
       object-fit: contain;
-      border-radius: 20px;
+      border-radius: 25px;
     }
 
     .modal-close {
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       border: none;
       color: white;
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       z-index: 1001;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
     }
 
-    /* Efectos de partículas de corazones */
+    .modal-close:hover {
+      transform: scale(1.1);
+      background: rgba(255,71,87,0.8);
+    }
+
+    /* Efectos de corazones mejorados */
     .hearts-container {
       position: fixed;
       top: 0;
@@ -306,39 +443,48 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 50;
+      z-index: 60;
     }
 
     .heart {
       position: absolute;
-      color: var(--pink-glow);
-      font-size: 20px;
-      opacity: 0.7;
-      animation: floatHeart 6s linear infinite;
+      font-size: 24px;
+      opacity: 0.8;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      animation: floatHeart 8s linear infinite;
     }
 
     @keyframes floatHeart {
       0% {
-        transform: translateY(100vh) rotate(0deg);
+        transform: translateY(100vh) rotate(0deg) scale(0.8);
         opacity: 0;
       }
-      10% {
-        opacity: 0.7;
+      15% {
+        opacity: 0.8;
+        transform: translateY(85vh) rotate(45deg) scale(1);
       }
-      90% {
-        opacity: 0.7;
+      85% {
+        opacity: 0.6;
+        transform: translateY(15vh) rotate(315deg) scale(1.2);
       }
       100% {
-        transform: translateY(-100px) rotate(360deg);
+        transform: translateY(-50px) rotate(360deg) scale(0.6);
         opacity: 0;
       }
     }
 
-    /* Animaciones de entrada */
+    /* Animaciones de entrada escalonadas */
     .photo-card {
       opacity: 0;
-      transform: translateY(30px);
-      animation: fadeInUp 0.8s ease-out forwards;
+      transform: translateY(40px) scale(0.9);
+      animation: cardAppear 1s ease-out forwards;
+    }
+
+    @keyframes cardAppear {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .photo-card:nth-child(1) { animation-delay: 0.1s; }
@@ -349,26 +495,7 @@
     .photo-card:nth-child(6) { animation-delay: 0.6s; }
     .photo-card:nth-child(7) { animation-delay: 0.7s; }
 
-    @keyframes fadeInUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive */
-    @media (min-width: 768px) {
-      .gallery {
-        max-width: 800px;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-      }
-      
-      .photo-card:nth-child(3) { grid-column: span 1; aspect-ratio: 3/4; }
-      .photo-card:nth-child(6) { grid-column: span 1; aspect-ratio: 3/4; }
-    }
-
-    /* Loading */
+    /* Loading cinematográfico */
     .loading {
       position: fixed;
       inset: 0;
@@ -379,19 +506,30 @@
       z-index: 9999;
     }
 
-    .loading-text {
+    .loading-content {
       text-align: center;
       color: var(--accent-a);
     }
 
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 158, 199, 0.3);
-      border-top: 3px solid var(--accent-a);
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 158, 199, 0.3);
+      border-top: 4px solid var(--accent-a);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      animation: spin 1.5s linear infinite;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .loading-spinner::after {
+      content: '💖';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes spin {
@@ -405,49 +543,76 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 12px;
-      color: rgba(255, 223, 232, 0.7);
+      color: rgba(255, 223, 232, 0.8);
       text-align: center;
       z-index: 100;
+      background: rgba(255,255,255,0.05);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
     }
 
-    /* Kenburns effect suave */
-    @keyframes kenburns {
-      0% { 
-        transform: scale(1) translate(0, 0); 
-        filter: brightness(1) contrast(1); 
+    /* Responsive */
+    @media (min-width: 768px) {
+      .gallery {
+        max-width: 800px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
       }
-      50% { 
-        transform: scale(1.05) translate(-2px, -3px); 
-        filter: brightness(1.05) contrast(1.1); 
-      }
-      100% { 
-        transform: scale(1) translate(0, 0); 
-        filter: brightness(1) contrast(1); 
-      }
+      
+      .photo-card:nth-child(3) { grid-column: span 1; aspect-ratio: 3/4; }
+      .photo-card:nth-child(6) { grid-column: span 1; aspect-ratio: 3/4; }
     }
 
-    .photo-card img.kenburns {
-      animation: kenburns 8s ease-in-out infinite;
+    @media (max-width: 480px) {
+      .top-bar {
+        padding: 12px 15px;
+      }
+      
+      .back-btn, .surprise-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+      
+      .instruction-text {
+        font-size: 10px;
+        max-width: 150px;
+      }
     }
   </style>
 </head>
 <body>
   <!-- Loading Screen -->
   <div class="loading" id="loading">
-    <div class="loading-text">
+    <div class="loading-content">
       <div class="loading-spinner"></div>
-      <h2>Cargando momentos románticos...</h2>
-      <p>Preparando tus recuerdos especiales</p>
+      <h2>Preparando momentos mágicos...</h2>
+      <p>Cargando tus recuerdos más especiales</p>
     </div>
   </div>
 
   <!-- Partículas de fondo -->
   <div class="bg-particles" id="bgParticles"></div>
 
-  <!-- Header -->
-  <div class="header">
-    <h1>✨ Galería Romántica ✨</h1>
-    <p>Momentos especiales para recordar</p>
+  <!-- Barra superior con botones -->
+  <div class="top-bar">
+    <div class="back-section">
+      <button class="back-btn" id="backBtn">← Regresar</button>
+      <div class="instruction-text">
+        Presiona el botón de regresar para ver el siguiente contenido
+      </div>
+    </div>
+    
+    <div class="title-section">
+      <h1>✨ Galería Romántica ✨</h1>
+    </div>
+    
+    <div class="surprise-section">
+      <button class="surprise-btn" id="surpriseBtn">💖 Sorpresa</button>
+      <div class="instruction-text" style="text-align: right;">
+        Efectos mágicos y corazones flotantes
+      </div>
+    </div>
   </div>
 
   <!-- Contenedor de corazones flotantes -->
@@ -457,11 +622,6 @@
   <div class="container">
     <div class="gallery" id="gallery">
       <!-- Las fotos se cargarán aquí dinámicamente -->
-    </div>
-    
-    <div class="controls">
-      <button class="btn btn-secondary" id="backBtn">← Regresar</button>
-      <button class="btn btn-primary" id="surpriseBtn">💖 Sorpresa</button>
     </div>
   </div>
 
@@ -475,7 +635,7 @@
 
   <!-- Créditos -->
   <div class="credits">
-    Toca cualquier foto para verla en grande 💕
+    Toca cualquier foto para verla en grande • Animaciones automáticas activadas 💕
   </div>
 
   <script type="module">
@@ -497,6 +657,8 @@
 
     let galleryData = [];
     let currentFocusIndex = 0;
+    let cameraEffectsInterval;
+    let kenburnsInterval;
 
     // Elementos del DOM
     const loading = document.getElementById('loading');
@@ -507,40 +669,45 @@
     const backBtn = document.getElementById('backBtn');
     const surpriseBtn = document.getElementById('surpriseBtn');
 
-    // Función para crear partículas de fondo
+    // Crear partículas de fondo más románticas
     function createBackgroundParticles() {
       const container = document.getElementById('bgParticles');
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 30; i++) {
         const particle = document.createElement('div');
-        particle.className = 'particle';
+        const isHeart = Math.random() > 0.6;
+        particle.className = `particle ${isHeart ? 'heart' : 'star'}`;
         particle.style.left = Math.random() * 100 + '%';
         particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 8 + 's';
-        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        particle.style.animationDelay = Math.random() * 12 + 's';
+        particle.style.animationDuration = (8 + Math.random() * 6) + 's';
         container.appendChild(particle);
       }
     }
 
-    // Función para crear corazones flotantes
+    // Crear corazones flotantes mejorados
     function createFloatingHearts() {
       const container = document.getElementById('heartsContainer');
-      const hearts = ['💖', '💕', '💗', '💘', '💝', '💞'];
+      const hearts = ['💖', '💕', '💗', '💘', '💝', '💞', '🌸', '✨', '🦋'];
       
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 8; i++) {
         const heart = document.createElement('div');
         heart.className = 'heart';
         heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
         heart.style.left = Math.random() * 100 + '%';
-        heart.style.animationDelay = Math.random() * 6 + 's';
-        heart.style.animationDuration = (8 + Math.random() * 4) + 's';
+        heart.style.animationDelay = Math.random() * 2 + 's';
+        heart.style.animationDuration = (6 + Math.random() * 4) + 's';
+        
+        // Colores aleatorios románticos
+        const colors = ['#ff6b9d', '#ff9ec7', '#87ceeb', '#ffd700', '#ff69b4'];
+        heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+        
         container.appendChild(heart);
         
-        // Remover después de la animación
         setTimeout(() => {
           if (heart.parentNode) {
             heart.parentNode.removeChild(heart);
           }
-        }, 12000);
+        }, 10000);
       }
     }
 
@@ -567,10 +734,64 @@
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => resolve(url);
-          img.onerror = () => resolve(url); // Incluir aunque falle
+          img.onerror = () => resolve(url);
           img.src = url;
         });
       }));
+    }
+
+    // Efectos de cámara automáticos
+    function startCameraEffects() {
+      const cards = document.querySelectorAll('.photo-card');
+      if (cards.length === 0) return;
+      
+      let focusIndex = 0;
+      let effectIndex = 0;
+      
+      function applyCameraEffect() {
+        // Resetear todos los efectos
+        cards.forEach(card => {
+          card.classList.remove('camera-focus', 'camera-blur', 'camera-zoom', 'camera-flash');
+          const img = card.querySelector('img');
+          if (img) img.classList.remove('kenburns-active');
+        });
+        
+        // Aplicar efecto principal a la foto enfocada
+        const focusCard = cards[focusIndex];
+        const focusImg = focusCard.querySelector('img');
+        
+        switch(effectIndex % 4) {
+          case 0:
+            focusCard.classList.add('camera-focus');
+            if (focusImg) focusImg.classList.add('kenburns-active');
+            break;
+          case 1:
+            focusCard.classList.add('camera-zoom');
+            focusCard.classList.add('camera-flash');
+            break;
+          case 2:
+            focusCard.classList.add('camera-focus');
+            // Aplicar blur a las otras fotos
+            cards.forEach((card, index) => {
+              if (index !== focusIndex) {
+                card.classList.add('camera-blur');
+              }
+            });
+            break;
+          case 3:
+            focusCard.classList.add('camera-zoom');
+            if (focusImg) focusImg.classList.add('kenburns-active');
+            break;
+        }
+        
+        focusIndex = (focusIndex + 1) % cards.length;
+        effectIndex++;
+      }
+      
+      // Iniciar efectos
+      applyCameraEffect();
+      
+      cameraEffectsInterval = setInterval(applyCameraEffect, 3500);
     }
 
     // Construir galería
@@ -588,158 +809,4 @@
         if (images.length === 0) break;
       }
 
-      // Si no hay imágenes suficientes, usar placeholders
-      if (galleryData.length === 0) {
-        for (let i = 1; i <= 7; i++) {
-          galleryData.push(`https://picsum.photos/600/800?random=${i}`);
-        }
-      }
-
-      // Crear tarjetas de fotos
-      galleryData.forEach((imageUrl, index) => {
-        const card = document.createElement('div');
-        card.className = 'photo-card';
-        card.innerHTML = `<img src="${imageUrl}" alt="Foto ${index + 1}" loading="lazy" />`;
-        
-        // Añadir efecto kenburns aleatorio
-        setTimeout(() => {
-          const img = card.querySelector('img');
-          img.classList.add('kenburns');
-          img.style.animationDelay = Math.random() * 3 + 's';
-          img.style.animationDuration = (6 + Math.random() * 4) + 's';
-        }, 500);
-
-        // Evento click para abrir modal
-        card.addEventListener('click', () => openModal(index));
-        
-        gallery.appendChild(card);
-      });
-
-      // Iniciar ciclo de enfoque
-      startFocusCycle();
-    }
-
-    // Ciclo de enfoque automático
-    function startFocusCycle() {
-      const cards = document.querySelectorAll('.photo-card');
-      
-      function cycleFocus() {
-        cards.forEach((card, index) => {
-          card.classList.toggle('active', index === currentFocusIndex);
-        });
-        
-        currentFocusIndex = (currentFocusIndex + 1) % cards.length;
-      }
-      
-      // Inicial
-      cycleFocus();
-      
-      // Repetir cada 4 segundos
-      setInterval(cycleFocus, 4000);
-    }
-
-    // Abrir modal
-    function openModal(index) {
-      modalImg.src = galleryData[index];
-      modal.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
-
-    // Cerrar modal
-    function closeModalFn() {
-      modal.classList.remove('show');
-      modalImg.src = '';
-      document.body.style.overflow = '';
-    }
-
-    // Efecto sorpresa
-    function triggerSurprise() {
-      // Crear corazones
-      createFloatingHearts();
-      
-      // Efecto de brillo en todas las fotos
-      const cards = document.querySelectorAll('.photo-card');
-      cards.forEach((card, index) => {
-        setTimeout(() => {
-          card.style.transform = 'scale(1.05)';
-          card.style.boxShadow = '0 20px 40px rgba(255, 107, 157, 0.4)';
-          
-          setTimeout(() => {
-            card.style.transform = '';
-            card.style.boxShadow = '';
-          }, 800);
-        }, index * 100);
-      });
-    }
-
-    // Event listeners
-    closeModal.addEventListener('click', closeModalFn);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModalFn();
-    });
-    
-    backBtn.addEventListener('click', () => {
-      window.parent.postMessage({ type: 'doorClosed' }, '*');
-    });
-    
-    surpriseBtn.addEventListener('click', triggerSurprise);
-
-    // Inicialización
-    async function init() {
-      // Crear efectos de fondo
-      createBackgroundParticles();
-      
-      // Obtener ID de usuario
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id')?.trim();
-      
-      let images = [];
-      if (userId) {
-        images = await fetchImagesFromFirebase(userId);
-      }
-      
-      // Si no hay imágenes, usar placeholders románticos
-      if (images.length === 0) {
-        images = [
-          'https://picsum.photos/600/800?random=1',
-          'https://picsum.photos/600/800?random=2',
-          'https://picsum.photos/600/800?random=3',
-          'https://picsum.photos/600/800?random=4',
-          'https://picsum.photos/600/800?random=5',
-          'https://picsum.photos/600/800?random=6',
-          'https://picsum.photos/600/800?random=7'
-        ];
-      }
-      
-      // Precargar y construir galería
-      const preloadedImages = await preloadImages(images);
-      buildGallery(preloadedImages);
-      
-      // Ocultar loading
-      setTimeout(() => {
-        loading.style.opacity = '0';
-        setTimeout(() => {
-          loading.style.display = 'none';
-        }, 500);
-      }, 1000);
-      
-      // Efectos automáticos
-      setTimeout(() => {
-        createFloatingHearts();
-      }, 2000);
-      
-      // Corazones cada 15 segundos
-      setInterval(createFloatingHearts, 15000);
-    }
-
-    // Iniciar aplicación
-    init();
-
-    // Soporte para teclado
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModalFn();
-    });
-
-  </script>
-</body>
-</html>
+      // Si no hay imágenes suficientes,
