@@ -3,64 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Polaroid (Estilo: Jardín de Luces)</title>
+  <title>Sala Romántica — Polaroid (Jardín de Luces · Versión Animada)</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --rose-1:#ff7fbf; --rose-2:#ffdfe9; --mid-rose:#ff4f9e; --bg:#0b0210; --glass:rgba(255,255,255,0.06);
+      --rose-1:#ff7fbf; --rose-2:#ffdfe9; --glow: rgba(255,120,180,0.18);
       --card-w:clamp(220px,62vw,360px); --card-h:clamp(320px,58vh,420px);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(800px 400px at 20% 15%, rgba(255,120,170,0.06), transparent 8%),linear-gradient(180deg,#09020a,#0b0210 60%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
+    html,body{height:100%;margin:0;background:radial-gradient(900px 460px at 14% 16%, rgba(255,120,170,0.06), transparent 8%),linear-gradient(180deg,#050006,#0b0210 65%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
 
     /* fireworks canvas behind everything */
     #fireworksCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-    /* soft ambience */
-    #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.04), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.03), transparent)}
+    /* ambience & sparkles layer */
+    #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.03), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.02), transparent)}
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdce7);opacity:0.0;filter:blur(1px);}
 
     /* main stage */
     #stage{position:relative;z-index:5;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
 
-    /* circular ring container */
+    /* ring container */
     #ring-container{position:relative;width:min(88vw,1100px);height:min(78vh,800px);display:block}
 
     /* central spotlight */
-    #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42%;height:42%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%),linear-gradient(180deg,rgba(255,120,180,0.02),transparent);filter:blur(14px);z-index:10;pointer-events:none}
+    #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;height:44%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%);filter:blur(18px);z-index:10;pointer-events:none}
 
-    /* polaroid ring items */
+    /* ring slots and polaroids */
     .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center}
-    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 30px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease}
-    .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px}
+    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease,filter 400ms ease}
+    .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px;display:block}
     .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700}
 
-    /* center card (larger) */
-    .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 80px rgba(255,110,160,0.08);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
+    /* shimmer effect across active card */
+    .polaroid::after{content:'';position:absolute;left:-40%;top:0;width:140%;height:100%;pointer-events:none;transform:skewX(-18deg);opacity:0;transition:opacity .3s}
+    .polaroid.active::after{background:linear-gradient(90deg,rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 60%);animation:shine 1.2s linear infinite;opacity:1}
+    @keyframes shine{0%{transform:translateX(-100%) skewX(-18deg)}100%{transform:translateX(100%) skewX(-18deg)}}
+
+    /* glow ring behind active card */
+    .polaroid.active{box-shadow:0 40px 120px rgba(255,120,180,0.18),0 0 80px rgba(255,140,190,0.06);filter:drop-shadow(0 12px 30px rgba(255,120,180,0.12));transform:scale(1.06)}
+
+    /* floating / bobbing variations */
+    @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+    .ring-slot{animation: bob 6s ease-in-out infinite;}
+    .ring-slot[data-idx='0']{animation-delay:0s}
+    .ring-slot[data-idx='1']{animation-delay:0.4s}
+    .ring-slot[data-idx='2']{animation-delay:0.9s}
+    .ring-slot[data-idx='3']{animation-delay:1.3s}
+    .ring-slot[data-idx='4']{animation-delay:1.7s}
+    .ring-slot[data-idx='5']{animation-delay:2.1s}
+    .ring-slot[data-idx='6']{animation-delay:2.6s}
+
+    /* center card */
+    .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 120px rgba(255,110,160,0.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
     .center-card.visible{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
     .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px}
     .center-card .caption{height:56px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:800}
 
-    /* ribbons & lanterns */
-    .ribbon{position:absolute;width:220px;height:6px;border-radius:999px;background:linear-gradient(90deg,rgba(255,140,180,0.8),rgba(255,200,230,0.6));filter:blur(6px);opacity:0.85;z-index:8}
-    .lantern{position:absolute;width:14px;height:28px;border-radius:8px;background:linear-gradient(180deg,#ffd7e8,#ffbcd6);box-shadow:0 6px 18px rgba(255,120,170,0.18);opacity:0.9}
+    /* particles (petals) style (CSS fallback) */
+    .petal{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff, #ffd1e8);pointer-events:none;transform:translateY(0);opacity:0}
 
-    /* overlay controls */
-    #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:var(--glass);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
+    /* controls */
+    #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
     #controls h3{margin:0;font-family:'Playfair Display',serif;color:var(--rose-1)}
     #controls p{margin:6px 0 0 0;font-size:13px;color:rgba(255,240,245,0.95)}
     .controls-row{display:flex;gap:8px;margin-top:8px}
     .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
 
-    /* small screens */
-    @media (max-width:720px){
-      .center-card{width:86vw;height:62vh}
-      .polaroid{border-radius:10px}
-      :root{--card-w:70vw;--card-h:54vh}
-    }
-
-    /* subtle floating animation */
-    @keyframes floatSlow {0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+    /* responsive tweaks */
+    @media (max-width:720px){ .center-card{width:86vw;height:62vh} :root{--card-w:70vw;--card-h:54vh} }
 
     /* preview modal fallback */
     #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,2,8,0.85),rgba(6,2,8,0.95));z-index:120;padding:20px}
@@ -86,7 +98,7 @@
 
   <div id="controls">
     <h3>Jardín de Luces — Sala Romántica</h3>
-    <p>Nuevo estilo: anillo de recuerdos, fuegos románticos y partículas.</p>
+    <p>Ahora con fuegos de corazones y animaciones románticas para las 7 fotos.</p>
     <div class="controls-row">
       <button id="autoplayBtn" class="btn">Pausa</button>
       <button id="fireBtn" class="btn ghost">Fuegos</button>
@@ -95,7 +107,6 @@
   </div>
 
   <div id="loading">Cargando...</div>
-
   <div id="previewModal" aria-hidden="true">
     <img id="previewBig" src="" alt="Vista previa grande">
   </div>
@@ -163,7 +174,7 @@
       ring.appendChild(slot);
 
       // click behaviour
-      card.addEventListener('click', ()=>{ focus(i); openPreview(url); spawnRibbon(i); });
+      card.addEventListener('click', ()=>{ focus(i); openPreview(url); spawnPetalBurstAtSlot(slot); triggerLocalizedFirework(slot); });
       img.addEventListener('error', ()=>{ img.src='https://picsum.photos/600/800?blur=10'; });
     }
 
@@ -183,9 +194,11 @@
         const x = cx + Math.cos(angle) * radius;
         const y = cy + Math.sin(angle) * (radius * 0.78);
         slot.style.left = x + 'px'; slot.style.top = y + 'px';
-        slot.style.transform = `translate(-50%,-50%) rotate(${angle * 12}deg) scale(${idx===current?1.06:0.88})`;
-        slot.style.zIndex = (idx===current?50:30 + ((idx - current + TOTAL) % TOTAL));
-        slot.querySelector('.polaroid').style.opacity = (idx===current?1:0.9);
+        const scale = idx===current ? 1.06 : 0.86 + (1 - (Math.abs((idx-current+TOTAL)%TOTAL) / TOTAL) * 0.18);
+        slot.style.transform = `translate(-50%,-50%) rotate(${angle * 12}deg) scale(${scale})`;
+        slot.style.zIndex = (idx===current?120:30 + ((idx - current + TOTAL) % TOTAL));
+        const card = slot.querySelector('.polaroid');
+        if (idx===current){ card.classList.add('active'); } else { card.classList.remove('active'); }
       });
     }
 
@@ -193,11 +206,11 @@
 
     function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
-    function next(){ current = (current + 1) % TOTAL; positionSlots(); showCenter(current); }
-    function prev(){ current = (current - 1 + TOTAL) % TOTAL; positionSlots(); showCenter(current); }
+    function next(){ current = (current + 1) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
+    function prev(){ current = (current - 1 + TOTAL) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
 
     // autoplay loop (gentle rotation)
-    function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3800); autoplayBtn.textContent='Pausa'; }
+    function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3400); autoplayBtn.textContent='Pausa'; }
     function stopAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = null; autoplayBtn.textContent='Reanudar'; }
     function resetAutoplay(){ if (autoplay){ stopAutoplay(); startAutoplay(); } }
 
@@ -209,52 +222,61 @@
     function openPreview(url){ previewBig.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden', 'false'); }
     previewModal.addEventListener('click', ()=>{ previewModal.style.display='none'; previewBig.src=''; previewModal.setAttribute('aria-hidden','true'); });
 
-    // ribbons spawn effect when click
-    function spawnRibbon(idx){ const r = document.createElement('div'); r.className='ribbon'; const angle = Math.random() * Math.PI * 2; const rc = ring.getBoundingClientRect(); r.style.left = (rc.left + rc.width/2 + Math.cos(angle)*40) + 'px'; r.style.top = (rc.top + rc.height/2 + Math.sin(angle)*40) + 'px'; r.style.transform = `translate(-50%,-50%) rotate(${Math.random()*40-20}deg)`; document.body.appendChild(r); setTimeout(()=>r.remove(),2200); }
-
-    // small lanterns floating
-    function spawnLantern(){ const l = document.createElement('div'); l.className='lantern'; const x = Math.random()*window.innerWidth; const y = window.innerHeight + 20; l.style.left = x + 'px'; l.style.top = y + 'px'; l.style.transition = 'transform 6s linear, top 6s linear'; document.body.appendChild(l); requestAnimationFrame(()=>{ l.style.transform = 'translateY(-120vh)'; l.style.top = '-120vh'; }); setTimeout(()=>l.remove(),6500); }
-    setInterval(()=>{ if (Math.random() < 0.25) spawnLantern(); }, 1800);
+    // petal bursts (CSS DOM particles)
+    function spawnPetal(x,y){ const p = document.createElement('div'); p.className='petal'; p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.opacity = '1'; p.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(p);
+      const dx = (Math.random()-0.5)*200; const dy = - (100 + Math.random()*250);
+      p.animate([{transform:`translate(0,0) rotate(0deg)`,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:2400 + Math.random()*1400,easing:'cubic-bezier(.2,.9,.25,1)'});
+      setTimeout(()=>p.remove(),3600);
+    }
+    function spawnPetalBurstAtSlot(slot){ const rc = slot.getBoundingClientRect(); const cx = rc.left + rc.width/2; const cy = rc.top + rc.height/2; for(let i=0;i<10;i++){ setTimeout(()=>spawnPetal(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40), i*40); } }
+    function spawnPetalBurstAroundRing(){ const slots = Array.from(ring.children); slots.forEach((slot, i)=>{ if (Math.random() < 0.45) spawnPetalBurstAtSlot(slot); }); }
 
     // ---- fireworks canvas (romantic hearts) ----
     const canvas = document.getElementById('fireworksCanvas'); const ctx = canvas.getContext('2d'); let cw=0,ch=0; function resize(){ cw = canvas.width = innerWidth; ch = canvas.height = innerHeight; } window.addEventListener('resize', resize); resize();
 
     const fireworks = [];
-    function launchFirework(){ const x = Math.random()*cw*0.8 + cw*0.1; const y = Math.random()*ch*0.35 + ch*0.05; const hue = Math.random()*30 + 320; const petals = Math.floor(Math.random()*8)+6; fireworks.push({x,y,hue,particles:[],life:0,petals}); }
+    function launchFireworkAt(x,y,scale=1){ const hue = Math.random()*30 + 320; const petals = Math.floor(8*scale) + Math.floor(Math.random()*6); const fw = {x,y,hue,particles:[],life:0,petals,scale}; fireworks.push(fw); }
+    function launchRandomFirework(){ const x = Math.random()*cw*0.8 + cw*0.1; const y = Math.random()*ch*0.35 + ch*0.05; launchFireworkAt(x,y, 0.9 + Math.random()*0.6); }
 
-    function createParticles(fw){ const count = fw.petals * 6; for(let i=0;i<count;i++){ const angle = Math.random()*Math.PI*2; const speed = Math.random()*4+1; const vx = Math.cos(angle)*speed; const vy = Math.sin(angle)*speed; fw.particles.push({x:fw.x,y:fw.y,vx,vy,life:0,ttl:60 + Math.random()*40, hue:fw.hue}); } }
+    function createParticles(fw){ const count = fw.petals * 8; for(let i=0;i<count;i++){ const angle = Math.random()*Math.PI*2; const speed = (Math.random()*4+1) * (0.7 + fw.scale*0.6); const vx = Math.cos(angle)*speed; const vy = Math.sin(angle)*speed; fw.particles.push({x:fw.x,y:fw.y,vx,vy,life:0,ttl:50 + Math.random()*60, hue:fw.hue, size:4 + Math.random()*5}); } }
 
-    function drawHeart(x,y,size,clr){ ctx.save(); ctx.translate(x,y); ctx.scale(size/12,size/12);
+    function drawHeart(x,y,size,clr,alpha=1){ ctx.save(); ctx.translate(x,y); ctx.scale(size/12,size/12);
       ctx.beginPath(); ctx.moveTo(0,0);
       ctx.bezierCurveTo(6,-10,20,-6,20,4);
       ctx.bezierCurveTo(20,16,10,26,0,34);
       ctx.bezierCurveTo(-10,26,-20,16,-20,4);
       ctx.bezierCurveTo(-20,-6,-6,-10,0,0);
-      ctx.closePath(); ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
+      ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
 
     function updateFireworks(){ ctx.clearRect(0,0,cw,ch);
-      // spawn occasionally
-      if (fireworksOn && Math.random() < 0.02) launchFirework();
+      // spawn more often but controlled
+      if (fireworksOn && Math.random() < 0.04) launchRandomFirework();
       for(let i=fireworks.length-1;i>=0;i--){ const fw = fireworks[i]; fw.life++;
         if (fw.life===1) createParticles(fw);
-        for(let p of fw.particles){ p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life++; const alpha = Math.max(0,1 - p.life/p.ttl);
+        for(let p of fw.particles){ p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life++; const alpha = Math.max(0,1 - p.life/p.ttl);
           const color = `hsla(${p.hue},85%,65%,${alpha})`;
-          drawHeart(p.x,p.y,8, color);
+          drawHeart(p.x,p.y,p.size, color, alpha);
         }
         if (fw.particles.every(p=>p.life > p.ttl-2)){ fireworks.splice(i,1); }
       }
     }
 
+    // localized firework at slot center
+    function triggerLocalizedFirework(slot){ const rc = slot.getBoundingClientRect(); const x = rc.left + rc.width/2; const y = rc.top + rc.height/2; launchFireworkAt(x, y - 30, 1.4); }
+
     // main loop
-    function loop(){ rotation += 0.002; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
+    function loop(){ rotation += 0.0035; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
 
     // init
     (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown
       // preload
-      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); } }; }
+      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); // initial soft fireworks
+                  for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*700);
+                } }; }
     })();
 
-    // expose helpers
+    // expose helpers for debugging
     window._romantic = { next, prev, focus };
 
   </script>
