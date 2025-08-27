@@ -253,6 +253,72 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Función para dibujar el agujero negro con bordes mejorados
+    function drawBlackHole() {
+      // Horizonte de eventos - borde exterior con efecto de distorsión
+      const eventHorizonGradient = ctx.createRadialGradient(
+        centerX, centerY, blackHoleRadius - 15,
+        centerX, centerY, blackHoleRadius + 8
+      );
+      eventHorizonGradient.addColorStop(0, 'rgba(0,0,0,1)');
+      eventHorizonGradient.addColorStop(0.7, 'rgba(40,20,0,0.9)');
+      eventHorizonGradient.addColorStop(0.85, 'rgba(80,40,0,0.7)');
+      eventHorizonGradient.addColorStop(0.95, 'rgba(120,60,0,0.4)');
+      eventHorizonGradient.addColorStop(1, 'rgba(160,80,0,0)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, blackHoleRadius + 8, 0, Math.PI * 2);
+      ctx.fillStyle = eventHorizonGradient;
+      ctx.fill();
+
+      // Anillo de fotones - borde brillante
+      const photonRingGradient = ctx.createRadialGradient(
+        centerX, centerY, blackHoleRadius - 3,
+        centerX, centerY, blackHoleRadius + 3
+      );
+      photonRingGradient.addColorStop(0, 'rgba(0,0,0,1)');
+      photonRingGradient.addColorStop(0.4, 'rgba(0,0,0,1)');
+      photonRingGradient.addColorStop(0.7, 'rgba(255,140,0,0.8)');
+      photonRingGradient.addColorStop(0.85, 'rgba(255,180,0,0.6)');
+      photonRingGradient.addColorStop(0.95, 'rgba(255,220,0,0.3)');
+      photonRingGradient.addColorStop(1, 'rgba(255,255,0,0)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, blackHoleRadius + 3, 0, Math.PI * 2);
+      ctx.fillStyle = photonRingGradient;
+      ctx.fill();
+
+      // Círculo negro principal con borde definido
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, blackHoleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.fill();
+
+      // Borde interno con sombra para dar profundidad
+      const innerShadowGradient = ctx.createRadialGradient(
+        centerX, centerY, blackHoleRadius - 20,
+        centerX, centerY, blackHoleRadius
+      );
+      innerShadowGradient.addColorStop(0, 'rgba(0,0,0,1)');
+      innerShadowGradient.addColorStop(0.8, 'rgba(0,0,0,1)');
+      innerShadowGradient.addColorStop(0.95, 'rgba(20,10,0,0.8)');
+      innerShadowGradient.addColorStop(1, 'rgba(40,20,0,0.3)');
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, blackHoleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = innerShadowGradient;
+      ctx.fill();
+
+      // Efecto de distorsión en el borde con líneas sutiles
+      ctx.strokeStyle = `rgba(255,140,0,${0.3 + Math.sin(auroraTime * 3) * 0.2})`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, blackHoleRadius + 1, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     let lastTime = performance.now();
 
     // Animating the scene
@@ -291,10 +357,8 @@
       ctx.fillStyle = glowGradient;
       ctx.fill();
 
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius, 0, Math.PI * 2);
-      ctx.fillStyle = 'black';
-      ctx.fill();
+      // Dibujar el agujero negro con bordes mejorados
+      drawBlackHole();
 
       ctx.restore();
     }
