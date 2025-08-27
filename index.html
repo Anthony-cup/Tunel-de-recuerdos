@@ -241,7 +241,7 @@
       const gifOverlay = document.getElementById('gifOverlay');
       const gifImage = document.getElementById('gifImage');
       const gifText = document.getElementById('gifText');
-      let gifState = sessionStorage.getItem('gifShown_' + userId) ? 'done' : 'initial';
+      let gifState = 'initial';
       const renderer = new THREE.WebGLRenderer({ canvas: tunnelCanvas, alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1.5, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -492,9 +492,7 @@
         const buttonTextGeo = new THREE.PlaneGeometry(tunnelRadius * 0.2, tunnelRadius * 0.1);
         const buttonTextMesh = new THREE.Mesh(buttonTextGeo, buttonTextMat);
         buttonTextMesh.position.set(0, -tunnelRadius * 0.25, doorPosition - 0.05);
-        buttonTextMesh.rotation.z = Math
-
-.PI;
+        buttonTextMesh.rotation.z = Math.PI;
         buttonTextMesh.visible = false;
         buttonTextMesh.userData = { doorIndex: i };
         scene.add(buttonTextMesh);
@@ -543,7 +541,6 @@
         } else if (gifState === 'second' && currentDoorIndex === 0) {
           gifState = 'done';
           gifOverlay.style.display = 'none';
-          sessionStorage.setItem('gifShown_' + userId, 'true');
           console.log('Clic en segundo texto, ocultando GIF y texto');
         }
       });
