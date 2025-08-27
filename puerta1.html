@@ -3,115 +3,101 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Polaroid Automático (Mejorado)</title>
+  <title>Sala Romántica — Polaroid (Estilo: Jardín de Luces)</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --rose-1:#ff86b6; --rose-2:#ffdce9; --bg-dark:#120418; --glass:rgba(255,255,255,0.08);
-      --soft-shadow: 0 8px 30px rgba(0,0,0,0.45);
-      --card-w: clamp(260px,78vw,420px);
-      --card-h: clamp(360px,70vh,520px);
+      --rose-1:#ff7fbf; --rose-2:#ffdfe9; --mid-rose:#ff4f9e; --bg:#0b0210; --glass:rgba(255,255,255,0.06);
+      --card-w:clamp(220px,62vw,360px); --card-h:clamp(320px,58vh,420px);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background: radial-gradient(1200px 600px at 10% 10%, rgba(255,140,180,0.08), transparent 10%), radial-gradient(800px 400px at 90% 80%, rgba(200,150,255,0.04), transparent 8%), linear-gradient(180deg,#1a0520,#0d0012 60%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
+    html,body{height:100%;margin:0;background:radial-gradient(800px 400px at 20% 15%, rgba(255,120,170,0.06), transparent 8%),linear-gradient(180deg,#09020a,#0b0210 60%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
 
-    /* container */
-    #polaroid-container{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    /* fireworks canvas behind everything */
+    #fireworksCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-    /* soft vignette + bokeh */
-    #scene-bg{position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(50% 40% at 50% 30%, rgba(255,180,200,0.04), transparent 20%);}
-    #bokeh::before, #bokeh::after{content:'';position:absolute;inset:0;pointer-events:none;background-repeat:no-repeat;background-position:center;opacity:0.06}
-    #bokeh::before{background-image:radial-gradient(circle at 20% 30%, rgba(255,220,240,0.12) 0 8%, transparent 8%), radial-gradient(circle at 85% 70%, rgba(225,200,255,0.08) 0 6%, transparent 6%)}
+    /* soft ambience */
+    #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.04), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.03), transparent)}
 
-    /* polaroid stack */
-    #polaroid-stack{position:relative;width:var(--card-w);height:var(--card-h);display:grid;place-items:center;perspective:1200px;z-index:5}
-    .polaroid{position:absolute;width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:12px;box-shadow:var(--soft-shadow),0 0 30px rgba(255,110,160,0.08);transform-origin:center center;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;transition:transform 700ms cubic-bezier(.22,.9,.35,1),opacity 600ms ease,filter 400ms ease}
-    .polaroid img{width:100%;height:calc(100% - 44px);object-fit:cover;border-radius:8px;display:block;backface-visibility:hidden}
-    .polaroid .caption{height:40px;text-align:center;margin-top:8px;font-family:'Playfair Display',serif;color:#2a0520;font-weight:600}
+    /* main stage */
+    #stage{position:relative;z-index:5;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
 
-    /* layered offsets (7 items) */
-    .polaroid[data-order='0']{transform:translateY(0) rotate(0deg) scale(1);z-index:70}
-    .polaroid[data-order='1']{transform:translateY(10px) rotate(-6deg) scale(.98);z-index:60;filter:grayscale(.04) contrast(.98)}
-    .polaroid[data-order='2']{transform:translateY(18px) rotate(8deg) scale(.96);z-index:50;opacity:.95}
-    .polaroid[data-order='3']{transform:translateY(28px) rotate(-12deg) scale(.94);z-index:40;opacity:.88}
-    .polaroid[data-order='4']{transform:translateY(36px) rotate(12deg) scale(.92);z-index:30;opacity:.82}
-    .polaroid[data-order='5']{transform:translateY(44px) rotate(-20deg) scale(.90);z-index:20;opacity:.76}
-    .polaroid[data-order='6']{transform:translateY(52px) rotate(20deg) scale(.88);z-index:10;opacity:.68}
+    /* circular ring container */
+    #ring-container{position:relative;width:min(88vw,1100px);height:min(78vh,800px);display:block}
 
-    /* active center style */
-    .polaroid.active{transform:translateY(0) rotate(0) scale(1.02);z-index:120;box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 40px rgba(255,120,170,0.12)}
+    /* central spotlight */
+    #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42%;height:42%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%),linear-gradient(180deg,rgba(255,120,180,0.02),transparent);filter:blur(14px);z-index:10;pointer-events:none}
 
-    /* exiting style for smooth transitions */
-    .polaroid.exiting{transform:translateY(-60vh) rotate(-6deg) scale(.9);opacity:0}
+    /* polaroid ring items */
+    .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center}
+    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 30px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease}
+    .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px}
+    .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700}
+
+    /* center card (larger) */
+    .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 80px rgba(255,110,160,0.08);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
+    .center-card.visible{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+    .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px}
+    .center-card .caption{height:56px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:800}
+
+    /* ribbons & lanterns */
+    .ribbon{position:absolute;width:220px;height:6px;border-radius:999px;background:linear-gradient(90deg,rgba(255,140,180,0.8),rgba(255,200,230,0.6));filter:blur(6px);opacity:0.85;z-index:8}
+    .lantern{position:absolute;width:14px;height:28px;border-radius:8px;background:linear-gradient(180deg,#ffd7e8,#ffbcd6);box-shadow:0 6px 18px rgba(255,120,170,0.18);opacity:0.9}
 
     /* overlay controls */
-    #overlay{position:fixed;left:14px;top:14px;z-index:140;padding:12px;border-radius:12px;background:var(--glass);backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,0.45);max-width:calc(100% - 28px)}
-    #overlay h3{margin:0 0 6px 0;font-family:'Playfair Display',serif;font-size:18px;color:var(--rose-1)}
-    #overlay p{margin:0;font-size:13px;color:rgba(255,240,245,0.9)}
-    .controls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-    .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:600;cursor:pointer;box-shadow:0 6px 24px rgba(255,130,180,0.12)}
+    #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:var(--glass);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
+    #controls h3{margin:0;font-family:'Playfair Display',serif;color:var(--rose-1)}
+    #controls p{margin:6px 0 0 0;font-size:13px;color:rgba(255,240,245,0.95)}
+    .controls-row{display:flex;gap:8px;margin-top:8px}
+    .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
 
-    /* bottom cue */
-    #next-label{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--glass);padding:8px 14px;border-radius:999px;backdrop-filter:blur(6px);z-index:140;font-size:13px;text-shadow:0 0 6px rgba(255,120,170,0.15)}
-
-    /* preview modal */
-    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(10,4,18,0.8),rgba(10,4,18,0.95));z-index:200;padding:20px}
-    #previewContent{max-width:95vw;max-height:92vh;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));padding:12px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
-    #previewContent img{max-width:100%;max-height:80vh;border-radius:10px;object-fit:contain}
-    #previewClose{background:linear-gradient(180deg,var(--rose-1),#ffb6d9);border:0;padding:8px 10px;border-radius:10px;cursor:pointer}
-
-    /* heart + petals container */
-    #romOverlay{position:fixed;inset:0;pointer-events:none;z-index:120}
-    .particle{position:absolute;width:18px;height:18px;opacity:0;transform:translateY(0);animation:floatUp 6s linear infinite}
-    .particle.heart{background:radial-gradient(circle at 30% 30%, rgba(255,140,180,1), rgba(255,120,170,0.15));clip-path:path('M10,5 C12,1 16,5 10,12 C4,5 8,1 10,5 Z')}
-    .particle.petal{background:linear-gradient(180deg,#ffd5e6,#ffc0e0);border-radius:50%;transform-origin:center}
-    @keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.6)}10%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translateY(-110vh) scale(1.1)} }
-
-    /* small responsive tweaks */
-    @media(max-width:720px){
-      :root{--card-w:86vw;--card-h:62vh}
-      #overlay{left:10px;top:10px;padding:10px;width:calc(100% - 20px)}
-      #next-label{bottom:18px}
-      .particle{width:12px;height:12px}
+    /* small screens */
+    @media (max-width:720px){
+      .center-card{width:86vw;height:62vh}
+      .polaroid{border-radius:10px}
+      :root{--card-w:70vw;--card-h:54vh}
     }
 
-    /* accessibility focus */
-    .btn:focus{outline:2px solid rgba(255,140,180,0.28);outline-offset:3px}
+    /* subtle floating animation */
+    @keyframes floatSlow {0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+    /* preview modal fallback */
+    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,2,8,0.85),rgba(6,2,8,0.95));z-index:120;padding:20px}
+    #previewModal img{max-width:95vw;max-height:90vh;border-radius:12px}
+
+    /* loading */
+    #loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:200;color:var(--rose-1);font-weight:700}
   </style>
 </head>
 <body>
-  <div id="scene-bg"></div>
-  <div id="bokeh"></div>
-  <div id="polaroid-container">
-    <div id="polaroid-stack" aria-live="polite" aria-label="Galería romántica"></div>
-    <div id="next-label">Toca o desliza ◀ ▶</div>
+  <canvas id="fireworksCanvas" aria-hidden="true"></canvas>
+  <div id="ambience" aria-hidden="true"></div>
+  <div id="stage">
+    <div id="ring-container" aria-live="polite">
+      <div id="center-spot"></div>
+      <div id="ring-slots"></div>
+      <div id="centerCard" class="center-card" role="dialog" aria-hidden="true">
+        <img id="centerImg" src="" alt="Recuerdo grande">
+        <div class="caption" id="centerCaption">Toca una foto para verla</div>
+      </div>
+    </div>
   </div>
 
-  <div id="romOverlay" aria-hidden="true"></div>
-
-  <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Polaroid</h3>
-    <p>Toque una foto para verla en grande. Desliza para cambiar. Recomendado en móvil.</p>
-    <div class="controls">
-      <button id="pauseBtn" class="btn">Pausa</button>
-      <button id="soundBtn" class="btn ghost" aria-pressed="false">Sonido</button>
+  <div id="controls">
+    <h3>Jardín de Luces — Sala Romántica</h3>
+    <p>Nuevo estilo: anillo de recuerdos, fuegos románticos y partículas.</p>
+    <div class="controls-row">
+      <button id="autoplayBtn" class="btn">Pausa</button>
+      <button id="fireBtn" class="btn ghost">Fuegos</button>
       <button id="returnBtn" class="btn ghost">Regresar</button>
     </div>
   </div>
 
-  <div id="credits" style="position:fixed;right:12px;bottom:12px;z-index:140;padding:8px 10px;border-radius:10px;background:var(--glass);backdrop-filter:blur(6px);font-size:12px">Diseño romántico • Imágenes: picsum.photos</div>
+  <div id="loading">Cargando...</div>
 
   <div id="previewModal" aria-hidden="true">
-    <div id="previewContent">
-      <button id="previewClose">Cerrar</button>
-      <img id="previewImage" src="" alt="Vista previa de recuerdo">
-    </div>
-  </div>
-
-  <div id="loadingBarContainer" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:250;display:flex;flex-direction:column;align-items:center;gap:8px">
-    <div style="width:140px;height:8px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden"><div id="loadingBar" style="width:0;height:100%;background:linear-gradient(90deg,var(--rose-1),var(--rose-2));transition:width .25s"></div></div>
-    <div id="loadingText" style="color:var(--rose-1);font-size:13px">Cargando...</div>
+    <img id="previewBig" src="" alt="Vista previa grande">
   </div>
 
   <script type="module">
@@ -131,135 +117,145 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // -- utils & elements
-    const polaroidStack = document.getElementById('polaroid-stack');
-    const previewModal = document.getElementById('previewModal');
-    const previewImage = document.getElementById('previewImage');
-    const previewClose = document.getElementById('previewClose');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const soundBtn = document.getElementById('soundBtn');
+    const TOTAL = 7;
+    const ring = document.getElementById('ring-slots');
+    const centerCard = document.getElementById('centerCard');
+    const centerImg = document.getElementById('centerImg');
+    const centerCaption = document.getElementById('centerCaption');
+    const loading = document.getElementById('loading');
+    const autoplayBtn = document.getElementById('autoplayBtn');
+    const fireBtn = document.getElementById('fireBtn');
     const returnBtn = document.getElementById('returnBtn');
-    const romOverlay = document.getElementById('romOverlay');
-    const loadingBar = document.getElementById('loadingBar');
-    const loadingText = document.getElementById('loadingText');
+    const previewModal = document.getElementById('previewModal');
+    const previewBig = document.getElementById('previewBig');
 
     let imageUrls = [];
-    let currentIndex = 0;
+    let current = 0;
     let autoplay = true;
-    let autoplayInterval = 4200; // suave
-    let autoplayTimer = null;
-    const TOTAL_SLOTS = 7;
+    let autoTimer = null;
+    let rotation = 0;
+    let fireworksOn = true;
 
     async function fetchImages(){
-      const urlParams = new URLSearchParams(window.location.search);
-      const userId = urlParams.get('id')?.trim();
-      if (!userId){
-        loadingText.textContent = 'Falta ID: añade ?id=TU_ID en la URL';
-        return [];
-      }
-
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id')?.trim();
+      if (!id){ loading.textContent = 'Falta ?id=TU_ID en la URL'; return []; }
       try{
-        const snap = await get(ref(database, `usuarios/${userId}`));
-        if (!snap.exists()){
-          loadingText.textContent = 'ID no encontrado. Verifica tu ID.';
-          return [];
-        }
+        const snap = await get(ref(database, `usuarios/${id}`));
+        if (!snap.exists()){ loading.textContent = 'ID no encontrado.'; return []; }
         const data = snap.val();
         let all = [];
-        for(let i=1;i<=5;i++){
-          const fotos = data[`puerta${i}Fotos`] || [];
-          all = all.concat(fotos.filter(u=>typeof u==='string' && u.trim()));
-        }
-        let valid = all.slice(0,TOTAL_SLOTS);
-        if (valid.length===0){ loadingText.textContent='No hay imágenes. Agrega al menos 1.'; return []; }
-        // repeat if less than 7 to always show 7 slots
-        while(valid.length<TOTAL_SLOTS){ valid = valid.concat(valid.slice(0,Math.min(valid.length,TOTAL_SLOTS-valid.length))); }
-        return valid.slice(0,TOTAL_SLOTS);
-      }catch(err){ console.error(err); loadingText.textContent='Error al cargar imágenes.'; return []; }
+        for(let i=1;i<=5;i++){ const fotos = data[`puerta${i}Fotos`] || []; all = all.concat(fotos.filter(u=>typeof u==='string' && u.trim())); }
+        let valid = all.slice(0,TOTAL);
+        if (valid.length===0){ loading.textContent='No hay imágenes.'; return []; }
+        while(valid.length<TOTAL) valid = valid.concat(valid.slice(0,Math.min(valid.length,TOTAL-valid.length)));
+        return valid.slice(0,TOTAL);
+      }catch(e){ console.error(e); loading.textContent='Error al cargar imágenes.'; return []; }
     }
 
-    function updateLoading(progress, text){ loadingBar.style.width = progress + '%'; loadingText.textContent = text || 'Cargando...'; }
+    function createSlot(url, i){
+      const slot = document.createElement('div'); slot.className='ring-slot'; slot.dataset.idx = i;
+      const card = document.createElement('div'); card.className='polaroid';
+      const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${i+1}`; img.loading='lazy';
+      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${i+1}`;
+      card.appendChild(img); card.appendChild(cap);
+      slot.appendChild(card);
+      ring.appendChild(slot);
 
-    function createPolaroid(url, idx){
-      const el = document.createElement('div'); el.className='polaroid'; el.dataset.index = idx; el.dataset.order = idx; // order used for layered transform
-      const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${idx+1}`; img.loading='lazy';
-      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${idx+1}`;
-      el.appendChild(img); el.appendChild(cap);
-      polaroidStack.appendChild(el);
+      // click behaviour
+      card.addEventListener('click', ()=>{ focus(i); openPreview(url); spawnRibbon(i); });
+      img.addEventListener('error', ()=>{ img.src='https://picsum.photos/600/800?blur=10'; });
+    }
 
-      // tilt follow mouse for active card
-      el.addEventListener('pointermove', (ev)=>{
-        if (!el.classList.contains('active')) return;
-        const r = el.getBoundingClientRect();
-        const dx = (ev.clientX - (r.left + r.width/2)) / (r.width/2);
-        const dy = (ev.clientY - (r.top + r.height/2)) / (r.height/2);
-        el.style.transform = `translateY(0) rotateX(${ -dy * 6 }deg) rotateY(${ dx * 8 }deg) scale(1.03)`;
+    function buildRing(){ ring.innerHTML = '';
+      for(let i=0;i<TOTAL;i++) createSlot(imageUrls[i % imageUrls.length], i);
+      positionSlots();
+      showCenter(current);
+    }
+
+    function positionSlots(){
+      const slots = Array.from(ring.children);
+      const w = ring.clientWidth; const h = ring.clientHeight;
+      const cx = w/2; const cy = h/2;
+      const radius = Math.min(w,h) * 0.36;
+      slots.forEach((slot, idx)=>{
+        const angle = ( (idx - current) / TOTAL ) * Math.PI * 2 + rotation;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * (radius * 0.78);
+        slot.style.left = x + 'px'; slot.style.top = y + 'px';
+        slot.style.transform = `translate(-50%,-50%) rotate(${angle * 12}deg) scale(${idx===current?1.06:0.88})`;
+        slot.style.zIndex = (idx===current?50:30 + ((idx - current + TOTAL) % TOTAL));
+        slot.querySelector('.polaroid').style.opacity = (idx===current?1:0.9);
       });
-      el.addEventListener('pointerleave', ()=>{ if (el.classList.contains('active')) el.style.transform='translateY(0) rotate(0) scale(1.02)'; });
-
-      img.addEventListener('error', ()=>{ img.src = 'https://picsum.photos/600/800?blur=10'; });
-
-      el.addEventListener('click', ()=>{ if (el.classList.contains('active')) openPreview(url); else focusIndex(parseInt(el.dataset.index)); spawnParticle('heart'); });
     }
 
-    function spawnParticle(type){ const p = document.createElement('div'); p.className='particle '+type; const x = Math.random()*window.innerWidth; p.style.left = (x)+'px'; p.style.bottom = '-20px'; p.style.animationDelay = (Math.random()*1.2)+'s'; romOverlay.appendChild(p); setTimeout(()=>p.remove(),7000);
-    }
+    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = `Recuerdo ${i+1}`; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
 
-    function buildStack(){ polaroidStack.innerHTML=''; for(let i=0;i<TOTAL_SLOTS;i++){ createPolaroid(imageUrls[i%imageUrls.length], i); } applyOrder(); }
+    function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
-    function applyOrder(){ const nodes = Array.from(polaroidStack.querySelectorAll('.polaroid'));
-      nodes.forEach((n, i)=>{ n.dataset.order = ((i - currentIndex) + TOTAL_SLOTS) % TOTAL_SLOTS; n.classList.remove('active','exiting'); const order = parseInt(n.dataset.order); n.setAttribute('data-order', order); if (order===0) n.classList.add('active'); else if (order>3) n.classList.add('exiting'); });
-    }
+    function next(){ current = (current + 1) % TOTAL; positionSlots(); showCenter(current); }
+    function prev(){ current = (current - 1 + TOTAL) % TOTAL; positionSlots(); showCenter(current); }
 
-    function focusIndex(i){ currentIndex = i % TOTAL_SLOTS; applyOrder(); resetAutoplay(); }
+    // autoplay loop (gentle rotation)
+    function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3800); autoplayBtn.textContent='Pausa'; }
+    function stopAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = null; autoplayBtn.textContent='Reanudar'; }
+    function resetAutoplay(){ if (autoplay){ stopAutoplay(); startAutoplay(); } }
 
-    function next(){ currentIndex = (currentIndex+1) % TOTAL_SLOTS; applyOrder(); }
-    function prev(){ currentIndex = (currentIndex-1+TOTAL_SLOTS) % TOTAL_SLOTS; applyOrder(); }
-
-    // autoplay
-    function startAutoplay(){ if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = setInterval(()=>{ next(); }, autoplayInterval); pauseBtn.textContent='Pausa'; }
-    function stopAutoplay(){ if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = null; pauseBtn.textContent='Reanudar'; }
-    function resetAutoplay(){ if (autoplay) { stopAutoplay(); startAutoplay(); } }
+    autoplayBtn.addEventListener('click', ()=>{ autoplay = !autoplay; if (autoplay) startAutoplay(); else stopAutoplay(); });
+    returnBtn.addEventListener('click', ()=>{ window.parent.postMessage({type:'doorClosed'}, '*'); });
+    fireBtn.addEventListener('click', ()=>{ fireworksOn = !fireworksOn; fireBtn.textContent = fireworksOn ? 'Fuegos' : 'Fuegos (off)'; });
 
     // preview
-    function openPreview(url){ previewImage.src = url; previewModal.style.display='flex'; previewModal.setAttribute('aria-hidden','false'); }
-    function closePreview(){ previewModal.style.display='none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
+    function openPreview(url){ previewBig.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden', 'false'); }
+    previewModal.addEventListener('click', ()=>{ previewModal.style.display='none'; previewBig.src=''; previewModal.setAttribute('aria-hidden','true'); });
 
-    // simple swipe for mobile
-    let touchStartX = 0; let touchStartY = 0; let touchMoved = false;
-    polaroidStack.addEventListener('touchstart',(e)=>{ touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; touchMoved=false;});
-    polaroidStack.addEventListener('touchmove',(e)=>{ touchMoved=true; });
-    polaroidStack.addEventListener('touchend',(e)=>{
-      if (!touchMoved) return;
-      const dx = (e.changedTouches[0].clientX - touchStartX);
-      const dy = (e.changedTouches[0].clientY - touchStartY);
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30){ if (dx < 0) next(); else prev(); resetAutoplay(); }
-    });
+    // ribbons spawn effect when click
+    function spawnRibbon(idx){ const r = document.createElement('div'); r.className='ribbon'; const angle = Math.random() * Math.PI * 2; const rc = ring.getBoundingClientRect(); r.style.left = (rc.left + rc.width/2 + Math.cos(angle)*40) + 'px'; r.style.top = (rc.top + rc.height/2 + Math.sin(angle)*40) + 'px'; r.style.transform = `translate(-50%,-50%) rotate(${Math.random()*40-20}deg)`; document.body.appendChild(r); setTimeout(()=>r.remove(),2200); }
 
-    // keyboard controls
-    window.addEventListener('keydown',(e)=>{ if (e.key==='ArrowRight') { next(); resetAutoplay(); } if (e.key==='ArrowLeft'){ prev(); resetAutoplay(); } if (e.key==='Escape') closePreview(); });
+    // small lanterns floating
+    function spawnLantern(){ const l = document.createElement('div'); l.className='lantern'; const x = Math.random()*window.innerWidth; const y = window.innerHeight + 20; l.style.left = x + 'px'; l.style.top = y + 'px'; l.style.transition = 'transform 6s linear, top 6s linear'; document.body.appendChild(l); requestAnimationFrame(()=>{ l.style.transform = 'translateY(-120vh)'; l.style.top = '-120vh'; }); setTimeout(()=>l.remove(),6500); }
+    setInterval(()=>{ if (Math.random() < 0.25) spawnLantern(); }, 1800);
 
-    // preview close
-    previewClose.addEventListener('click', closePreview);
-    previewModal.addEventListener('click',(e)=>{ if (e.target===previewModal) closePreview(); });
+    // ---- fireworks canvas (romantic hearts) ----
+    const canvas = document.getElementById('fireworksCanvas'); const ctx = canvas.getContext('2d'); let cw=0,ch=0; function resize(){ cw = canvas.width = innerWidth; ch = canvas.height = innerHeight; } window.addEventListener('resize', resize); resize();
 
-    // overlay buttons
-    pauseBtn.addEventListener('click', ()=>{ autoplay = !autoplay; if (autoplay){ startAutoplay(); } else { stopAutoplay(); } });
-    soundBtn.addEventListener('click', ()=>{ /* placeholder: toggle sound — avoid autoplay audio; only change aria state */ soundBtn.setAttribute('aria-pressed', soundBtn.getAttribute('aria-pressed')==='true' ? 'false' : 'true'); spawnParticle('petal'); });
-    returnBtn.addEventListener('click', ()=>{ window.parent.postMessage({type:'doorClosed'}, '*'); spawnParticle('heart'); });
+    const fireworks = [];
+    function launchFirework(){ const x = Math.random()*cw*0.8 + cw*0.1; const y = Math.random()*ch*0.35 + ch*0.05; const hue = Math.random()*30 + 320; const petals = Math.floor(Math.random()*8)+6; fireworks.push({x,y,hue,particles:[],life:0,petals}); }
 
-    // particles loop
-    setInterval(()=>{ if (Math.random() < 0.6) spawnParticle('petal'); else spawnParticle('heart'); }, 700);
+    function createParticles(fw){ const count = fw.petals * 6; for(let i=0;i<count;i++){ const angle = Math.random()*Math.PI*2; const speed = Math.random()*4+1; const vx = Math.cos(angle)*speed; const vy = Math.sin(angle)*speed; fw.particles.push({x:fw.x,y:fw.y,vx,vy,life:0,ttl:60 + Math.random()*40, hue:fw.hue}); } }
+
+    function drawHeart(x,y,size,clr){ ctx.save(); ctx.translate(x,y); ctx.scale(size/12,size/12);
+      ctx.beginPath(); ctx.moveTo(0,0);
+      ctx.bezierCurveTo(6,-10,20,-6,20,4);
+      ctx.bezierCurveTo(20,16,10,26,0,34);
+      ctx.bezierCurveTo(-10,26,-20,16,-20,4);
+      ctx.bezierCurveTo(-20,-6,-6,-10,0,0);
+      ctx.closePath(); ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
+
+    function updateFireworks(){ ctx.clearRect(0,0,cw,ch);
+      // spawn occasionally
+      if (fireworksOn && Math.random() < 0.02) launchFirework();
+      for(let i=fireworks.length-1;i>=0;i--){ const fw = fireworks[i]; fw.life++;
+        if (fw.life===1) createParticles(fw);
+        for(let p of fw.particles){ p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life++; const alpha = Math.max(0,1 - p.life/p.ttl);
+          const color = `hsla(${p.hue},85%,65%,${alpha})`;
+          drawHeart(p.x,p.y,8, color);
+        }
+        if (fw.particles.every(p=>p.life > p.ttl-2)){ fireworks.splice(i,1); }
+      }
+    }
+
+    // main loop
+    function loop(){ rotation += 0.002; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
 
     // init
-    (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown in UI
-      // preload images and update loading
-      let loaded = 0; const total = imageUrls.length;
-      imageUrls.forEach(u=>{ const im = new Image(); im.src = u; im.onload = im.onerror = ()=>{ loaded++; updateLoading(Math.round((loaded/total)*100), `Cargando... (${loaded}/${total})`); if (loaded>=total){ setTimeout(()=>document.getElementById('loadingBarContainer').style.display='none', 300); buildStack(); startAutoplay(); } }; });
+    (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown
+      // preload
+      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); } }; }
     })();
 
-    // expose for debugging
-    window._romanticScene = { next, prev, focusIndex };
+    // expose helpers
+    window._romantic = { next, prev, focus };
 
   </script>
 </body>
