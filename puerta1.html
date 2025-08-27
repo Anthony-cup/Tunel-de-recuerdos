@@ -2,63 +2,263 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica 3D — 7 Fotos Optimizado</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Galería Romántica — 7 Fotos</title>
   <style>
-    :root{ --rose-1:#ff7aa0; --rose-2:#ffc1d3; --glass: rgba(255,255,255,0.04); --btn-bg: linear-gradient(180deg,#ff9fb6,#ffd6e3); }
-    html,body{height:100%;margin:0;background:radial-gradient(1000px 600px at 20% 10%, rgba(255,100,140,0.05), transparent 10%, #000 60%), #000;overflow:hidden;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#fdeef6}
-    #canvas-container{width:100vw;height:100vh;display:block;position:relative;touch-action:none}
-    #overlay{position:absolute;left:10px;top:10px;color:#111;z-index:80;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.1));backdrop-filter: blur(5px);box-shadow:0 6px 25px rgba(0,0,0,0.5);display:none}
-    #overlay h3{margin:0 0 5px 0;font-size:14px;color:var(--rose-2)}
-    #overlay p{margin:0;font-size:12px;color:rgba(255,255,255,0.85)}
-    .controls{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
-    .btn, .btn-ghost {
-      position:relative;
-      overflow:hidden;
-      display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600;font-size:12px;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      transition:transform .12s ease, box-shadow .12s ease;
+    :root {
+      --rose-1: #ff8ab5;
+      --rose-2: #ffd1e0;
+      --lavender: #d8b4fe;
+      --glass: rgba(255, 255, 255, 0.1);
+      --btn-bg: linear-gradient(135deg, #ff99cc, #ffe6f0);
+      --bg-gradient: radial-gradient(circle at 50% 30%, rgba(255, 150, 180, 0.2), rgba(216, 180, 254, 0.15), #1a0a20);
     }
-    .btn{background:var(--btn-bg); color:#111; box-shadow: 0 5px 15px rgba(255,120,160,0.08);}
-    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 25px rgba(255,120,160,0.1);}
-    .btn:active{transform:translateY(0);}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.07);color:#fff;padding:7px 10px}
-    .btn-ghost:hover{background:rgba(255,255,255,0.02);transform:translateY(-1px)}
-    .btn:focus{outline:2px solid rgba(255,120,160,0.12);outline-offset:2px}
-    .ripple{position:absolute;border-radius:999px;transform:scale(0);animation:rip .5s ease-out;pointer-events:none;background:rgba(255,255,255,0.15)}
-    @keyframes rip{ to { transform:scale(2.4); opacity:0 } }
-    #credits{position:absolute;right:10px;bottom:10px;color:#ffdfe8;font-size:10px;z-index:5;padding:5px;border-radius:6px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));display:none}
-    #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:15px;color:#ffdfe8;z-index:5;font-size:11px;padding:5px 10px;border-radius:999px;background:linear-gradient(90deg, rgba(255,111,163,0.07), rgba(255,182,193,0.03));backdrop-filter: blur(3px);display:none}
-    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.8));z-index:120}
-    #previewContent{max-width:95vw;max-height:90vh;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));display:flex;flex-direction:column;gap:8px}
-    #previewContent img{max-width:100%;max-height:85vh;border-radius:8px;display:block;box-shadow:0 15px 40px rgba(0,0,0,0.5)}
-    #previewClose{align-self:flex-end;padding:6px 9px;border-radius:8px;border:0;background:var(--btn-bg);color:#111;cursor:pointer;font-size:11px}
-    #romOverlay{position:absolute;inset:0;pointer-events:none;z-index:30;background:radial-gradient(50% 50% at 50% 40%, rgba(255,120,160,0.05), transparent 30%), linear-gradient(180deg, rgba(255,240,245,0.02), transparent 50%);}
-    #tooltip{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:60;color:#fff;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:10px;display:none}
-    #errorMessage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(0.7rem, 2.8vw, 0.9rem);text-align:center;color:#ff7aa0;text-shadow:0 0 8px #ff7aa0, 0 0 16px #ff7aa0;z-index:130;display:none;padding:clamp(4px, 1.2vw, 6px);max-width:95vw;background:rgba(0,0,0,0.7);border-radius:8px}
-    #loadingBarContainer{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:clamp(100px, 60vw, 150px);height:6px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;z-index:140}
-    #loadingBar{height:100%;width:0;background:linear-gradient(90deg, #ff7aa0, #ffc1d3);transition:width 0.3s ease}
-    #loadingText{position:absolute;top:calc(50% + 16px);left:50%;transform:translate(-50%,0);color:#ff7aa0;font-size:clamp(0.7rem, 2.5vw, 0.9rem);text-shadow:0 0 6px #ff7aa0}
-    @media (max-width:900px){
-      #overlay{left:8px;top:8px;padding:6px}
-      .btn, .btn-ghost{padding:6px 9px;font-size:11px}
-      .controls{gap:5px}
-      #loadingBarContainer{width:clamp(80px, 50vw, 120px);height:5px}
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg-gradient);
+      overflow: hidden;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: #ffe6f0;
     }
-    @media (max-width:480px){
-      #overlay{left:6px;top:6px;padding:5px;width:calc(100% - 12px);box-sizing:border-box}
-      .controls{gap:4px;flex-direction:column;align-items:flex-start}
-      #overlay h3{font-size:12px}
-      #overlay p{font-size:10px;display:block}
-      .btn, .btn-ghost{padding:7px 10px;border-radius:8px;font-size:11px}
-      #hint{display:block;font-size:10px;padding:4px 8px}
-      #errorMessage{font-size:clamp(0.6rem, 2.5vw, 0.8rem);padding:clamp(4px, 1.2vw, 6px);max-width:98vw}
-      #loadingBarContainer{width:clamp(80px, 60vw, 120px);height:5px}
-      #loadingText{font-size:clamp(0.6rem, 2.2vw, 0.8rem)}
+    #gallery-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      touch-action: pan-x;
     }
-    @media (min-resolution: 2dppx){
-      #canvas-container canvas{width:100vw !important;height:100vh !important}
+    .carousel {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 70vh;
+      perspective: 1000px;
+      overflow: hidden;
+    }
+    .carousel-inner {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+    .photo-frame {
+      position: absolute;
+      width: 200px;
+      height: 250px;
+      background: var(--glass);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      transform: rotateY(0deg) translateZ(400px);
+      clip-path: path('M100,20 C120,0 180,0 200,20 C220,40 220,100 200,120 C180,140 120,140 100,120 C80,100 80,40 100,20 Z');
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.95) contrast(1.1) drop-shadow(0 0 10px rgba(255, 150, 180, 0.3));
+    }
+    #overlay {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    #overlay h3 {
+      margin: 0 0 8px 0;
+      font-size: clamp(16px, 4vw, 18px);
+      color: var(--rose-2);
+      text-shadow: 0 0 5px rgba(255, 150, 180, 0.5);
+    }
+    #overlay p {
+      margin: 0;
+      font-size: clamp(12px, 3.2vw, 13px);
+      color: rgba(255, 230, 240, 0.9);
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 0;
+      background: var(--btn-bg);
+      color: #2a0a20;
+      cursor: pointer;
+      font-size: clamp(12px, 3.2vw, 13px);
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(255, 120, 180, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 120, 180, 0.3);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .ripple {
+      position: absolute;
+      border-radius: 999px;
+      transform: scale(0);
+      animation: ripple 0.5s ease-out;
+      pointer-events: none;
+      background: rgba(255, 230, 240, 0.3);
+    }
+    @keyframes ripple {
+      to { transform: scale(2.5); opacity: 0; }
+    }
+    #previewModal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(50, 30, 60, 0.7), rgba(20, 10, 30, 0.9));
+      z-index: 20;
+    }
+    #previewContent {
+      max-width: 90vw;
+      max-height: 85vh;
+      padding: 15px;
+      border-radius: 15px;
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #previewContent img {
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: 12px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 15px rgba(255, 150, 180, 0.4));
+    }
+    #previewClose {
+      align-self: flex-end;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 0;
+      background: var(--btn-bg);
+      color: #2a0a20;
+      cursor: pointer;
+      font-size: clamp(12px, 3.2vw, 13px);
+    }
+    #errorMessage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(0.8rem, 3.5vw, 1rem);
+      text-align: center;
+      color: var(--rose-1);
+      text-shadow: 0 0 8px var(--rose-1);
+      z-index: 30;
+      display: none;
+      padding: clamp(8px, 2vw, 10px);
+      max-width: 95vw;
+      background: rgba(20, 10, 30, 0.8);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+    }
+    #loadingBarContainer {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(120px, 60vw, 180px);
+      height: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      overflow: hidden;
+      z-index: 40;
+    }
+    #loadingBar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--rose-1), var(--lavender));
+      transition: width 0.4s ease;
+    }
+    #loadingText {
+      position: absolute;
+      top: calc(50% + 20px);
+      left: 50%;
+      transform: translate(-50%, 0);
+      color: var(--rose-1);
+      font-size: clamp(0.8rem, 3vw, 1rem);
+      text-shadow: 0 0 6px var(--rose-1);
+    }
+    .hearts-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .heart-particle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(255, 150, 180, 0.5), transparent);
+      clip-path: path('M10,3 C12,1 15,1 17,3 C19,5 19,8 17,10 C15,12 12,12 10,10 C8,8 8,5 10,3 Z');
+      animation: float 10s infinite ease-in-out;
+      opacity: 0.6;
+    }
+    @keyframes float {
+      0% { transform: translateY(100vh) scale(0.8); opacity: 0.3; }
+      50% { opacity: 0.6; }
+      100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+    }
+    @media (max-width: 720px) {
+      .carousel {
+        height: 60vh;
+      }
+      .photo-frame {
+        width: 160px;
+        height: 200px;
+        transform: rotateY(0deg) translateZ(300px);
+      }
+      #overlay {
+        padding: 10px;
+        max-width: 95%;
+      }
+      #overlay h3 {
+        font-size: clamp(14px, 3.8vw, 16px);
+      }
+      #overlay p {
+        font-size: clamp(11px, 3vw, 12px);
+      }
+      .btn {
+        padding: 7px 12px;
+        font-size: clamp(11px, 3vw, 12px);
+      }
+      #errorMessage {
+        font-size: clamp(0.7rem, 3vw, 0.9rem);
+        padding: clamp(6px, 1.8vw, 8px);
+      }
+      #loadingBarContainer {
+        width: clamp(100px, 50vw, 140px);
+        height: 6px;
+      }
+      #loadingText {
+        font-size: clamp(0.7rem, 2.8vw, 0.9rem);
+      }
     }
   </style>
 </head>
@@ -68,26 +268,30 @@
     <div id="loadingBar"></div>
     <div id="loadingText">Cargando...</div>
   </div>
-  <div id="canvas-container"></div>
-  <div id="romOverlay"></div>
-  <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Forma corazón v12</h3>
-    <p>Mueve o toca para mirar. Toca una imagen para agrandarla.</p>
-    <div class="controls">
-      <button id="toggleAuto" class="btn" aria-pressed="false">Auto-rotar</button>
-      <button id="heartBtn" class="btn-ghost">Cambiar forma</button>
-      <button id="shuffleBtn" class="btn-ghost">Aleatorizar</button>
-      <button id="returnBtn" class="btn-ghost">Regresar</button>
+  <div id="gallery-container">
+    <div class="carousel">
+      <div class="carousel-inner"></div>
     </div>
   </div>
-  <div id="credits">Diseño romántico • Imágenes de ejemplo: picsum.photos</div>
-  <div id="hint">Toca una imagen para abrirla • Pellizca para acercar</div>
-  <div id="previewModal" aria-hidden="true"><div id="previewContent"><button id="previewClose">Cerrar</button><img id="previewImage" src="" alt="Vista previa"></div></div>
-  <div id="tooltip">Sugerencia: prueba "Cambiar forma"</div>
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+  <div class="hearts-bg"></div>
+  <div id="overlay" role="region" aria-label="Controles">
+    <h3>Galería Romántica</h3>
+    <p>Desliza para explorar. Toca una foto para ampliarla.</p>
+    <div class="controls">
+      <button id="prevBtn" class="btn">Anterior</button>
+      <button id="nextBtn" class="btn">Siguiente</button>
+      <button id="returnBtn" class="btn">Regresar</button>
+    </div>
+  </div>
+  <div id="previewModal" aria-hidden="true">
+    <div id="previewContent">
+      <button id="previewClose">Cerrar</button>
+      <img id="previewImage" src="" alt="Vista previa">
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
       authDomain: "tunel-de-recuerdos.firebaseapp.com",
@@ -97,13 +301,12 @@
       appId: "1:630660710506:web:90d34150c9f21f668eca13",
       measurementId: "G-ETFDVEHML1"
     };
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
     let imageUrls = [];
     async function fetchImages() {
       const errorMessage = document.getElementById('errorMessage');
-      const rawSearch = window.location.search;
-      const urlParams = new URLSearchParams(rawSearch);
+      const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('id')?.trim();
       if (!userId || userId === '') {
         errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
@@ -112,18 +315,21 @@
         return [];
       }
       try {
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
+        const snapshot = await database.ref(`usuarios/${userId}`).once('value');
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const puertaFotos = data.puerta1Fotos || [];
-          let validFotos = puertaFotos.slice(0, 7).filter(url => typeof url === 'string' && url.trim() !== '');
+          let allFotos = [];
+          for (let i = 1; i <= 5; i++) {
+            const fotos = data[`puerta${i}Fotos`] || [];
+            allFotos = allFotos.concat(fotos.filter(url => typeof url === 'string' && url.trim() !== ''));
+          }
+          let validFotos = allFotos.slice(0, 7);
           if (validFotos.length === 0) {
             errorMessage.textContent = 'No hay imágenes en tu galería. Agrega al menos 1 imagen.';
             errorMessage.style.display = 'block';
             document.getElementById('loadingBarContainer').style.display = 'none';
             return [];
           }
-          // Duplicate images to reach 7 if fewer are available
           while (validFotos.length < 7) {
             validFotos = validFotos.concat(validFotos.slice(0, Math.min(validFotos.length, 7 - validFotos.length)));
           }
@@ -141,25 +347,15 @@
         return [];
       }
     }
-    (async function(){
+    (async function() {
       const loadingBarContainer = document.getElementById('loadingBarContainer');
       const loadingBar = document.getElementById('loadingBar');
       const loadingText = document.getElementById('loadingText');
       loadingBarContainer.style.display = 'block';
       loadingText.textContent = 'Cargando...';
       imageUrls = await fetchImages();
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-      const TOTAL_IMAGES = 7;
-      const STARS_COUNT = isMobile ? 80 : 300;
-      const PETALS_COUNT = isMobile ? 15 : 40;
-      const LANTERNS_COUNT = isMobile ? 3 : 6;
-      const ORBS_COUNT = isMobile ? 1 : 4;
-      const BASE_FRAME_W = isMobile ? 180 : 300; // Increased sizes
-      const BASE_FRAME_H = isMobile ? 130 : 220;
-      const MIN_CAMERA_DISTANCE = 300;
-      const MAX_CAMERA_DISTANCE = 1200;
-      let loadedImages = 0;
       const totalImages = Math.min(imageUrls.length, 7);
+      let loadedImages = 0;
       function updateLoadingProgress() {
         loadedImages++;
         const progress = (loadedImages / totalImages) * 100;
@@ -170,9 +366,6 @@
             setTimeout(() => {
               loadingBarContainer.style.display = 'none';
               document.getElementById('overlay').style.display = 'block';
-              document.getElementById('credits').style.display = 'block';
-              document.getElementById('hint').style.display = 'block';
-              document.getElementById('tooltip').style.display = 'block';
             }, 400);
           }, 600);
         }
@@ -190,279 +383,125 @@
           };
         });
       }
-      const container = document.getElementById('canvas-container');
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); // Increased for clarity
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.domElement.style.display = 'block';
-      renderer.domElement.style.touchAction = 'none';
-      container.appendChild(renderer.domElement);
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x08020a);
-      scene.fog = new THREE.FogExp2(0x08020a, 0.00035);
-      const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 8000);
-      let cameraDistance = isMobile ? 600 : 500; // Closer camera
-      camera.position.set(0, 50, cameraDistance);
-      camera.lookAt(0,0,0);
-      const hemi = new THREE.HemisphereLight(0xfff0f6, 0x111122, 0.45); scene.add(hemi);
-      const ambient = new THREE.AmbientLight(0xffe7f0, 0.12); scene.add(ambient);
-      const key = new THREE.PointLight(0xff9ac0, 0.85, 1800); key.position.set(600,250,250); scene.add(key);
-      const soft = new THREE.PointLight(0xffb6d3, 0.35, 1000); soft.position.set(-400,150,-300); scene.add(soft);
-      const roomSize = 2000;
-      const floorGeo = new THREE.PlaneGeometry(roomSize, roomSize);
-      const floorMat = new THREE.MeshStandardMaterial({ color:0x0b0710, roughness:0.25, metalness:0.1 });
-      const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI/2; floor.position.y = -400; scene.add(floor);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(700, 14, 24, 180), new THREE.MeshStandardMaterial({ color:0xff7aa0, emissive:0xff7aa0, emissiveIntensity:0.12, roughness:0.55, metalness:0.35 }));
-      ring.rotation.x = Math.PI/2; ring.position.y = -50; scene.add(ring);
-      const starsGeo = new THREE.BufferGeometry();
-      const starsCount = STARS_COUNT;
-      const positions = new Float32Array(starsCount*3);
-      const colors = new Float32Array(starsCount*3);
-      for(let i=0;i<starsCount;i++){
-        const r = 350 + Math.random()*1600;
-        const theta = Math.random()*Math.PI*2;
-        const phi = Math.acos(2*Math.random()-1);
-        positions[i*3] = Math.sin(phi)*Math.cos(theta)*r;
-        positions[i*3+1] = Math.sin(phi)*Math.sin(theta)*r*0.5;
-        positions[i*3+2] = Math.cos(phi)*r;
-        colors[i*3]=1.0; colors[i*3+1]=0.75+Math.random()*0.2; colors[i*3+2]=0.85;
-      }
-      starsGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
-      starsGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
-      const starsMat = new THREE.PointsMaterial({ size: isMobile ? 1.2 : 2.2, sizeAttenuation:true, vertexColors:true, opacity:0.85, transparent:true });
-      const stars = new THREE.Points(starsGeo, starsMat); scene.add(stars);
-      const imagesGroup = new THREE.Group(); scene.add(imagesGroup);
-      const loader = new THREE.TextureLoader(); loader.setCrossOrigin('');
-      function heartPoint(t, scale=1){
-        const x = 16*Math.pow(Math.sin(t),3);
-        const y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-        return new THREE.Vector3(x*scale, y*scale, Math.sin(t*3)*35*scale);
-      }
-      function getScaleFactor(){ return Math.min(1, window.innerWidth / 900); }
-      function createFramedImage(url, pos, idx){
-        const scaleFactor = getScaleFactor();
-        const frameW = BASE_FRAME_W * scaleFactor;
-        const frameH = BASE_FRAME_H * scaleFactor;
-        const glow = new THREE.Mesh(new THREE.PlaneGeometry(frameW*1.08, frameH*1.08), new THREE.MeshBasicMaterial({ color:0xff9ec5, transparent:true, opacity:0.06, side:THREE.DoubleSide }));
-        const frame = new THREE.Mesh(new THREE.BoxGeometry(frameW*1.01, frameH*1.02, Math.max(4, Math.round(4*scaleFactor))), new THREE.MeshStandardMaterial({ color:0x2b1b1b, roughness:0.3, metalness:0.5 }));
-        const imgMat = new THREE.MeshBasicMaterial({ color:0xffffff, map: null }); // Initialize map as null
-        const img = new THREE.Mesh(new THREE.PlaneGeometry(frameW-8, frameH-8), imgMat);
-        const group = new THREE.Group();
-        glow.position.set(0,4 * scaleFactor,-2); frame.position.set(0,0,-4 * scaleFactor); img.position.set(0,0,2 * scaleFactor);
-        group.add(glow); group.add(frame); group.add(img);
-        group.position.copy(pos); group.userData={idx,url};
-        loader.load(url, tex => {
-          tex.minFilter = THREE.LinearFilter; // Improve clarity
-          tex.magFilter = THREE.LinearFilter;
-          tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Enhance texture quality
-          imgMat.map = tex;
-          imgMat.needsUpdate = true;
-        }, undefined, err => {
-          console.warn(`Error al cargar textura: ${url}`, err);
+      const carouselInner = document.querySelector('.carousel-inner');
+      const TOTAL_IMAGES = 7;
+      let currentIndex = 0;
+      function setupCarousel() {
+        carouselInner.innerHTML = '';
+        imageUrls.slice(0, TOTAL_IMAGES).forEach((url, index) => {
+          const frame = document.createElement('div');
+          frame.className = 'photo-frame';
+          frame.style.transform = `rotateY(${index * (360 / TOTAL_IMAGES)}deg) translateZ(${window.innerWidth < 720 ? 300 : 400}px)`;
+          const img = document.createElement('img');
+          img.src = url;
+          img.alt = `Foto ${index + 1}`;
+          frame.appendChild(img);
+          carouselInner.appendChild(frame);
+          frame.addEventListener('click', () => openPreview(url));
         });
-        imagesGroup.add(group); return group;
+        updateCarousel();
       }
-      function getFrameCollisionRadius(){ const scaleFactor = getScaleFactor(); const fw = BASE_FRAME_W*scaleFactor, fh = BASE_FRAME_H*scaleFactor; return Math.sqrt((fw/2)*(fw/2) + (fh/2)*(fh/2)) * 1.2; }
-      let mode = 'heart';
-      function arrangeImages(shape='heart'){
-        const placed = [];
-        while(imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
-        const total = Math.min(TOTAL_IMAGES, imageUrls.length);
-        for(let i=0;i<total;i++){
-          const t = (i/total)*Math.PI*2;
-          let basePos;
-          if(shape==='heart'){
-            const point = heartPoint(t, 45); // Increased scale
-            const layer = 1 + Math.floor(i / Math.max(1,Math.floor(total/4))) * 0.22;
-            basePos = new THREE.Vector3(point.x * layer, point.y*layer - 70, point.z * layer);
+      function updateCarousel() {
+        const angle = currentIndex * (360 / TOTAL_IMAGES);
+        carouselInner.style.transform = `rotateY(-${angle}deg)`;
+        document.querySelectorAll('.photo-frame').forEach((frame, index) => {
+          const frameAngle = (index - currentIndex) * (360 / TOTAL_IMAGES);
+          frame.style.opacity = Math.max(0.5, 1 - Math.abs(frameAngle) / 90);
+          frame.style.transform = `rotateY(${index * (360 / TOTAL_IMAGES)}deg) translateZ(${window.innerWidth < 720 ? 300 : 400}px) scale(${Math.max(0.8, 1 - Math.abs(frameAngle) / 180)})`;
+        });
+      }
+      if (imageUrls.length > 0) setupCarousel();
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const returnBtn = document.getElementById('returnBtn');
+      prevBtn.addEventListener('click', (e) => {
+        createRipple(prevBtn, e.clientX, e.clientY);
+        currentIndex = (currentIndex - 1 + TOTAL_IMAGES) % TOTAL_IMAGES;
+        updateCarousel();
+      });
+      nextBtn.addEventListener('click', (e) => {
+        createRipple(nextBtn, e.clientX, e.clientY);
+        currentIndex = (currentIndex + 1) % TOTAL_IMAGES;
+        updateCarousel();
+      });
+      returnBtn.addEventListener('click', (e) => {
+        createRipple(returnBtn, e.clientX, e.clientY);
+        window.parent.postMessage({ type: 'doorClosed' }, '*');
+      });
+      let touchStartX = 0;
+      document.getElementById('gallery-container').addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      document.getElementById('gallery-container').addEventListener('touchmove', (e) => {
+        const touchX = e.touches[0].clientX;
+        const deltaX = touchX - touchStartX;
+        if (Math.abs(deltaX) > 50) {
+          if (deltaX > 0) {
+            currentIndex = (currentIndex - 1 + TOTAL_IMAGES) % TOTAL_IMAGES;
           } else {
-            const radius = 500 + i*30 * getScaleFactor(); // Increased spacing
-            const ang = i*0.5;
-            basePos = new THREE.Vector3(Math.cos(ang)*radius, -25 + Math.sin(i*0.35)*10, Math.sin(ang)*radius);
+            currentIndex = (currentIndex + 1) % TOTAL_IMAGES;
           }
-          let candidate = basePos.clone();
-          let safety = 0;
-          const R = getFrameCollisionRadius();
-          while(true){
-            let conflict=false;
-            for(const p of placed){ if(p.distanceTo(candidate) < R * 1.8){ conflict = true; break; } } // Increased spacing
-            if(!conflict) break;
-            candidate.x *= 1.08; candidate.z *= 1.08;
-            candidate.x += (Math.random()-0.5) * 18 * getScaleFactor();
-            candidate.z += (Math.random()-0.5) * 18 * getScaleFactor();
-            safety++; if(safety>35) break;
-          }
-          placed.push(candidate.clone());
-          candidate.y = Math.max(-240, Math.min(140, candidate.y));
-          createFramedImage(imageUrls[i % imageUrls.length], candidate, i);
+          updateCarousel();
+          touchStartX = touchX;
         }
+      }, { passive: true });
+      const previewModal = document.getElementById('previewModal');
+      const previewImage = document.getElementById('previewImage');
+      const previewClose = document.getElementById('previewClose');
+      function openPreview(url) {
+        previewImage.src = url;
+        previewModal.style.display = 'flex';
+        previewModal.setAttribute('aria-hidden', 'false');
       }
-      if (imageUrls.length > 0) arrangeImages(mode);
-      const petalsGeo = new THREE.BufferGeometry();
-      const petalsCount = PETALS_COUNT;
-      const petPos = new Float32Array(petalsCount*3);
-      for(let i=0;i<petalsCount;i++){ petPos[i*3] = (Math.random()-0.5)*1800; petPos[i*3+1] = -180 + Math.random()*600; petPos[i*3+2] = (Math.random()-0.5)*1800; }
-      petalsGeo.setAttribute('position', new THREE.BufferAttribute(petPos,3));
-      function createHeartTexture(){ const s=48; const c=document.createElement('canvas'); c.width=s; c.height=s; const cx=c.getContext('2d'); cx.clearRect(0,0,s,s); cx.fillStyle='rgba(255,120,160,0.85)'; cx.beginPath(); const x=s/2,y=s/2,scale=s/26; cx.moveTo(x,y+3*scale); cx.bezierCurveTo(x+11*scale,y-9*scale,x+20*scale,y+9*scale,x,y+18*scale); cx.bezierCurveTo(x-20*scale,y+9*scale,x-11*scale,y-9*scale,x,y+3*scale); cx.closePath(); cx.fill(); cx.globalCompositeOperation='lighter'; cx.fillStyle='rgba(255,182,193,0.12)'; cx.beginPath(); cx.arc(x,y+2*scale,30*scale,0,Math.PI*2); cx.fill(); return new THREE.CanvasTexture(c); }
-      const heartTex = createHeartTexture();
-      const petalsMat = new THREE.PointsMaterial({ size:35 * getScaleFactor(), map:heartTex, transparent:true, alphaTest:0.01, depthWrite:false });
-      const petals = new THREE.Points(petalsGeo, petalsMat); scene.add(petals);
-      const lanterns = new THREE.Group(); scene.add(lanterns);
-      function addLantern(pos, color=0xffc4d6){ const geo = new THREE.SphereGeometry(14 * getScaleFactor(), 8, 8); const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity:0.6, roughness:0.5, metalness:0.05 }); const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(pos); const light = new THREE.PointLight(color, 0.6, 400 * getScaleFactor()); light.position.copy(pos); lanterns.add(mesh); lanterns.add(light); }
-      for(let i=0;i<LANTERNS_COUNT;i++){ const a = i/LANTERNS_COUNT*Math.PI*2; const r=700 * getScaleFactor(); addLantern(new THREE.Vector3(Math.cos(a)*r, -100, Math.sin(a)*r)); }
-      const orbs = new THREE.Group(); scene.add(orbs);
-      function addOrb(pos){ const geo = new THREE.SphereGeometry(24 * getScaleFactor(), 12, 12); const mat = new THREE.MeshPhysicalMaterial({ color:0xffffff, metalness:0.0, roughness:0.15, transmission:0.75, transparent:true, opacity:0.8, clearcoat:0.4, clearcoatRoughness:0.2 }); const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(pos); orbs.add(mesh); }
-      for(let i=0;i<ORBS_COUNT;i++){ const a=Math.random()*Math.PI*2; const r=700*getScaleFactor()+Math.random()*700*getScaleFactor(); addOrb(new THREE.Vector3(Math.cos(a)*r, -25 + Math.random()*180, Math.sin(a)*r)); }
-      const bursts = []; const floatingHearts = [];
-      function spawnBurstAt(worldPos, color=0xffc4d6, count= isMobile ? 4 : 12){
-        for(let i=0;i<count;i++){ const g=new THREE.SphereGeometry(2 + Math.random()*4 * getScaleFactor(), 4, 4); const m=new THREE.MeshBasicMaterial({ color }); const mesh=new THREE.Mesh(g,m); mesh.position.copy(worldPos); scene.add(mesh); const dir=new THREE.Vector3((Math.random()-0.5)*2, 0.5+Math.random()*1.2, (Math.random()-0.5)*2).normalize(); const speed = 40*getScaleFactor() + Math.random()*100*getScaleFactor(); bursts.push({mesh, vel: dir.multiplyScalar(speed), life:0.5+Math.random()*0.6}); }
+      function closePreview() {
+        previewModal.style.display = 'none';
+        previewImage.src = '';
+        previewModal.setAttribute('aria-hidden', 'true');
       }
-      function spawnFloatingHeart(){ const canvas=document.createElement('canvas'); canvas.width=48; canvas.height=48; const cx=canvas.getContext('2d'); cx.clearRect(0,0,48,48); cx.fillStyle='rgba(255,120,160,0.85)'; cx.beginPath(); cx.moveTo(24,15); cx.bezierCurveTo(33,1,46,13,24,34); cx.bezierCurveTo(2,13,15,1,24,15); cx.fill(); const tex=new THREE.CanvasTexture(canvas); const mat=new THREE.SpriteMaterial({ map:tex, transparent:true, opacity:0.85 }); const s=new THREE.Sprite(mat); const scale = 90 * getScaleFactor(); s.scale.set(scale, scale, 1); s.position.set((Math.random()-0.5)*700*getScaleFactor(), -70 + Math.random()*220, (Math.random()-0.5)*700*getScaleFactor()); scene.add(s); floatingHearts.push({ sprite:s, life: 2.5 + Math.random()*2.5 }); }
-      let mouse = new THREE.Vector2(0,0);
-      const raycaster = new THREE.Raycaster(); let hovered = null;
-      let lastTap = 0;
-      let isPointerDown=false, pointerStart={}, cameraYaw=0, cameraPitch=0, targetYaw=0, targetPitch=0;
-      const maxPitch = Math.PI/2 - 0.12;
-      function onPointerMoveEvent(e){
-        const p = getClientPoint(e);
-        const rect = renderer.domElement.getBoundingClientRect();
-        mouse.x = ((p.x - rect.left)/rect.width)*2 -1;
-        mouse.y = -((p.y - rect.top)/rect.height)*2 +1;
-        if(e.pointerType === 'mouse' || (!e.touches && !e.pointerType)){
-          const mx = (p.x - rect.left) / rect.width;
-          const my = (p.y - rect.top) / rect.height;
-          targetYaw = -(mx - 0.5) * Math.PI * 0.95;
-          targetPitch = -(my - 0.5) * Math.PI * 0.75;
-          targetPitch = Math.max(-maxPitch, Math.min(maxPitch, targetPitch));
-        } else {
-          if(isPointerDown && (!e.touches || e.touches.length === 1)){
-            const dx = (p.x - pointerStart.x) / window.innerWidth;
-            const dy = (p.y - pointerStart.y) / window.innerHeight;
-            targetYaw = -dx * Math.PI * 0.95;
-            targetPitch = -dy * Math.PI * 0.75;
-          }
+      previewClose.addEventListener('click', closePreview);
+      previewModal.addEventListener('click', (e) => {
+        if (e.target === previewModal) closePreview();
+      });
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closePreview();
+        else if (e.key === 'ArrowLeft') {
+          currentIndex = (currentIndex - 1 + TOTAL_IMAGES) % TOTAL_IMAGES;
+          updateCarousel();
+        } else if (e.key === 'ArrowRight') {
+          currentIndex = (currentIndex + 1) % TOTAL_IMAGES;
+          updateCarousel();
         }
-      }
-      function onPointerDown(e){
-        isPointerDown = true;
-        const p = getClientPoint(e);
-        pointerStart.x = p.x; pointerStart.y = p.y;
-        pointerStart.touches = e.touches ? e.touches.length : (e.pointerType || 'mouse') === 'mouse' ? 1 : 1;
-        const now = performance.now();
-        if(isMobile && now - lastTap < 350) toggleAutoRotate();
-        lastTap = now;
-      }
-      function onPointerUp(e){ isPointerDown = false; }
-      function getClientPoint(e){ if(e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; if(e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }; return { x: e.clientX, y: e.clientY }; }
-      renderer.domElement.addEventListener('pointermove', onPointerMoveEvent, {passive:true});
-      renderer.domElement.addEventListener('pointerdown', onPointerDown, {passive:true});
-      window.addEventListener('pointerup', onPointerUp, {passive:true});
-      let pinchStartDist = 0, pinchStartCameraDist = cameraDistance;
-      function getTouchDist(e){ if(!e.touches || e.touches.length < 2) return 0; const dx = e.touches[0].clientX - e.touches[1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; return Math.sqrt(dx*dx + dy*dy); }
-      renderer.domElement.addEventListener('touchstart', (e)=>{ if(e.touches && e.touches.length === 2){ pinchStartDist = getTouchDist(e); pinchStartCameraDist = cameraDistance; } }, {passive:true});
-      renderer.domElement.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches.length === 2){ const d = getTouchDist(e); if(pinchStartDist > 0){ const factor = pinchStartDist / d; cameraDistance = pinchStartCameraDist * factor; cameraDistance = Math.max(MIN_CAMERA_DISTANCE, Math.min(MAX_CAMERA_DISTANCE, cameraDistance)); } } }, {passive:true});
-      renderer.domElement.addEventListener('wheel', (e)=>{ e.preventDefault(); cameraDistance += e.deltaY * 0.4; cameraDistance = Math.max(MIN_CAMERA_DISTANCE, Math.min(MAX_CAMERA_DISTANCE, cameraDistance)); }, {passive:false});
-      function onClick(e){
-        const rect = renderer.domElement.getBoundingClientRect();
-        const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX) || (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientX);
-        const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY) || (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY);
-        const target = e.target;
-        if(target.closest && target.closest('.btn, .btn-ghost')) createRipple(target.closest('.btn, .btn-ghost'), clientX, clientY);
-        const cx = clientX - rect.left;
-        const cy = clientY - rect.top;
-        const mx = (cx/rect.width)*2 -1; const my = -((cy/rect.height)*2 -1);
-        raycaster.setFromCamera({ x: mx, y: my }, camera);
-        const ints = raycaster.intersectObjects(imagesGroup.children, true);
-        if(ints.length>0){
-          let obj = ints[0].object;
-          while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
-          if(obj && obj.userData && obj.userData.url){
-            openPreview(obj.userData.url);
-            const world = new THREE.Vector3(); obj.getWorldPosition(world);
-            spawnBurstAt(world);
-          }
-        }
-      }
-      renderer.domElement.addEventListener('click', onClick, {passive:true});
-      const previewModal = document.getElementById('previewModal'); const previewImage = document.getElementById('previewImage'); const previewClose = document.getElementById('previewClose');
-      function openPreview(url){ previewImage.src = url; previewModal.style.display='flex'; previewModal.setAttribute('aria-hidden','false'); }
-      function closePreview(){ previewModal.style.display='none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
-      previewClose.addEventListener('click', closePreview); previewModal.addEventListener('click',(e)=>{ if(e.target===previewModal) closePreview(); });
-      function createRipple(button, clientX, clientY){
+      });
+      function createRipple(button, clientX, clientY) {
         const rect = button.getBoundingClientRect();
         const x = clientX - rect.left;
         const y = clientY - rect.top;
         const r = Math.max(rect.width, rect.height);
         const el = document.createElement('span');
         el.className = 'ripple';
-        el.style.width = el.style.height = (r*1.5) + 'px';
-        el.style.left = (x - r*0.75) + 'px';
-        el.style.top = (y - r*0.75) + 'px';
+        el.style.width = el.style.height = (r * 1.5) + 'px';
+        el.style.left = (x - r * 0.75) + 'px';
+        el.style.top = (y - r * 0.75) + 'px';
         button.appendChild(el);
-        setTimeout(()=>{ el.remove(); }, 600);
+        setTimeout(() => { el.remove(); }, 600);
       }
-      const toggleBtn = document.getElementById('toggleAuto'); let autoRotate=false;
-      function toggleAutoRotate(){ autoRotate = !autoRotate; toggleBtn.textContent = autoRotate ? 'Detener' : 'Auto-rotar'; toggleBtn.setAttribute('aria-pressed', String(autoRotate)); }
-      toggleBtn.addEventListener('click', (e)=>{ createRipple(toggleBtn, e.clientX, e.clientY); toggleAutoRotate(); });
-      const heartBtn = document.getElementById('heartBtn'); heartBtn.addEventListener('click', (e)=>{ createRipple(heartBtn, e.clientX, e.clientY); mode = (mode==='heart')? 'spiral':'heart'; arrangeImages(mode); });
-      const shuffleBtn = document.getElementById('shuffleBtn'); shuffleBtn.addEventListener('click', (e)=>{ createRipple(shuffleBtn, e.clientX, e.clientY); imagesGroup.children.forEach((g)=>{ g.position.x += (Math.random()-0.5)*80 * getScaleFactor(); g.position.z += (Math.random()-0.5)*80 * getScaleFactor(); }); });
-      document.getElementById('returnBtn').addEventListener('click', (e)=>{ createRipple(e.currentTarget, e.clientX, e.clientY); window.parent.postMessage({ type: 'doorClosed' }, '*'); });
-      window.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closePreview(); });
-      let lastTime = performance.now();
-      let heartSpawnTimer = 0;
-      function animate(){
-        requestAnimationFrame(animate);
-        const now = performance.now(); const dt = Math.max(0.001, (now - lastTime)/1000); lastTime = now;
-        const lerp = 1 - Math.pow(0.003, dt * 60);
-        cameraYaw += (targetYaw - cameraYaw) * (lerp * 0.85);
-        cameraPitch += (targetPitch - cameraPitch) * (lerp * 0.85);
-        cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, cameraPitch));
-        camera.position.x += ((cameraYaw * 500) - camera.position.x) * 0.08;
-        camera.position.y += ((cameraPitch * -130 + 50) - camera.position.y) * 0.08;
-        camera.position.z += (cameraDistance - camera.position.z) * 0.1;
-        camera.lookAt(0,0,0);
-        stars.rotation && (stars.rotation.y += 0.00015 * (autoRotate ? 1.4 : 1));
-        const posAttr = petals.geometry.getAttribute('position');
-        for(let i=0;i<petalsCount;i++){
-          let idx = i*3;
-          let y = posAttr.array[idx+1];
-          y += (0.8 + Math.sin(i*0.12 + now*0.0007) * 0.3) * dt * 8;
-          if(y > 900){ y = -180 - Math.random()*250; posAttr.array[idx] = (Math.random()-0.5)*1800; posAttr.array[idx+2] = (Math.random()-0.5)*1800; }
-          posAttr.array[idx+1] = y;
+      function createHearts() {
+        const heartsBg = document.querySelector('.hearts-bg');
+        for (let i = 0; i < (window.innerWidth < 720 ? 5 : 10); i++) {
+          const heart = document.createElement('div');
+          heart.className = 'heart-particle';
+          heart.style.left = `${Math.random() * 100}vw`;
+          heart.style.animationDelay = `${Math.random() * 8}s`;
+          heartsBg.appendChild(heart);
         }
-        posAttr.needsUpdate = true;
-        imagesGroup.children.forEach((g, idx)=>{ const bob = Math.sin((idx*0.4 + now*0.0006)) * 0.4; g.position.y += bob * 0.006 * getScaleFactor(); g.lookAt(camera.position); g.rotation.z = Math.sin(idx + now*0.00025)*0.01; });
-        for(let i = bursts.length - 1; i >= 0; i--){
-          const b = bursts[i]; b.life -= dt;
-          b.mesh.position.x += b.vel.x * dt; b.mesh.position.y += b.vel.y * dt; b.mesh.position.z += b.vel.z * dt;
-          if(b.mesh.material && b.mesh.material.opacity !== undefined) b.mesh.material.opacity = Math.max(0, b.life / 0.7);
-          if(b.life <= 0){ scene.remove(b.mesh); bursts.splice(i,1); }
-        }
-        heartSpawnTimer += dt;
-        if(heartSpawnTimer > 3.5 + Math.random()*4.5){ heartSpawnTimer = 0; spawnFloatingHeart(); }
-        for(let i=floatingHearts.length-1;i>=0;i--){
-          floatingHearts[i].life -= dt;
-          floatingHearts[i].sprite.position.y += dt * 14 * getScaleFactor();
-          floatingHearts[i].sprite.material.opacity = Math.max(0, floatingHearts[i].life / 3);
-          if(floatingHearts[i].life <= 0){ scene.remove(floatingHearts[i].sprite); floatingHearts.splice(i,1); }
-        }
-        lanterns.rotation.y += 0.0001;
-        orbs.rotation.y -= 0.00006;
-        if(autoRotate) imagesGroup.rotation.y += dt * 0.04;
-        if(!isMobile){
-          raycaster.setFromCamera(mouse, camera);
-          const intersects = raycaster.intersectObjects(imagesGroup.children, true);
-          if(intersects.length>0){
-            let obj = intersects[0].object; while(obj && (!obj.userData || !obj.userData.url)) obj = obj.parent;
-            if(obj && obj !== hovered){ if(hovered) hovered.scale && hovered.scale.setScalar(1); hovered = obj; hovered.scale && hovered.scale.setScalar(1.04); }
-          } else if(hovered){ hovered.scale && hovered.scale.setScalar(1); hovered = null; }
-        }
-        renderer.render(scene, camera);
       }
-      animate();
-      function onResize(){ renderer.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); arrangeImages(mode); }
+      createHearts();
+      function onResize() {
+        setupCarousel();
+        document.querySelector('.hearts-bg').innerHTML = '';
+        createHearts();
+      }
       window.addEventListener('resize', onResize);
-      window._romanticScene = { arrangeImages, spawnBurstAt, spawnFloatingHeart, toggleAutoRotate };
     })();
   </script>
 </body>
