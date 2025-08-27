@@ -13,37 +13,28 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:radial-gradient(900px 460px at 14% 16%, rgba(255,120,170,0.06), transparent 8%),linear-gradient(180deg,#050006,#0b0210 65%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
 
-    /* fireworks canvas behind everything */
     #fireworksCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-    /* ambience & sparkles layer */
     #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.03), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.02), transparent)}
     .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdce7);opacity:0.0;filter:blur(1px);}
 
-    /* main stage */
     #stage{position:relative;z-index:5;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
 
-    /* ring container */
     #ring-container{position:relative;width:min(88vw,1100px);height:min(78vh,800px);display:block}
 
-    /* central spotlight */
     #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;height:44%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%);filter:blur(18px);z-index:10;pointer-events:none}
 
-    /* ring slots and polaroids */
     .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center}
     .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease,filter 400ms ease}
     .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px;display:block}
     .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700}
 
-    /* shimmer effect across active card */
     .polaroid::after{content:'';position:absolute;left:-40%;top:0;width:140%;height:100%;pointer-events:none;transform:skewX(-18deg);opacity:0;transition:opacity .3s}
     .polaroid.active::after{background:linear-gradient(90deg,rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 60%);animation:shine 1.2s linear infinite;opacity:1}
     @keyframes shine{0%{transform:translateX(-100%) skewX(-18deg)}100%{transform:translateX(100%) skewX(-18deg)}}
 
-    /* glow ring behind active card */
     .polaroid.active{box-shadow:0 40px 120px rgba(255,120,180,0.18),0 0 80px rgba(255,140,190,0.06);filter:drop-shadow(0 12px 30px rgba(255,120,180,0.12));transform:scale(1.06)}
 
-    /* floating / bobbing variations */
     @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
     .ring-slot{animation: bob 6s ease-in-out infinite;}
     .ring-slot[data-idx='0']{animation-delay:0s}
@@ -54,31 +45,24 @@
     .ring-slot[data-idx='5']{animation-delay:2.1s}
     .ring-slot[data-idx='6']{animation-delay:2.6s}
 
-    /* center card */
     .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 120px rgba(255,110,160,0.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
     .center-card.visible{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
     .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px}
     .center-card .caption{height:56px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:800}
 
-    /* particles (petals) style (CSS fallback) */
     .petal{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff, #ffd1e8);pointer-events:none;transform:translateY(0);opacity:0}
 
-    /* controls */
     #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
-    #controls h3{margin:0;font-family:'Playfair Display',serif;color:var(--rose-1)}
     #controls p{margin:6px 0 0 0;font-size:13px;color:rgba(255,240,245,0.95)}
     .controls-row{display:flex;gap:8px;margin-top:8px}
     .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer}
     .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
 
-    /* responsive tweaks */
     @media (max-width:720px){ .center-card{width:86vw;height:62vh} :root{--card-w:70vw;--card-h:54vh} }
 
-    /* preview modal fallback */
     #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,2,8,0.85),rgba(6,2,8,0.95));z-index:120;padding:20px}
     #previewModal img{max-width:95vw;max-height:90vh;border-radius:12px}
 
-    /* loading */
     #loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:200;color:var(--rose-1);font-weight:700}
   </style>
 </head>
@@ -91,17 +75,15 @@
       <div id="ring-slots"></div>
       <div id="centerCard" class="center-card" role="dialog" aria-hidden="true">
         <img id="centerImg" src="" alt="Recuerdo grande">
-        <div class="caption" id="centerCaption">Toca una foto para verla</div>
+        <div class="caption" id="centerCaption"></div>
       </div>
     </div>
   </div>
 
   <div id="controls">
-    <h3>Jardín de Luces — Sala Romántica</h3>
-    <p>Ahora con fuegos de corazones y animaciones románticas para las 7 fotos.</p>
+    <p>Espera esto no es todo presiona Regresar para ver el siguiente</p>
     <div class="controls-row">
       <button id="autoplayBtn" class="btn">Pausa</button>
-      <button id="fireBtn" class="btn ghost">Fuegos</button>
       <button id="returnBtn" class="btn ghost">Regresar</button>
     </div>
   </div>
@@ -135,7 +117,6 @@
     const centerCaption = document.getElementById('centerCaption');
     const loading = document.getElementById('loading');
     const autoplayBtn = document.getElementById('autoplayBtn');
-    const fireBtn = document.getElementById('fireBtn');
     const returnBtn = document.getElementById('returnBtn');
     const previewModal = document.getElementById('previewModal');
     const previewBig = document.getElementById('previewBig');
@@ -168,12 +149,11 @@
       const slot = document.createElement('div'); slot.className='ring-slot'; slot.dataset.idx = i;
       const card = document.createElement('div'); card.className='polaroid';
       const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${i+1}`; img.loading='lazy';
-      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${i+1}`;
+      const cap = document.createElement('div'); cap.className='caption';
       card.appendChild(img); card.appendChild(cap);
       slot.appendChild(card);
       ring.appendChild(slot);
 
-      // click behaviour
       card.addEventListener('click', ()=>{ focus(i); openPreview(url); spawnPetalBurstAtSlot(slot); triggerLocalizedFirework(slot); });
       img.addEventListener('error', ()=>{ img.src='https://picsum.photos/600/800?blur=10'; });
     }
@@ -202,27 +182,23 @@
       });
     }
 
-    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = `Recuerdo ${i+1}`; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
+    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = ''; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
 
     function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
     function next(){ current = (current + 1) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
     function prev(){ current = (current - 1 + TOTAL) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
 
-    // autoplay loop (gentle rotation)
     function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3400); autoplayBtn.textContent='Pausa'; }
     function stopAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = null; autoplayBtn.textContent='Reanudar'; }
     function resetAutoplay(){ if (autoplay){ stopAutoplay(); startAutoplay(); } }
 
     autoplayBtn.addEventListener('click', ()=>{ autoplay = !autoplay; if (autoplay) startAutoplay(); else stopAutoplay(); });
     returnBtn.addEventListener('click', ()=>{ window.parent.postMessage({type:'doorClosed'}, '*'); });
-    fireBtn.addEventListener('click', ()=>{ fireworksOn = !fireworksOn; fireBtn.textContent = fireworksOn ? 'Fuegos' : 'Fuegos (off)'; });
 
-    // preview
     function openPreview(url){ previewBig.src = url; previewModal.style.display = 'flex'; previewModal.setAttribute('aria-hidden', 'false'); }
     previewModal.addEventListener('click', ()=>{ previewModal.style.display='none'; previewBig.src=''; previewModal.setAttribute('aria-hidden','true'); });
 
-    // petal bursts (CSS DOM particles)
     function spawnPetal(x,y){ const p = document.createElement('div'); p.className='petal'; p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.opacity = '1'; p.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
       document.body.appendChild(p);
       const dx = (Math.random()-0.5)*200; const dy = - (100 + Math.random()*250);
@@ -232,7 +208,6 @@
     function spawnPetalBurstAtSlot(slot){ const rc = slot.getBoundingClientRect(); const cx = rc.left + rc.width/2; const cy = rc.top + rc.height/2; for(let i=0;i<10;i++){ setTimeout(()=>spawnPetal(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40), i*40); } }
     function spawnPetalBurstAroundRing(){ const slots = Array.from(ring.children); slots.forEach((slot, i)=>{ if (Math.random() < 0.45) spawnPetalBurstAtSlot(slot); }); }
 
-    // ---- fireworks canvas (romantic hearts) ----
     const canvas = document.getElementById('fireworksCanvas'); const ctx = canvas.getContext('2d'); let cw=0,ch=0; function resize(){ cw = canvas.width = innerWidth; ch = canvas.height = innerHeight; } window.addEventListener('resize', resize); resize();
 
     const fireworks = [];
@@ -250,7 +225,6 @@
       ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
 
     function updateFireworks(){ ctx.clearRect(0,0,cw,ch);
-      // spawn more often but controlled
       if (fireworksOn && Math.random() < 0.04) launchRandomFirework();
       for(let i=fireworks.length-1;i>=0;i--){ const fw = fireworks[i]; fw.life++;
         if (fw.life===1) createParticles(fw);
@@ -262,23 +236,17 @@
       }
     }
 
-    // localized firework at slot center
     function triggerLocalizedFirework(slot){ const rc = slot.getBoundingClientRect(); const x = rc.left + rc.width/2; const y = rc.top + rc.height/2; launchFireworkAt(x, y - 30, 1.4); }
 
-    // main loop
     function loop(){ rotation += 0.0035; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
 
-    // init
-    (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown
-      // preload
-      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop(); // initial soft fireworks
+    (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return;
+      let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop();
                   for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*700);
                 } }; }
     })();
 
-    // expose helpers for debugging
     window._romantic = { next, prev, focus };
-
   </script>
 </body>
 </html>
