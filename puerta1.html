@@ -16,54 +16,64 @@
     #fireworksCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
     #ambience{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:radial-gradient(30% 20% at 20% 30%, rgba(255,160,200,0.03), transparent), radial-gradient(20% 18% at 80% 80%, rgba(200,160,255,0.02), transparent)}
-    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdce7);opacity:0.0;filter:blur(1px);}
+    .sparkle{position:absolute;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#fff,#ffdce7);opacity:0.0;filter:blur(1px);animation:twinkle 3s ease-in-out infinite;}
+
+    @keyframes twinkle{0%,100%{opacity:0;transform:scale(0.8)}50%{opacity:0.8;transform:scale(1.2)}}
 
     #stage{position:relative;z-index:5;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:24px}
 
     #ring-container{position:relative;width:min(88vw,1100px);height:min(78vh,800px);display:block}
 
-    #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;height:44%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%);filter:blur(18px);z-index:10;pointer-events:none}
+    #center-spot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44%;height:44%;border-radius:50%;background:radial-gradient(circle at 40% 30%, rgba(255,200,230,0.06), transparent 30%);filter:blur(18px);z-index:10;pointer-events:none;animation:pulse 4s ease-in-out infinite}
 
-    .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center}
-    .polaroid{width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:transform 600ms cubic-bezier(.2,.9,.25,1),opacity 400ms ease,filter 400ms ease}
-    .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px;display:block}
-    .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700}
+    @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.6}50%{transform:translate(-50%,-50%) scale(1.05);opacity:0.8}}
 
+    .ring-slot{position:absolute;left:50%;top:50%;transform-origin:center center;width:var(--card-w);height:var(--card-h);display:flex;align-items:center;justify-content:center;transition:all 800ms cubic-bezier(.25,.46,.45,.94)}
+    .polaroid{width:100%;height:100%;background:linear-gradient(145deg,#fff 0%,#fefefe 100%);padding:12px;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.45),0 0 40px rgba(255,100,160,0.06);overflow:hidden;display:flex;flex-direction:column;transition:all 700ms cubic-bezier(.34,1.56,.64,1);will-change:transform,filter;backface-visibility:hidden}
+    .polaroid img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:10px;display:block;transition:all 500ms ease;filter:saturate(1.1) contrast(1.02)}
+    .polaroid .caption{height:46px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:700;transition:color 400ms ease}
+
+    .polaroid::before{content:'';position:absolute;inset:0;border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,200,220,0.05));opacity:0;transition:opacity 500ms ease;pointer-events:none}
     .polaroid::after{content:'';position:absolute;left:-40%;top:0;width:140%;height:100%;pointer-events:none;transform:skewX(-18deg);opacity:0;transition:opacity .3s}
-    .polaroid.active::after{background:linear-gradient(90deg,rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 60%);animation:shine 1.2s linear infinite;opacity:1}
+    .polaroid.active::before{opacity:1}
+    .polaroid.active::after{background:linear-gradient(90deg,rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 60%);animation:shine 1.8s ease-in-out infinite;opacity:1}
     @keyframes shine{0%{transform:translateX(-100%) skewX(-18deg)}100%{transform:translateX(100%) skewX(-18deg)}}
 
-    .polaroid.active{box-shadow:0 40px 120px rgba(255,120,180,0.18),0 0 80px rgba(255,140,190,0.06);filter:drop-shadow(0 12px 30px rgba(255,120,180,0.12));transform:scale(1.06)}
+    .polaroid.active{box-shadow:0 25px 80px rgba(255,120,180,0.25),0 0 100px rgba(255,140,190,0.08),inset 0 1px 0 rgba(255,255,255,0.2);filter:drop-shadow(0 12px 30px rgba(255,120,180,0.15));transform:scale(1.08);z-index:100}
+    .polaroid.active img{filter:saturate(1.2) contrast(1.05)}
+    .polaroid:hover{transform:scale(1.02);box-shadow:0 15px 50px rgba(255,120,180,0.15),0 0 60px rgba(255,140,190,0.05)}
 
-    @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
-    .ring-slot{animation: bob 6s ease-in-out infinite;}
-    .ring-slot[data-idx='0']{animation-delay:0s}
+    @keyframes float{0%{transform:translateY(0) rotateZ(0deg)}33%{transform:translateY(-6px) rotateZ(1deg)}66%{transform:translateY(-3px) rotateZ(-0.5deg)}100%{transform:translateY(0) rotateZ(0deg)}}
+    .ring-slot{animation: float 8s ease-in-out infinite;}
+    .ring-slot[data-idx='0']{animation-delay:-0.2s}
     .ring-slot[data-idx='1']{animation-delay:0.4s}
-    .ring-slot[data-idx='2']{animation-delay:0.9s}
-    .ring-slot[data-idx='3']{animation-delay:1.3s}
-    .ring-slot[data-idx='4']{animation-delay:1.7s}
-    .ring-slot[data-idx='5']{animation-delay:2.1s}
-    .ring-slot[data-idx='6']{animation-delay:2.6s}
+    .ring-slot[data-idx='2']{animation-delay:1.1s}
+    .ring-slot[data-idx='3']{animation-delay:1.8s}
+    .ring-slot[data-idx='4']{animation-delay:2.5s}
+    .ring-slot[data-idx='5']{animation-delay:3.2s}
+    .ring-slot[data-idx='6']{animation-delay:3.9s}
 
-    .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(180deg,#fff,#fff);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 120px rgba(255,110,160,0.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:opacity 300ms ease,transform 300ms ease}
+    .center-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(48vw,520px);height:min(62vh,560px);z-index:30;border-radius:16px;padding:14px;background:linear-gradient(145deg,#fff 0%,#fefefe 100%);box-shadow:0 30px 90px rgba(0,0,0,0.6),0 0 120px rgba(255,110,160,0.12);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;opacity:0;pointer-events:none;transition:all 600ms cubic-bezier(.34,1.56,.64,1);backdrop-filter:blur(2px)}
     .center-card.visible{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
-    .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px}
+    .center-card img{width:100%;height:calc(100% - 56px);object-fit:cover;border-radius:12px;transition:all 400ms ease}
     .center-card .caption{height:56px;text-align:center;margin-top:10px;font-family:'Playfair Display',serif;color:#27020b;font-weight:800}
 
-    .petal{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff, #ffd1e8);pointer-events:none;transform:translateY(0);opacity:0}
+    .petal{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff, #ffd1e8);pointer-events:none;transform:translateY(0);opacity:0;filter:drop-shadow(0 2px 4px rgba(255,120,180,0.3))}
 
     #controls{position:fixed;left:12px;top:12px;z-index:60;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);backdrop-filter:blur(6px);box-shadow:0 6px 24px rgba(0,0,0,0.5)}
     #controls p{margin:6px 0 0 0;font-size:13px;color:rgba(255,240,245,0.95)}
     .controls-row{display:flex;gap:8px;margin-top:8px}
-    .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
+    .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(145deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:700;cursor:pointer;transition:all 300ms ease;box-shadow:0 2px 8px rgba(255,120,180,0.2)}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,120,180,0.3)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2);box-shadow:none}
 
     @media (max-width:720px){ .center-card{width:86vw;height:62vh} :root{--card-w:70vw;--card-h:54vh} }
 
-    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,2,8,0.85),rgba(6,2,8,0.95));z-index:120;padding:20px}
-    #previewModal img{max-width:95vw;max-height:90vh;border-radius:12px}
+    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(6,2,8,0.85),rgba(6,2,8,0.95));z-index:120;padding:20px;backdrop-filter:blur(4px)}
+    #previewModal img{max-width:95vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);transition:all 400ms ease}
 
-    #loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:200;color:var(--rose-1);font-weight:700}
+    #loading{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:200;color:var(--rose-1);font-weight:700;animation:loadingPulse 2s ease-in-out infinite}
+    @keyframes loadingPulse{0%,100%{opacity:0.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
   </style>
 </head>
 <body>
@@ -174,22 +184,32 @@
         const x = cx + Math.cos(angle) * radius;
         const y = cy + Math.sin(angle) * (radius * 0.78);
         slot.style.left = x + 'px'; slot.style.top = y + 'px';
-        const scale = idx===current ? 1.06 : 0.86 + (1 - (Math.abs((idx-current+TOTAL)%TOTAL) / TOTAL) * 0.18);
-        slot.style.transform = `translate(-50%,-50%) rotate(${angle * 12}deg) scale(${scale})`;
+        const scale = idx===current ? 1.08 : 0.85 + (1 - (Math.abs((idx-current+TOTAL)%TOTAL) / TOTAL) * 0.2);
+        const rotateAmount = angle * 8 + (idx===current ? 0 : Math.sin(rotation * 2) * 3);
+        slot.style.transform = `translate(-50%,-50%) rotate(${rotateAmount}deg) scale(${scale})`;
         slot.style.zIndex = (idx===current?120:30 + ((idx - current + TOTAL) % TOTAL));
         const card = slot.querySelector('.polaroid');
         if (idx===current){ card.classList.add('active'); } else { card.classList.remove('active'); }
       });
     }
 
-    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = ''; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
+    function showCenter(i){ 
+      centerCard.classList.remove('visible');
+      setTimeout(()=>{
+        const url = imageUrls[i % imageUrls.length]; 
+        centerImg.src = url; 
+        centerCaption.textContent = ''; 
+        centerCard.classList.add('visible'); 
+        centerCard.setAttribute('aria-hidden','false');
+      }, 150);
+    }
 
     function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
     function next(){ current = (current + 1) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
     function prev(){ current = (current - 1 + TOTAL) % TOTAL; positionSlots(); showCenter(current); spawnPetalBurstAroundRing(); }
 
-    function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3400); autoplayBtn.textContent='Pausa'; }
+    function startAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = setInterval(()=>{ rotation += 0.06; next(); }, 3800); autoplayBtn.textContent='Pausa'; }
     function stopAutoplay(){ if (autoTimer) clearInterval(autoTimer); autoTimer = null; autoplayBtn.textContent='Reanudar'; }
     function resetAutoplay(){ if (autoplay){ stopAutoplay(); startAutoplay(); } }
 
@@ -201,12 +221,12 @@
 
     function spawnPetal(x,y){ const p = document.createElement('div'); p.className='petal'; p.style.left = x + 'px'; p.style.top = y + 'px'; p.style.opacity = '1'; p.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
       document.body.appendChild(p);
-      const dx = (Math.random()-0.5)*200; const dy = - (100 + Math.random()*250);
-      p.animate([{transform:`translate(0,0) rotate(0deg)`,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:2400 + Math.random()*1400,easing:'cubic-bezier(.2,.9,.25,1)'});
-      setTimeout(()=>p.remove(),3600);
+      const dx = (Math.random()-0.5)*240; const dy = - (120 + Math.random()*280);
+      p.animate([{transform:`translate(0,0) rotate(0deg) scale(0.8)`,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${Math.random()*720}deg) scale(1.2)`,opacity:0}],{duration:2800 + Math.random()*1200,easing:'cubic-bezier(.25,.46,.45,.94)'});
+      setTimeout(()=>p.remove(),4200);
     }
-    function spawnPetalBurstAtSlot(slot){ const rc = slot.getBoundingClientRect(); const cx = rc.left + rc.width/2; const cy = rc.top + rc.height/2; for(let i=0;i<10;i++){ setTimeout(()=>spawnPetal(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40), i*40); } }
-    function spawnPetalBurstAroundRing(){ const slots = Array.from(ring.children); slots.forEach((slot, i)=>{ if (Math.random() < 0.45) spawnPetalBurstAtSlot(slot); }); }
+    function spawnPetalBurstAtSlot(slot){ const rc = slot.getBoundingClientRect(); const cx = rc.left + rc.width/2; const cy = rc.top + rc.height/2; for(let i=0;i<12;i++){ setTimeout(()=>spawnPetal(cx + (Math.random()-0.5)*50, cy + (Math.random()-0.5)*50), i*50); } }
+    function spawnPetalBurstAroundRing(){ const slots = Array.from(ring.children); slots.forEach((slot, i)=>{ if (Math.random() < 0.4) spawnPetalBurstAtSlot(slot); }); }
 
     const canvas = document.getElementById('fireworksCanvas'); const ctx = canvas.getContext('2d'); let cw=0,ch=0; function resize(){ cw = canvas.width = innerWidth; ch = canvas.height = innerHeight; } window.addEventListener('resize', resize); resize();
 
@@ -225,10 +245,10 @@
       ctx.closePath(); ctx.globalAlpha = alpha; ctx.fillStyle = clr; ctx.fill(); ctx.restore(); }
 
     function updateFireworks(){ ctx.clearRect(0,0,cw,ch);
-      if (fireworksOn && Math.random() < 0.04) launchRandomFirework();
+      if (fireworksOn && Math.random() < 0.035) launchRandomFirework();
       for(let i=fireworks.length-1;i>=0;i--){ const fw = fireworks[i]; fw.life++;
         if (fw.life===1) createParticles(fw);
-        for(let p of fw.particles){ p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life++; const alpha = Math.max(0,1 - p.life/p.ttl);
+        for(let p of fw.particles){ p.x += p.vx; p.y += p.vy; p.vy += 0.025; p.life++; const alpha = Math.max(0,1 - p.life/p.ttl);
           const color = `hsla(${p.hue},85%,65%,${alpha})`;
           drawHeart(p.x,p.y,p.size, color, alpha);
         }
@@ -236,13 +256,13 @@
       }
     }
 
-    function triggerLocalizedFirework(slot){ const rc = slot.getBoundingClientRect(); const x = rc.left + rc.width/2; const y = rc.top + rc.height/2; launchFireworkAt(x, y - 30, 1.4); }
+    function triggerLocalizedFirework(slot){ const rc = slot.getBoundingClientRect(); const x = rc.left + rc.width/2; const y = rc.top + rc.height/2; launchFireworkAt(x, y - 30, 1.5); }
 
-    function loop(){ rotation += 0.0035; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
+    function loop(){ rotation += 0.004; positionSlots(); updateFireworks(); requestAnimationFrame(loop); }
 
     (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return;
       let loaded=0; for(const u of imageUrls){ const im=new Image(); im.src=u; im.onload=im.onerror=()=>{ loaded++; if (loaded>=imageUrls.length){ loading.style.display='none'; buildRing(); startAutoplay(); loop();
-                  for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*700);
+                  for(let i=0;i<3;i++) setTimeout(()=>launchRandomFirework(), i*800);
                 } }; }
     })();
 
