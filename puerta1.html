@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Carrusel 3D</title>
+  <title>Sala Romántica — Galería Circular</title>
   <style>
     :root {
-      --rose-1: #ff99cc;
-      --rose-2: #ffe6f0;
-      --lavender: #d8b4fe;
-      --glass: rgba(255, 255, 255, 0.12);
+      --rose-1: #ff8ab5;
+      --rose-2: #ffd1e0;
+      --lavender: #e0c7ff;
+      --glass: rgba(255, 255, 255, 0.15);
       --btn-bg: linear-gradient(180deg, #ff99cc, #ffe6f0);
-      --bg-gradient: radial-gradient(circle at 50% 30%, rgba(255, 150, 180, 0.2), transparent 40%, rgba(40, 20, 60, 0.95));
+      --bg-gradient: radial-gradient(circle at 50% 20%, rgba(255, 150, 180, 0.25), transparent 50%, rgba(30, 15, 50, 0.95));
     }
     html, body {
       height: 100%;
       margin: 0;
-      background: var(--bg-gradient), #1c0a25;
+      background: var(--bg-gradient), #1a0a2a;
       overflow: hidden;
       font-family: 'Segoe UI', Roboto, Arial, sans-serif;
       color: var(--rose-2);
@@ -143,7 +143,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(180deg, rgba(40, 20, 60, 0.7), rgba(20, 10, 30, 0.9));
+      background: linear-gradient(180deg, rgba(30, 15, 50, 0.7), rgba(20, 10, 30, 0.9));
       z-index: 120;
     }
     #previewContent {
@@ -181,7 +181,7 @@
       inset: 0;
       pointer-events: none;
       z-index: 30;
-      background: radial-gradient(50% 50% at 50% 40%, rgba(255, 150, 180, 0.1), transparent 50%), linear-gradient(180deg, rgba(255, 240, 245, 0.04), transparent 70%);
+      background: radial-gradient(50% 50% at 50% 40%, rgba(255, 150, 180, 0.12), transparent 50%), linear-gradient(180deg, rgba(255, 240, 245, 0.05), transparent 70%);
     }
     #errorMessage {
       position: absolute;
@@ -285,8 +285,8 @@
   <div id="canvas-container"></div>
   <div id="romOverlay"></div>
   <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Carrusel 3D</h3>
-    <p>Desliza para girar. Toca una foto para ampliarla.</p>
+    <h3>Sala Romántica — Galería Circular</h3>
+    <p>Desliza para rotar. Toca una foto para ampliarla.</p>
     <div class="controls">
       <button id="prevBtn" class="btn">Anterior</button>
       <button id="nextBtn" class="btn">Siguiente</button>
@@ -370,11 +370,11 @@
       imageUrls = await fetchImages();
       const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
       const TOTAL_IMAGES = 7;
-      const PARTICLES_COUNT = isMobile ? 20 : 50;
-      const BASE_FRAME_W = isMobile ? 140 : 260;
-      const BASE_FRAME_H = isMobile ? 100 : 180;
-      const MIN_CAMERA_DISTANCE = 200;
-      const MAX_CAMERA_DISTANCE = 800;
+      const PARTICLES_COUNT = isMobile ? 15 : 40;
+      const BASE_FRAME_W = isMobile ? 130 : 240;
+      const BASE_FRAME_H = isMobile ? 90 : 160;
+      const MIN_CAMERA_DISTANCE = 180;
+      const MAX_CAMERA_DISTANCE = 700;
       let loadedImages = 0;
       const totalImages = Math.min(imageUrls.length, 7);
       function updateLoadingProgress() {
@@ -414,21 +414,22 @@
       renderer.domElement.style.touchAction = 'none';
       container.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1c0a25);
-      scene.fog = new THREE.FogExp2(0x1c0a25, 0.0005);
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
-      let cameraDistance = isMobile ? 500 : 400;
-      camera.position.set(0, 30, cameraDistance);
+      scene.background = new THREE.Color(0x1a0a2a);
+      scene.fog = new THREE.FogExp2(0x1a0a2a, 0.0006);
+      const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 4000);
+      let cameraDistance = isMobile ? 450 : 350;
+      camera.position.set(0, 20, cameraDistance);
       camera.lookAt(0, 0, 0);
-      const hemi = new THREE.HemisphereLight(0xfff0f5, 0x1c0a25, 0.6);
+      camera.frustumCulled = false; // Prevent culling issues
+      const hemi = new THREE.HemisphereLight(0xfff0f5, 0x1a0a2a, 0.65);
       scene.add(hemi);
-      const ambient = new THREE.AmbientLight(0xffe8f0, 0.2);
+      const ambient = new THREE.AmbientLight(0xffe8f0, 0.25);
       scene.add(ambient);
-      const key = new THREE.PointLight(0xffa0c0, 1.0, 1200);
-      key.position.set(400, 150, 150);
+      const key = new THREE.PointLight(0xffa0c0, 1.1, 1000);
+      key.position.set(350, 120, 120);
       scene.add(key);
-      const soft = new THREE.PointLight(0xffc0d5, 0.5, 600);
-      soft.position.set(-300, 100, -200);
+      const soft = new THREE.PointLight(0xffc0d5, 0.6, 500);
+      soft.position.set(-250, 80, -150);
       scene.add(soft);
       const imagesGroup = new THREE.Group();
       scene.add(imagesGroup);
@@ -442,26 +443,27 @@
         const frameW = BASE_FRAME_W * scaleFactor;
         const frameH = BASE_FRAME_H * scaleFactor;
         const glow = new THREE.Mesh(
-          new THREE.PlaneGeometry(frameW * 1.12, frameH * 1.12),
-          new THREE.MeshBasicMaterial({ color: 0xffa0c5, transparent: true, opacity: 0.1, side: THREE.DoubleSide })
+          new THREE.PlaneGeometry(frameW * 1.15, frameH * 1.15),
+          new THREE.MeshBasicMaterial({ color: 0xffa0c5, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
         );
         const frame = new THREE.Mesh(
-          new THREE.BoxGeometry(frameW * 1.03, frameH * 1.03, Math.max(2.5, Math.round(2.5 * scaleFactor))),
-          new THREE.MeshStandardMaterial({ color: 0x2a0a20, roughness: 0.2, metalness: 0.6 })
+          new THREE.BoxGeometry(frameW * 1.04, frameH * 1.04, Math.max(2, Math.round(2 * scaleFactor))),
+          new THREE.MeshStandardMaterial({ color: 0x2a0a20, roughness: 0.15, metalness: 0.65 })
         );
         const imgMat = new THREE.MeshBasicMaterial({ color: 0xffffff, map: null });
-        const img = new THREE.Mesh(new THREE.PlaneGeometry(frameW - 5, frameH - 5), imgMat);
+        const img = new THREE.Mesh(new THREE.PlaneGeometry(frameW - 4, frameH - 4), imgMat);
         const group = new THREE.Group();
-        glow.position.set(0, 2.5 * scaleFactor, -1);
-        frame.position.set(0, 0, -2.5 * scaleFactor);
-        img.position.set(0, 0, 1 * scaleFactor);
+        group.frustumCulled = false; // Ensure images stay visible
+        glow.position.set(0, 2 * scaleFactor, -0.8);
+        frame.position.set(0, 0, -2 * scaleFactor);
+        img.position.set(0, 0, 0.8 * scaleFactor);
         group.add(glow);
         group.add(frame);
         group.add(img);
-        const radius = isMobile ? 300 : 400;
+        const radius = isMobile ? 250 : 350;
         group.position.set(
           Math.cos(angle) * radius,
-          -20,
+          -15,
           Math.sin(angle) * radius
         );
         group.rotation.y = -angle;
@@ -479,11 +481,12 @@
         return group;
       }
       let currentIndex = 0;
+      let targetIndex = 0;
       function arrangeImages() {
         while (imagesGroup.children.length) imagesGroup.remove(imagesGroup.children[0]);
         const total = TOTAL_IMAGES;
         for (let i = 0; i < total; i++) {
-          const angle = (i / total) * Math.PI * 2 - (currentIndex * (Math.PI * 2 / total));
+          const angle = (i / total) * Math.PI * 2 - (targetIndex * (Math.PI * 2 / total));
           createFramedImage(imageUrls[i % imageUrls.length], angle, i);
         }
       }
@@ -492,48 +495,49 @@
       const particlesCount = PARTICLES_COUNT;
       const posArray = new Float32Array(particlesCount * 3);
       for (let i = 0; i < particlesCount; i++) {
-        posArray[i * 3] = (Math.random() - 0.5) * 1400;
-        posArray[i * 3 + 1] = -140 + Math.random() * 500;
-        posArray[i * 3 + 2] = (Math.random() - 0.5) * 1400;
+        posArray[i * 3] = (Math.random() - 0.5) * 1200;
+        posArray[i * 3 + 1] = -120 + Math.random() * 450;
+        posArray[i * 3 + 2] = (Math.random() - 0.5) * 1200;
       }
       particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
       function createHeartTexture() {
-        const s = 24;
+        const s = 20;
         const c = document.createElement('canvas');
         c.width = s;
         c.height = s;
         const cx = c.getContext('2d');
         cx.clearRect(0, 0, s, s);
-        cx.fillStyle = 'rgba(255, 140, 180, 0.9)';
+        cx.fillStyle = 'rgba(255, 140, 180, 0.95)';
         cx.beginPath();
-        const x = s / 2, y = s / 2, scale = s / 30;
+        const x = s / 2, y = s / 2, scale = s / 32;
         cx.moveTo(x, y + 3 * scale);
-        cx.bezierCurveTo(x + 9 * scale, y - 7 * scale, x + 16 * scale, y + 7 * scale, x, y + 14 * scale);
-        cx.bezierCurveTo(x - 16 * scale, y + 7 * scale, x - 9 * scale, y - 7 * scale, x, y + 3 * scale);
+        cx.bezierCurveTo(x + 8 * scale, y - 6 * scale, x + 14 * scale, y + 6 * scale, x, y + 12 * scale);
+        cx.bezierCurveTo(x - 14 * scale, y + 6 * scale, x - 8 * scale, y - 6 * scale, x, y + 3 * scale);
         cx.closePath();
         cx.fill();
         cx.globalCompositeOperation = 'lighter';
-        cx.fillStyle = 'rgba(255, 180, 200, 0.2)';
+        cx.fillStyle = 'rgba(255, 180, 200, 0.25)';
         cx.beginPath();
-        cx.arc(x, y + 2 * scale, 26 * scale, 0, Math.PI * 2);
+        cx.arc(x, y + 2 * scale, 24 * scale, 0, Math.PI * 2);
         cx.fill();
         return new THREE.CanvasTexture(c);
       }
       const heartTex = createHeartTexture();
-      const particlesMat = new THREE.PointsMaterial({ size: 25 * getScaleFactor(), map: heartTex, transparent: true, alphaTest: 0.03, depthWrite: false });
+      const particlesMat = new THREE.PointsMaterial({ size: 20 * getScaleFactor(), map: heartTex, transparent: true, alphaTest: 0.04, depthWrite: false });
       const particles = new THREE.Points(particlesGeo, particlesMat);
       scene.add(particles);
       const bursts = [];
-      function spawnBurstAt(worldPos, color = 0xffc8d8, count = isMobile ? 2 : 6) {
+      function spawnBurstAt(worldPos, color = 0xffc8d8, count = isMobile ? 2 : 5) {
         for (let i = 0; i < count; i++) {
-          const g = new THREE.SphereGeometry(1.2 + Math.random() * 2.5 * getScaleFactor(), 4, 4);
+          const g = new THREE.SphereGeometry(1 + Math.random() * 2 * getScaleFactor(), 4, 4);
           const m = new THREE.MeshBasicMaterial({ color });
           const mesh = new THREE.Mesh(g, m);
+          mesh.frustumCulled = false;
           mesh.position.copy(worldPos);
           scene.add(mesh);
-          const dir = new THREE.Vector3((Math.random() - 0.5) * 2, 0.5 + Math.random() * 0.8, (Math.random() - 0.5) * 2).normalize();
-          const speed = 25 * getScaleFactor() + Math.random() * 60 * getScaleFactor();
-          bursts.push({ mesh, vel: dir.multiplyScalar(speed), life: 0.3 + Math.random() * 0.4 });
+          const dir = new THREE.Vector3((Math.random() - 0.5) * 2, 0.4 + Math.random() * 0.6, (Math.random() - 0.5) * 2).normalize();
+          const speed = 20 * getScaleFactor() + Math.random() * 50 * getScaleFactor();
+          bursts.push({ mesh, vel: dir.multiplyScalar(speed), life: 0.25 + Math.random() * 0.35 });
         }
       }
       let mouse = new THREE.Vector2(0, 0);
@@ -553,14 +557,13 @@
         mouse.y = -((p.y - rect.top) / rect.height) * 2 + 1;
         if (isDragging && (!e.touches || e.touches.length === 1)) {
           const dx = (p.x - dragStartX) / window.innerWidth;
-          currentIndex = startIndex + dx * 10;
-          arrangeImages();
+          currentIndex = startIndex + dx * 12;
+          targetIndex = currentIndex;
         }
       }
       function onPointerUp() {
         isDragging = false;
-        currentIndex = Math.round(currentIndex);
-        arrangeImages();
+        targetIndex = Math.round(currentIndex);
       }
       function getClientPoint(e) {
         if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -595,7 +598,7 @@
       }, { passive: true });
       renderer.domElement.addEventListener('wheel', (e) => {
         e.preventDefault();
-        cameraDistance += e.deltaY * 0.25;
+        cameraDistance += e.deltaY * 0.2;
         cameraDistance = Math.max(MIN_CAMERA_DISTANCE, Math.min(MAX_CAMERA_DISTANCE, cameraDistance));
       }, { passive: false });
       function onClick(e) {
@@ -658,13 +661,11 @@
       let autoRotate = false;
       prevBtn.addEventListener('click', (e) => {
         createRipple(prevBtn, e.clientX, e.clientY);
-        currentIndex += 1;
-        arrangeImages();
+        targetIndex += 1;
       });
       nextBtn.addEventListener('click', (e) => {
         createRipple(nextBtn, e.clientX, e.clientY);
-        currentIndex -= 1;
-        arrangeImages();
+        targetIndex -= 1;
       });
       function toggleAutoRotate() {
         autoRotate = !autoRotate;
@@ -688,17 +689,18 @@
         const now = performance.now();
         const dt = Math.max(0.001, (now - lastTime) / 1000);
         lastTime = now;
-        camera.position.z += (cameraDistance - camera.position.z) * 0.15;
+        currentIndex += (targetIndex - currentIndex) * 0.1;
+        camera.position.z += (cameraDistance - camera.position.z) * 0.2;
         camera.lookAt(0, 0, 0);
         const posAttr = particles.geometry.getAttribute('position');
         for (let i = 0; i < particlesCount; i++) {
           let idx = i * 3;
           let y = posAttr.array[idx + 1];
-          y += (0.6 + Math.sin(i * 0.08 + now * 0.0005) * 0.2) * dt * 6;
-          if (y > 700) {
-            y = -140 - Math.random() * 180;
-            posAttr.array[idx] = (Math.random() - 0.5) * 1400;
-            posArray[idx + 2] = (Math.random() - 0.5) * 1400;
+          y += (0.5 + Math.sin(i * 0.07 + now * 0.0004) * 0.15) * dt * 5;
+          if (y > 600) {
+            y = -120 - Math.random() * 160;
+            posAttr.array[idx] = (Math.random() - 0.5) * 1200;
+            posArray[idx + 2] = (Math.random() - 0.5) * 1200;
           }
           posAttr.array[idx + 1] = y;
         }
@@ -709,11 +711,11 @@
           let delta = targetAngle - currentAngle;
           while (delta > Math.PI) delta -= Math.PI * 2;
           while (delta < -Math.PI) delta += Math.PI * 2;
-          g.rotation.y += delta * 0.1;
-          const radius = isMobile ? 300 : 400;
+          g.rotation.y += delta * 0.15;
+          const radius = isMobile ? 250 : 350;
           g.position.x = Math.cos(g.rotation.y) * radius;
           g.position.z = Math.sin(g.rotation.y) * radius;
-          g.position.y = -20 + Math.sin(idx + now * 0.0004) * 5;
+          g.position.y = -15 + Math.sin(idx + now * 0.0003) * 4;
         });
         for (let i = bursts.length - 1; i >= 0; i--) {
           const b = bursts[i];
@@ -721,15 +723,14 @@
           b.mesh.position.x += b.vel.x * dt;
           b.mesh.position.y += b.vel.y * dt;
           b.mesh.position.z += b.vel.z * dt;
-          if (b.mesh.material && b.mesh.material.opacity !== undefined) b.mesh.material.opacity = Math.max(0, b.life / 0.5);
+          if (b.mesh.material && b.mesh.material.opacity !== undefined) b.mesh.material.opacity = Math.max(0, b.life / 0.4);
           if (b.life <= 0) {
             scene.remove(b.mesh);
             bursts.splice(i, 1);
           }
         }
         if (autoRotate) {
-          currentIndex -= dt * 0.5;
-          arrangeImages();
+          targetIndex -= dt * 0.4;
         }
         if (!isMobile) {
           raycaster.setFromCamera(mouse, camera);
@@ -740,7 +741,7 @@
             if (obj && obj !== hovered) {
               if (hovered) hovered.scale && hovered.scale.setScalar(1);
               hovered = obj;
-              hovered.scale && hovered.scale.setScalar(1.06);
+              hovered.scale && hovered.scale.setScalar(1.07);
             }
           } else if (hovered) {
             hovered.scale && hovered.scale.setScalar(1);
