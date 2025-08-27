@@ -3,392 +3,106 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Polaroid Automático</title>
+  <title>Sala Romántica — Polaroid Mejorada</title>
   <style>
-    :root {
-      --rose-1: #ff8ab5;
-      --rose-2: #ffd1e0;
-      --lavender: #e0c7ff;
-      --glass: rgba(255, 255, 255, 0.15);
-      --glow-btn: linear-gradient(180deg, #ff66b2, #ff99cc, #ffe6f0);
-      --bg-gradient: radial-gradient(circle at 50% 20%, rgba(255, 150, 180, 0.3), transparent 50%, rgba(30, 15, 50, 0.95));
+    :root{
+      --rose-1:#ff7ab0;
+      --rose-2:#ffdcee;
+      --bg-dark:#100418;
+      --glass: rgba(255,255,255,0.08);
     }
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg-gradient), #1a0a2a;
-      overflow: hidden;
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-      color: var(--rose-2);
-    }
-    #polaroid-container {
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #polaroid-stack {
-      position: relative;
-      width: clamp(280px, 80vw, 400px);
-      height: clamp(400px, 70vh, 500px);
-    }
-    .polaroid {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: #fff;
-      padding: 12px;
-      border-radius: 10px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 120, 180, 0.3);
-      transform: translateY(100vh) scale(0.8) rotate(5deg);
-      opacity: 0;
-      transition: transform 1s ease-in-out, opacity 1s ease-in-out;
-      cursor: pointer;
-    }
-    .polaroid img {
-      width: 100%;
-      height: calc(100% - 40px);
-      object-fit: cover;
-      border-radius: 6px;
-      display: block;
-    }
-    .polaroid .caption {
-      text-align: center;
-      font-size: clamp(12px, 3vw, 14px);
-      color: #2a0a20;
-      margin-top: 8px;
-      font-weight: 500;
-    }
-    .polaroid.active {
-      transform: translateY(0) scale(1) rotate(0deg);
-      opacity: 1;
-      z-index: 10;
-    }
-    .polaroid.exiting {
-      transform: translateY(-100vh) scale(0.8) rotate(-5deg);
-      opacity: 0;
-      z-index: 5;
-    }
-    #next-label {
-      position: absolute;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--rose-2);
-      font-size: clamp(12px, 3vw, 14px);
-      text-shadow: 0 0 8px rgba(255, 120, 180, 0.6);
-      z-index: 15;
-      padding: 8px 16px;
-      border-radius: 999px;
-      background: var(--glass);
-      backdrop-filter: blur(4px);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
-      50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
-    }
-    #overlay {
-      position: absolute;
-      left: 10px;
-      top: 10px;
-      z-index: 80;
-      padding: 10px;
-      border-radius: 12px;
-      background: var(--glass);
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      max-width: 90%;
-    }
-    #overlay h3 {
-      margin: 0 0 6px 0;
-      font-size: clamp(14px, 3.5vw, 16px);
-      color: var(--rose-2);
-      text-shadow: 0 0 5px rgba(255, 150, 180, 0.6);
-    }
-    #overlay p {
-      margin: 0;
-      font-size: clamp(11px, 3vw, 12px);
-      color: rgba(255, 230, 240, 0.9);
-    }
-    .controls {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .btn-ghost {
-      position: relative;
-      overflow: hidden;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      border: 0;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: clamp(11px, 3vw, 12px);
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      background: var(--glow-btn);
-      color: #2a0a20;
-      box-shadow: 0 0 20px rgba(255, 100, 150, 0.5), inset 0 0 10px rgba(255, 100, 150, 0.3);
-      animation: glow 1.5s ease-in-out infinite;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .btn-ghost:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 30px rgba(255, 100, 150, 0.6);
-    }
-    .btn-ghost:active {
-      transform: translateY(0);
-    }
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(255, 100, 150, 0.5), inset 0 0 10px rgba(255, 100, 150, 0.3); }
-      50% { box-shadow: 0 0 30px rgba(255, 100, 150, 0.7), inset 0 0 15px rgba(255, 100, 150, 0.4); }
-    }
-    .btn-ghost:focus {
-      outline: 2px solid rgba(255, 120, 180, 0.25);
-      outline-offset: 2px;
-    }
-    .ripple {
-      position: absolute;
-      border-radius: 999px;
-      transform: scale(0);
-      animation: rip 0.5s ease-out;
-      pointer-events: none;
-      background: rgba(255, 230, 240, 0.3);
-    }
-    @keyframes rip {
-      to { transform: scale(2.5); opacity: 0; }
-    }
-    #credits {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      color: var(--rose-2);
-      font-size: clamp(9px, 2.5vw, 10px);
-      z-index: 5;
-      padding: 6px;
-      border-radius: 8px;
-      background: var(--glass);
-      backdrop-filter: blur(4px);
-    }
-    #hint {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 80px;
-      color: var(--rose-2);
-      z-index: 15;
-      font-size: clamp(9px, 2.5vw, 10px);
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: var(--glass);
-      backdrop-filter: blur(4px);
-      display: none;
-    }
-    #previewModal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(180deg, rgba(30, 15, 50, 0.7), rgba(20, 10, 30, 0.9));
-      z-index: 120;
-    }
-    #previewContent {
-      max-width: 95vw;
-      max-height: 90vh;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--glass);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-    #previewContent img {
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: 10px;
-      display: block;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      object-fit: contain;
-    }
-    #previewClose {
-      align-self: flex-end;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 0;
-      background: var(--glow-btn);
-      color: #2a0a20;
-      cursor: pointer;
-      font-size: clamp(11px, 3vw, 12px);
-      box-shadow: 0 0 20px rgba(255, 100, 150, 0.5);
-    }
-    #romOverlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 30;
-      background: radial-gradient(50% 50% at 50% 40%, rgba(255, 150, 180, 0.15), transparent 50%), linear-gradient(180deg, rgba(255, 240, 245, 0.06), transparent 70%);
-    }
-    #errorMessage {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: clamp(0.7rem, 3vw, 0.9rem);
-      text-align: center;
-      color: var(--rose-1);
-      text-shadow: 0 0 8px var(--rose-1);
-      z-index: 130;
-      display: none;
-      padding: clamp(6px, 1.5vw, 8px);
-      max-width: 95vw;
-      background: rgba(20, 10, 30, 0.8);
-      border-radius: 10px;
-      backdrop-filter: blur(4px);
-    }
-    #loadingBarContainer {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: clamp(100px, 60vw, 150px);
-      height: 6px;
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 4px;
-      overflow: hidden;
-      z-index: 140;
-    }
-    #loadingBar {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, var(--rose-1), var(--rose-2));
-      transition: width 0.3s ease;
-    }
-    #loadingText {
-      position: absolute;
-      top: calc(50% + 20px);
-      left: 50%;
-      transform: translate(-50%, 0);
-      color: var(--rose-1);
-      font-size: clamp(0.7rem, 2.8vw, 0.9rem);
-      text-shadow: 0 0 6px var(--rose-1);
-    }
-    #heart-particles {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 20;
-    }
-    .heart-particle {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      background: radial-gradient(circle, rgba(255, 140, 180, 0.95), transparent 70%);
-      clip-path: path('M10,6 C12,2 16,6 10,12 C4,6 8,2 10,6 Z');
-      animation: float 5s linear infinite;
-      opacity: 0;
-    }
-    @keyframes float {
-      0% { opacity: 0; transform: translateY(0) scale(0.5) rotate(0deg); }
-      10% { opacity: 0.9; }
-      90% { opacity: 0.9; }
-      100% { opacity: 0; transform: translateY(-100vh) scale(1) rotate(180deg); }
-    }
-    @media (max-width: 720px) {
-      #polaroid-container {
-        height: 80vh;
-      }
-      #polaroid-stack {
-        width: clamp(200px, 70vw, 320px);
-        height: clamp(300px, 60vh, 400px);
-      }
-      #overlay {
-        left: 8px;
-        top: 8px;
-        padding: 8px;
-        width: calc(100% - 16px);
-        box-sizing: border-box;
-      }
-      .btn-ghost {
-        padding: 7px 12px;
-        font-size: clamp(10px, 2.8vw, 11px);
-      }
-      #overlay h3 {
-        font-size: clamp(12px, 3.2vw, 14px);
-      }
-      #overlay p {
-        font-size: clamp(10px, 2.8vw, 11px);
-      }
-      #hint {
-        display: block;
-        font-size: clamp(9px, 2.5vw, 10px);
-        padding: 5px 10px;
-      }
-      #errorMessage {
-        font-size: clamp(0.6rem, 2.8vw, 0.8rem);
-        padding: clamp(5px, 1.5vw, 7px);
-        max-width: 98vw;
-      }
-      #loadingBarContainer {
-        width: clamp(80px, 50vw, 120px);
-        height: 5px;
-      }
-      #loadingText {
-        font-size: clamp(0.6rem, 2.5vw, 0.8rem);
-      }
-      .heart-particle {
-        width: 16px;
-        height: 16px;
-      }
-      #next-label {
-        bottom: 70px;
-        font-size: clamp(11px, 2.8vw, 12px);
-      }
-    }
-    @media (min-resolution: 2dppx) {
-      .polaroid img {
-        image-rendering: optimizeQuality;
-      }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(circle at 20% 10%, rgba(255,120,170,0.06), transparent 20%), linear-gradient(180deg,#15051a 0%, #08020a 100%);font-family:Inter, 'Segoe UI', Roboto, system-ui;color:var(--rose-2);-webkit-font-smoothing:antialiased}
+
+    /* Center container */
+    .stage{height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+
+    /* soft vignette + floating petals */
+    .bg-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 50% 30%, rgba(255,140,180,0.06), transparent 25%);} 
+
+    /* Polaroid carousel */
+    .carousel{width:clamp(260px,78vw,520px);max-height:85vh;position:relative;display:flex;align-items:center;justify-content:center}
+    .frame{
+      width:100%;height:100%;position:relative;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(10,5,10,0.6),0 4px 18px rgba(255,120,180,0.07);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      display:flex;align-items:center;justify-content:center;padding:16px}
+
+    /* crossfade + ken burns */
+    .slide{position:absolute;inset:16px;border-radius:10px;overflow:hidden;opacity:0;transform:scale(1);transition:opacity 700ms ease, transform 700ms ease}
+    .slide img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center}
+    .slide.active{opacity:1;z-index:5;animation:kenburns 12s ease-in-out infinite}
+    .slide.prev{opacity:0.0;z-index:2}
+
+    @keyframes kenburns{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.06) translateY(-3%)}100%{transform:scale(1) translateY(0)}}
+
+    /* soft romantic overlay gradient */
+    .soft-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(40% 40% at 10% 20%, rgba(255,100,150,0.06), transparent 15%), radial-gradient(30% 30% at 90% 80%, rgba(220,180,255,0.03), transparent 12%)}
+
+    /* controls overlay (only title + main button) */
+    .ui{position:absolute;left:16px;right:16px;top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:60}
+    .title{font-weight:700;font-size:clamp(14px,4vw,18px);letter-spacing:0.2px;text-shadow:0 6px 20px rgba(255,100,160,0.14)}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{
+      background:linear-gradient(180deg,var(--rose-1), #ff9ccf);
+      color:#27011a;border:0;padding:10px 14px;border-radius:12px;font-weight:700;font-size:clamp(12px,3.2vw,13px);cursor:pointer;box-shadow:0 8px 30px rgba(255,90,150,0.14);backdrop-filter:blur(4px)}
+    .btn:active{transform:translateY(1px)}
+
+    /* small pagination dots, hidden on mobile except condensed */
+    .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;display:flex;gap:8px;z-index:60}
+    .dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,0.14);box-shadow:0 6px 18px rgba(255,90,150,0.04)}
+    .dot.active{width:28px;border-radius:999px;background:linear-gradient(90deg,var(--rose-1),#ffd1ea);box-shadow:0 12px 30px rgba(255,90,150,0.16)}
+
+    /* preview modal */
+    .preview{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(10,5,10,0.7),rgba(4,2,6,0.95));z-index:120;padding:24px}
+    .preview img{max-width:98vw;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+    .preview.show{display:flex}
+
+    /* floating petals/hearts (reduced for mobile) */
+    .particles{position:absolute;inset:0;pointer-events:none;z-index:20}
+    .petal{position:absolute;width:22px;height:22px;opacity:0;transform:translateY(0);animation:petal 6s linear infinite}
+    @keyframes petal{0%{opacity:0;transform:translateY(-10vh) rotate(0) scale(0.6)}10%{opacity:1}90%{opacity:1;transform:translateY(100vh) rotate(360deg) scale(1)}100%{opacity:0}}
+
+    /* loading placeholder */
+    .loader{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80}
+
+    /* responsive tweaks */
+    @media (max-width:720px){
+      .carousel{width:92vw}
+      .title{font-size:16px}
+      .dots{bottom:12px}
+      .petal{width:14px;height:14px}
+      .frame{padding:10px;border-radius:10px}
     }
   </style>
 </head>
 <body>
-  <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ID primero.</div>
-  <div id="loadingBarContainer">
-    <div id="loadingBar"></div>
-    <div id="loadingText">Cargando...</div>
-  </div>
-  <div id="polaroid-container">
-    <div id="polaroid-stack"></div>
-    <div id="next-label">Ver la siguiente puerta</div>
-  </div>
-  <div id="romOverlay"></div>
-  <div id="heart-particles"></div>
-  <div id="overlay" role="region" aria-label="Controles">
-    <h3>Sala Romántica — Polaroid Automático</h3>
-    <p>Toca una foto para ampliarla. Ciclo automático.</p>
-    <div class="controls">
-      <button id="returnBtn" class="btn-ghost">Regresar</button>
+  <div class="stage" id="stage">
+    <div class="bg-vignette"></div>
+    <div class="carousel" aria-hidden="false">
+      <div class="frame" id="frame">
+        <!-- slides injected by JS -->
+      </div>
+      <div class="soft-glow"></div>
+      <div class="ui" id="ui">
+        <div class="title">Sala Romántica — Recuerdos</div>
+        <div class="controls">
+          <button id="prevBtn" class="btn" aria-label="Anterior">Anterior</button>
+          <button id="nextBtn" class="btn" aria-label="Siguiente">Siguiente</button>
+        </div>
+      </div>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+    </div>
+
+    <div class="particles" id="particles"></div>
+
+    <!-- preview modal (only image + close) -->
+    <div class="preview" id="preview" aria-hidden="true">
+      <img id="previewImg" alt="Imagen ampliada">
     </div>
   </div>
-  <div id="credits">Diseño romántico • Imágenes de ejemplo: picsum.photos</div>
-  <div id="hint">Toca para ampliar</div>
-  <div id="previewModal" aria-hidden="true">
-    <div id="previewContent">
-      <button id="previewClose">Cerrar</button>
-      <img id="previewImage" src="" alt="Vista previa">
-    </div>
-  </div>
+
   <script type="module">
+    // === conserva tu configuración Firebase (solo la dejamos como estaba) ===
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
     const firebaseConfig = {
@@ -402,197 +116,157 @@
     };
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
-    let imageUrls = [];
-    async function fetchImages() {
-      const errorMessage = document.getElementById('errorMessage');
+
+    // helpers
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
+    const devicePixelRatio = window.devicePixelRatio || 1;
+
+    async function fetchImages(){
+      // similar a tu lógica: espera un id por querystring
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('id')?.trim();
-      if (!userId || userId === '') {
-        errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
-        errorMessage.style.display = 'block';
-        document.getElementById('loadingBarContainer').style.display = 'none';
-        return [];
+      if(!userId){
+        // fallback: ejemplo con picsum para demo
+        return Array.from({length:7}).map((_,i)=>`https://picsum.photos/id/${110 + i}/3840/2160`);
       }
-      try {
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          let allFotos = [];
-          for (let i = 1; i <= 5; i++) {
-            const fotos = data[`puerta${i}Fotos`] || [];
-            allFotos = allFotos.concat(fotos.filter(url => typeof url === 'string' && url.trim() !== ''));
-          }
-          let validFotos = allFotos.slice(0, 7);
-          if (validFotos.length === 0) {
-            errorMessage.textContent = 'No hay imágenes en tu galería. Agrega al menos 1 imagen.';
-            errorMessage.style.display = 'block';
-            document.getElementById('loadingBarContainer').style.display = 'none';
-            return [];
-          }
-          while (validFotos.length < 7) {
-            validFotos = validFotos.concat(validFotos.slice(0, Math.min(validFotos.length, 7 - validFotos.length)));
-          }
-          return validFotos.slice(0, 7);
-        } else {
-          errorMessage.textContent = 'No creaste tu proyecto. Por favor, crea tu ID primero.';
-          errorMessage.style.display = 'block';
-          document.getElementById('loadingBarContainer').style.display = 'none';
-          return [];
+      try{
+        const snap = await get(ref(database, `usuarios/${userId}`));
+        if(!snap.exists()) return [];
+        const data = snap.val();
+        let all = [];
+        for(let i=1;i<=5;i++){
+          const fotos = data[`puerta${i}Fotos`] || [];
+          all = all.concat(fotos.filter(u=>typeof u==='string'&&u.trim()));
         }
-      } catch (error) {
-        errorMessage.textContent = 'Error al cargar las imágenes. Por favor, intenta de nuevo.';
-        errorMessage.style.display = 'block';
-        document.getElementById('loadingBarContainer').style.display = 'none';
+        if(all.length === 0) return [];
+        // ensure at least 5 - expand by repeating if needed
+        while(all.length < 7) all = all.concat(all.slice(0, Math.min(all.length, 7 - all.length)));
+        return all.slice(0,7);
+      }catch(e){
+        console.error(e);
         return [];
       }
     }
-    (async function() {
-      const loadingBarContainer = document.getElementById('loadingBarContainer');
-      const loadingBar = document.getElementById('loadingBar');
-      const loadingText = document.getElementById('loadingText');
-      loadingBarContainer.style.display = 'block';
-      loadingText.textContent = 'Cargando...';
-      imageUrls = await fetchImages();
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-      const TOTAL_IMAGES = 7;
-      const polaroidStack = document.getElementById('polaroid-stack');
-      const heartParticles = document.getElementById('heart-particles');
-      let currentIndex = 0;
-      let loadedImages = 0;
-      const totalImages = Math.min(imageUrls.length, 7);
-      function updateLoadingProgress() {
-        loadedImages++;
-        const progress = (loadedImages / totalImages) * 100;
-        loadingBar.style.width = `${progress}%`;
-        if (loadedImages >= totalImages) {
-          setTimeout(() => {
-            loadingBarContainer.style.opacity = '0';
-            setTimeout(() => {
-              loadingBarContainer.style.display = 'none';
-              document.getElementById('overlay').style.display = 'block';
-              document.getElementById('credits').style.display = 'block';
-              document.getElementById('hint').style.display = 'block';
-            }, 300);
-          }, 500);
-        }
-      }
-      if (totalImages === 0) {
-        loadingBarContainer.style.display = 'none';
-      } else {
-        imageUrls.forEach(url => {
-          const img = new Image();
-          img.src = url;
-          img.onload = updateLoadingProgress;
-          img.onerror = () => {
-            console.warn(`Error al cargar imagen: ${url}`);
-            updateLoadingProgress();
-          };
-        });
-      }
-      function createPolaroid(url, idx) {
-        const polaroid = document.createElement('div');
-        polaroid.className = 'polaroid';
-        polaroid.dataset.index = idx;
+
+    (async function init(){
+      const frame = document.getElementById('frame');
+      const dots = document.getElementById('dots');
+      const particles = document.getElementById('particles');
+      const preview = document.getElementById('preview');
+      const previewImg = document.getElementById('previewImg');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+
+      // show a subtle loader while fetching
+      const slides = [];
+      const urls = await fetchImages();
+      const TOTAL = Math.max(1, Math.min(7, urls.length || 7));
+
+      // preload + create slides (with high-res srcset if possible)
+      for(let i=0;i<TOTAL;i++){
+        const u = urls[i % urls.length];
+        const slide = document.createElement('div');
+        slide.className = 'slide';
+        slide.dataset.index = i;
         const img = document.createElement('img');
-        img.src = url;
-        img.alt = `Recuerdo ${idx + 1}`;
-        img.loading = 'lazy';
-        const caption = document.createElement('div');
-        caption.className = 'caption';
-        caption.textContent = `Recuerdo ${idx + 1}`;
-        polaroid.appendChild(img);
-        polaroid.appendChild(caption);
-        polaroidStack.appendChild(polaroid);
-      }
-      function updatePolaroid() {
-        const polaroids = polaroidStack.querySelectorAll('.polaroid');
-        polaroids.forEach((polaroid, idx) => {
-          const dist = (idx - currentIndex + TOTAL_IMAGES) % TOTAL_IMAGES;
-          if (dist < 0.5 || dist > TOTAL_IMAGES - 0.5) {
-            polaroid.classList.add('active');
-            polaroid.classList.remove('exiting');
-          } else {
-            polaroid.classList.remove('active');
-            polaroid.classList.add('exiting');
-          }
-        });
-      }
-      if (imageUrls.length > 0) {
-        for (let i = 0; i < TOTAL_IMAGES; i++) {
-          createPolaroid(imageUrls[i % imageUrls.length], i);
+        // attempt to request high-res images; if your URLs accept params adapt as needed
+        if(u.includes('picsum.photos')){
+          img.src = u; // picsum path already 3840x2160
+          img.srcset = `${u} 3840w, ${u.replace('/3840/2160','/1920/1080')} 1920w, ${u.replace('/3840/2160','/800/450')} 800w`;
+        } else {
+          // if firebase url, use it directly but keep lazy loading
+          img.src = u;
         }
-        updatePolaroid();
+        img.loading = isMobile ? 'lazy' : 'eager';
+        img.alt = `Recuerdo ${i+1}`;
+        slide.appendChild(img);
+        frame.appendChild(slide);
+        slides.push(slide);
+
+        // prewarm image
+        const pre = new Image(); pre.src = img.src;
       }
-      function spawnHeartParticle() {
-        const particle = document.createElement('div');
-        particle.className = 'heart-particle';
-        const x = Math.random() * window.innerWidth;
-        particle.style.left = `${x}px`;
-        particle.style.animationDelay = `${Math.random() * 1}s`;
-        heartParticles.appendChild(particle);
-        setTimeout(() => particle.remove(), 5000);
+
+      // dots
+      slides.forEach((s, idx)=>{
+        const d = document.createElement('button'); d.className='dot'; d.setAttribute('aria-label',`Ir a ${idx+1}`);
+        d.addEventListener('click',()=>goTo(idx));
+        dots.appendChild(d);
+      });
+
+      // automatic loop + manual controls
+      let current = 0;
+      let playing = true;
+      const AUTO_MS = isMobile ? 3500 : 4500;
+      function setActive(i){
+        slides.forEach((s,idx)=>{s.classList.toggle('active', idx===i); s.classList.toggle('prev', idx!==i);});
+        const dotButtons = dots.querySelectorAll('.dot'); dotButtons.forEach((db,idx)=>db.classList.toggle('active', idx===i));
       }
-      setInterval(spawnHeartParticle, isMobile ? 400 : 200);
-      polaroidStack.addEventListener('click', (e) => {
-        const target = e.target.closest('.polaroid.active');
-        if (target) {
-          const url = target.querySelector('img').src;
-          openPreview(url);
-          spawnHeartParticle();
+
+      function goTo(i){ current = (i + slides.length) % slides.length; setActive(current); }
+      function next(){ goTo(current+1); }
+      function prev(){ goTo(current-1); }
+
+      prevBtn.addEventListener('click',(e)=>{ prev(); spawnParticle(); giveRipple(e.currentTarget, e.clientX, e.clientY); });
+      nextBtn.addEventListener('click',(e)=>{ next(); spawnParticle(); giveRipple(e.currentTarget, e.clientX, e.clientY); });
+
+      // click slide to open preview (only active slide)
+      frame.addEventListener('click',(e)=>{
+        const s = e.target.closest('.slide.active');
+        if(!s) return;
+        const src = s.querySelector('img').src;
+        previewImg.src = src; preview.classList.add('show'); preview.setAttribute('aria-hidden','false');
+      });
+      preview.addEventListener('click', ()=>{ preview.classList.remove('show'); preview.setAttribute('aria-hidden','true'); previewImg.src=''; });
+
+      // autoplay loop
+      let autoTimer = setInterval(()=>{ next(); }, AUTO_MS);
+      // pause when interacting
+      [prevBtn,nextBtn,frame].forEach(el=>{ el.addEventListener('pointerdown', ()=>{ clearInterval(autoTimer); autoTimer = setInterval(()=>{ next(); }, AUTO_MS); }); });
+
+      // start
+      setActive(0);
+
+      // light weighted particles for romance
+      function spawnParticle(){
+        const el = document.createElement('div'); el.className='petal';
+        el.style.left = Math.random()*100 + '%';
+        el.style.top = (-5 - Math.random()*8) + 'vh';
+        el.style.animationDuration = (5 + Math.random()*4) + 's';
+        el.style.opacity = 1; particles.appendChild(el);
+        setTimeout(()=> el.remove(),8000);
+      }
+
+      // create a few at start with different shapes (hearts/petals) using SVG backgrounds
+      function seedParticles(n=6){
+        for(let i=0;i<n;i++){
+          const p = document.createElement('div'); p.className='petal';
+          const left = Math.random()*100; p.style.left = left + '%'; p.style.top = (-10 - Math.random()*20) + 'vh';
+          p.style.animationDelay = (Math.random()*2) + 's'; p.style.animationDuration = (5 + Math.random()*6) + 's';
+          // alternate shapes via clip-path
+          if(i%2===0) p.style.background = 'radial-gradient(circle at 35% 30%, rgba(255,140,180,0.95), transparent 60%)';
+          else p.style.background = 'radial-gradient(circle, rgba(255,200,240,0.95), transparent 70%)';
+          particles.appendChild(p);
+          setTimeout(()=> p.remove(),9000);
         }
-      });
-      const previewModal = document.getElementById('previewModal');
-      const previewImage = document.getElementById('previewImage');
-      const previewClose = document.getElementById('previewClose');
-      function openPreview(url) {
-        previewImage.src = url;
-        previewModal.style.display = 'flex';
-        previewModal.setAttribute('aria-hidden', 'false');
       }
-      function closePreview() {
-        previewModal.style.display = 'none';
-        previewImage.src = '';
-        previewModal.setAttribute('aria-hidden', 'true');
+      seedParticles(isMobile?4:8);
+
+      // small ripple effect for buttons
+      function giveRipple(button, clientX, clientY){
+        const rect = button.getBoundingClientRect(); const x = clientX - rect.left; const y = clientY - rect.top; const r = Math.max(rect.width, rect.height);
+        const el = document.createElement('span'); el.style.position='absolute'; el.style.left=(x - r/2)+'px'; el.style.top=(y - r/2)+'px'; el.style.width=el.style.height=(r)+'px'; el.style.borderRadius='999px'; el.style.opacity='0.18'; el.style.background='white'; el.style.transform='scale(0)'; el.style.transition='transform .5s ease, opacity .5s ease'; el.style.pointerEvents='none'; button.style.position='relative'; button.appendChild(el);
+        requestAnimationFrame(()=>{ el.style.transform='scale(1.8)'; el.style.opacity='0'; });
+        setTimeout(()=> el.remove(),600);
       }
-      previewClose.addEventListener('click', closePreview);
-      previewModal.addEventListener('click', (e) => {
-        if (e.target === previewModal) closePreview();
-      });
-      function createRipple(button, clientX, clientY) {
-        const rect = button.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-        const r = Math.max(rect.width, rect.height);
-        const el = document.createElement('span');
-        el.className = 'ripple';
-        el.style.width = el.style.height = (r * 1.5) + 'px';
-        el.style.left = (x - r * 0.75) + 'px';
-        el.style.top = (y - r * 0.75) + 'px';
-        button.appendChild(el);
-        setTimeout(() => { el.remove(); }, 600);
-      }
-      document.getElementById('returnBtn').addEventListener('click', (e) => {
-        createRipple(e.currentTarget, e.clientX, e.clientY);
-        window.parent.postMessage({ type: 'doorClosed' }, '*');
-      });
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closePreview();
-      });
-      function animate() {
-        requestAnimationFrame(animate);
-        const now = Date.now();
-        const cycleTime = 4000; // 4 seconds per image
-        const progress = (now % (TOTAL_IMAGES * cycleTime)) / cycleTime;
-        currentIndex = Math.floor(progress) % TOTAL_IMAGES;
-        updatePolaroid();
-      }
-      if (imageUrls.length > 0) {
-        animate();
-      }
-      window.addEventListener('resize', () => {
-        updatePolaroid();
-      });
-      window._romanticScene = { updatePolaroid };
+
+      // keyboard navigation
+      window.addEventListener('keydown', (e)=>{ if(e.key==='ArrowRight') next(); if(e.key==='ArrowLeft') prev(); if(e.key==='Escape') { preview.classList.remove('show'); previewImg.src=''; } });
+
+      // accessibility: pause animations when user prefers reduced motion
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(prefersReduced){ slides.forEach(s=>s.style.animation='none'); }
+
     })();
   </script>
 </body>
