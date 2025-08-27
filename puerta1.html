@@ -76,7 +76,7 @@
       <div id="ring-slots"></div>
       <div id="centerCard" class="center-card" role="dialog" aria-hidden="true">
         <img id="centerImg" src="" alt="Recuerdo grande">
-        <div class="caption" id="centerCaption">Toca una foto para verla</div>
+        <div class="caption" id="centerCaption"></div>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@
     <button id="returnBtn" class="btn ghost">Regresar</button>
   </div>
 
-  <div id="loading">Cargando...</div>
+  <div id="loading"></div>
   <div id="previewModal" aria-hidden="true">
     <img id="previewBig" src="" alt="Vista previa grande">
   </div>
@@ -129,18 +129,18 @@
     async function fetchImages(){
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id')?.trim();
-      if (!id){ loading.textContent = 'Falta ?id=TU_ID en la URL'; return []; }
+      if (!id){ return []; }
       try{
         const snap = await get(ref(database, `usuarios/${id}`));
-        if (!snap.exists()){ loading.textContent = 'ID no encontrado.'; return []; }
+        if (!snap.exists()){ return []; }
         const data = snap.val();
         let all = [];
         for(let i=1;i<=5;i++){ const fotos = data[`puerta${i}Fotos`] || []; all = all.concat(fotos.filter(u=>typeof u==='string' && u.trim())); }
         let valid = all.slice(0,TOTAL);
-        if (valid.length===0){ loading.textContent='No hay imágenes.'; return []; }
+        if (valid.length===0){ return []; }
         while(valid.length<TOTAL) valid = valid.concat(valid.slice(0,Math.min(valid.length,TOTAL-valid.length)));
         return valid.slice(0,TOTAL);
-      }catch(e){ console.error(e); loading.textContent='Error al cargar imágenes.'; return []; }
+      }catch(e){ console.error(e); return []; }
     }
 
     function createSlot(url, i){
@@ -151,7 +151,7 @@
       const card = document.createElement('div'); card.className='polaroid img-fade';
       const inner = document.createElement('div'); inner.className='inner';
       const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${i+1}`; img.loading='lazy';
-      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${i+1}`;
+      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = ``;
       inner.appendChild(img); inner.appendChild(cap);
       card.appendChild(inner);
       slot.appendChild(card);
@@ -199,7 +199,7 @@
       });
     }
 
-    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = `Recuerdo ${i+1}`; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
+    function showCenter(i){ const url = imageUrls[i % imageUrls.length]; centerImg.src = url; centerCaption.textContent = ``; centerCard.classList.add('visible'); centerCard.setAttribute('aria-hidden','false'); }
 
     function focus(i){ current = (i+TOTAL) % TOTAL; positionSlots(); showCenter(current); resetAutoplay(); }
 
