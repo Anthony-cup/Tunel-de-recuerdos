@@ -3,108 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Sala Romántica — Polaroid Mejorada</title>
+  <title>Sala Romántica — Polaroid Automático (Mejorado)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --rose-1:#ff7ab0;
-      --rose-2:#ffdcee;
-      --bg-dark:#100418;
-      --glass: rgba(255,255,255,0.08);
+      --rose-1:#ff86b6; --rose-2:#ffdce9; --bg-dark:#120418; --glass:rgba(255,255,255,0.08);
+      --soft-shadow: 0 8px 30px rgba(0,0,0,0.45);
+      --card-w: clamp(260px,78vw,420px);
+      --card-h: clamp(360px,70vh,520px);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(circle at 20% 10%, rgba(255,120,170,0.06), transparent 20%), linear-gradient(180deg,#15051a 0%, #08020a 100%);font-family:Inter, 'Segoe UI', Roboto, system-ui;color:var(--rose-2);-webkit-font-smoothing:antialiased}
+    html,body{height:100%;margin:0;background: radial-gradient(1200px 600px at 10% 10%, rgba(255,140,180,0.08), transparent 10%), radial-gradient(800px 400px at 90% 80%, rgba(200,150,255,0.04), transparent 8%), linear-gradient(180deg,#1a0520,#0d0012 60%);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;color:var(--rose-2);overflow:hidden}
 
-    /* Center container */
-    .stage{height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden}
+    /* container */
+    #polaroid-container{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 
-    /* soft vignette + floating petals */
-    .bg-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 50% 30%, rgba(255,140,180,0.06), transparent 25%);} 
+    /* soft vignette + bokeh */
+    #scene-bg{position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(50% 40% at 50% 30%, rgba(255,180,200,0.04), transparent 20%);}
+    #bokeh::before, #bokeh::after{content:'';position:absolute;inset:0;pointer-events:none;background-repeat:no-repeat;background-position:center;opacity:0.06}
+    #bokeh::before{background-image:radial-gradient(circle at 20% 30%, rgba(255,220,240,0.12) 0 8%, transparent 8%), radial-gradient(circle at 85% 70%, rgba(225,200,255,0.08) 0 6%, transparent 6%)}
 
-    /* Polaroid carousel */
-    .carousel{width:clamp(260px,78vw,520px);max-height:85vh;position:relative;display:flex;align-items:center;justify-content:center}
-    .frame{
-      width:100%;height:100%;position:relative;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(10,5,10,0.6),0 4px 18px rgba(255,120,180,0.07);
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      display:flex;align-items:center;justify-content:center;padding:16px}
+    /* polaroid stack */
+    #polaroid-stack{position:relative;width:var(--card-w);height:var(--card-h);display:grid;place-items:center;perspective:1200px;z-index:5}
+    .polaroid{position:absolute;width:100%;height:100%;background:linear-gradient(180deg,#fff,#fff);padding:12px;border-radius:12px;box-shadow:var(--soft-shadow),0 0 30px rgba(255,110,160,0.08);transform-origin:center center;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;transition:transform 700ms cubic-bezier(.22,.9,.35,1),opacity 600ms ease,filter 400ms ease}
+    .polaroid img{width:100%;height:calc(100% - 44px);object-fit:cover;border-radius:8px;display:block;backface-visibility:hidden}
+    .polaroid .caption{height:40px;text-align:center;margin-top:8px;font-family:'Playfair Display',serif;color:#2a0520;font-weight:600}
 
-    /* crossfade + ken burns */
-    .slide{position:absolute;inset:16px;border-radius:10px;overflow:hidden;opacity:0;transform:scale(1);transition:opacity 700ms ease, transform 700ms ease}
-    .slide img{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center center}
-    .slide.active{opacity:1;z-index:5;animation:kenburns 12s ease-in-out infinite}
-    .slide.prev{opacity:0.0;z-index:2}
+    /* layered offsets (7 items) */
+    .polaroid[data-order='0']{transform:translateY(0) rotate(0deg) scale(1);z-index:70}
+    .polaroid[data-order='1']{transform:translateY(10px) rotate(-6deg) scale(.98);z-index:60;filter:grayscale(.04) contrast(.98)}
+    .polaroid[data-order='2']{transform:translateY(18px) rotate(8deg) scale(.96);z-index:50;opacity:.95}
+    .polaroid[data-order='3']{transform:translateY(28px) rotate(-12deg) scale(.94);z-index:40;opacity:.88}
+    .polaroid[data-order='4']{transform:translateY(36px) rotate(12deg) scale(.92);z-index:30;opacity:.82}
+    .polaroid[data-order='5']{transform:translateY(44px) rotate(-20deg) scale(.90);z-index:20;opacity:.76}
+    .polaroid[data-order='6']{transform:translateY(52px) rotate(20deg) scale(.88);z-index:10;opacity:.68}
 
-    @keyframes kenburns{0%{transform:scale(1) translateY(0)}50%{transform:scale(1.06) translateY(-3%)}100%{transform:scale(1) translateY(0)}}
+    /* active center style */
+    .polaroid.active{transform:translateY(0) rotate(0) scale(1.02);z-index:120;box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 40px rgba(255,120,170,0.12)}
 
-    /* soft romantic overlay gradient */
-    .soft-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(40% 40% at 10% 20%, rgba(255,100,150,0.06), transparent 15%), radial-gradient(30% 30% at 90% 80%, rgba(220,180,255,0.03), transparent 12%)}
+    /* exiting style for smooth transitions */
+    .polaroid.exiting{transform:translateY(-60vh) rotate(-6deg) scale(.9);opacity:0}
 
-    /* controls overlay (only title + main button) */
-    .ui{position:absolute;left:16px;right:16px;top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:60}
-    .title{font-weight:700;font-size:clamp(14px,4vw,18px);letter-spacing:0.2px;text-shadow:0 6px 20px rgba(255,100,160,0.14)}
-    .controls{display:flex;gap:8px;align-items:center}
-    .btn{
-      background:linear-gradient(180deg,var(--rose-1), #ff9ccf);
-      color:#27011a;border:0;padding:10px 14px;border-radius:12px;font-weight:700;font-size:clamp(12px,3.2vw,13px);cursor:pointer;box-shadow:0 8px 30px rgba(255,90,150,0.14);backdrop-filter:blur(4px)}
-    .btn:active{transform:translateY(1px)}
+    /* overlay controls */
+    #overlay{position:fixed;left:14px;top:14px;z-index:140;padding:12px;border-radius:12px;background:var(--glass);backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,0.45);max-width:calc(100% - 28px)}
+    #overlay h3{margin:0 0 6px 0;font-family:'Playfair Display',serif;font-size:18px;color:var(--rose-1)}
+    #overlay p{margin:0;font-size:13px;color:rgba(255,240,245,0.9)}
+    .controls{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+    .btn{padding:8px 12px;border-radius:10px;border:0;background:linear-gradient(180deg,var(--rose-1),#ffb6d9);color:#2a0520;font-weight:600;cursor:pointer;box-shadow:0 6px 24px rgba(255,130,180,0.12)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--rose-2)}
 
-    /* small pagination dots, hidden on mobile except condensed */
-    .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;display:flex;gap:8px;z-index:60}
-    .dot{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,0.14);box-shadow:0 6px 18px rgba(255,90,150,0.04)}
-    .dot.active{width:28px;border-radius:999px;background:linear-gradient(90deg,var(--rose-1),#ffd1ea);box-shadow:0 12px 30px rgba(255,90,150,0.16)}
+    /* bottom cue */
+    #next-label{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--glass);padding:8px 14px;border-radius:999px;backdrop-filter:blur(6px);z-index:140;font-size:13px;text-shadow:0 0 6px rgba(255,120,170,0.15)}
 
     /* preview modal */
-    .preview{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(10,5,10,0.7),rgba(4,2,6,0.95));z-index:120;padding:24px}
-    .preview img{max-width:98vw;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-    .preview.show{display:flex}
+    #previewModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(10,4,18,0.8),rgba(10,4,18,0.95));z-index:200;padding:20px}
+    #previewContent{max-width:95vw;max-height:92vh;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));padding:12px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+    #previewContent img{max-width:100%;max-height:80vh;border-radius:10px;object-fit:contain}
+    #previewClose{background:linear-gradient(180deg,var(--rose-1),#ffb6d9);border:0;padding:8px 10px;border-radius:10px;cursor:pointer}
 
-    /* floating petals/hearts (reduced for mobile) */
-    .particles{position:absolute;inset:0;pointer-events:none;z-index:20}
-    .petal{position:absolute;width:22px;height:22px;opacity:0;transform:translateY(0);animation:petal 6s linear infinite}
-    @keyframes petal{0%{opacity:0;transform:translateY(-10vh) rotate(0) scale(0.6)}10%{opacity:1}90%{opacity:1;transform:translateY(100vh) rotate(360deg) scale(1)}100%{opacity:0}}
+    /* heart + petals container */
+    #romOverlay{position:fixed;inset:0;pointer-events:none;z-index:120}
+    .particle{position:absolute;width:18px;height:18px;opacity:0;transform:translateY(0);animation:floatUp 6s linear infinite}
+    .particle.heart{background:radial-gradient(circle at 30% 30%, rgba(255,140,180,1), rgba(255,120,170,0.15));clip-path:path('M10,5 C12,1 16,5 10,12 C4,5 8,1 10,5 Z')}
+    .particle.petal{background:linear-gradient(180deg,#ffd5e6,#ffc0e0);border-radius:50%;transform-origin:center}
+    @keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.6)}10%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translateY(-110vh) scale(1.1)} }
 
-    /* loading placeholder */
-    .loader{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:80}
-
-    /* responsive tweaks */
-    @media (max-width:720px){
-      .carousel{width:92vw}
-      .title{font-size:16px}
-      .dots{bottom:12px}
-      .petal{width:14px;height:14px}
-      .frame{padding:10px;border-radius:10px}
+    /* small responsive tweaks */
+    @media(max-width:720px){
+      :root{--card-w:86vw;--card-h:62vh}
+      #overlay{left:10px;top:10px;padding:10px;width:calc(100% - 20px)}
+      #next-label{bottom:18px}
+      .particle{width:12px;height:12px}
     }
+
+    /* accessibility focus */
+    .btn:focus{outline:2px solid rgba(255,140,180,0.28);outline-offset:3px}
   </style>
 </head>
 <body>
-  <div class="stage" id="stage">
-    <div class="bg-vignette"></div>
-    <div class="carousel" aria-hidden="false">
-      <div class="frame" id="frame">
-        <!-- slides injected by JS -->
-      </div>
-      <div class="soft-glow"></div>
-      <div class="ui" id="ui">
-        <div class="title">Sala Romántica — Recuerdos</div>
-        <div class="controls">
-          <button id="prevBtn" class="btn" aria-label="Anterior">Anterior</button>
-          <button id="nextBtn" class="btn" aria-label="Siguiente">Siguiente</button>
-        </div>
-      </div>
-      <div class="dots" id="dots" aria-hidden="true"></div>
-    </div>
+  <div id="scene-bg"></div>
+  <div id="bokeh"></div>
+  <div id="polaroid-container">
+    <div id="polaroid-stack" aria-live="polite" aria-label="Galería romántica"></div>
+    <div id="next-label">Toca o desliza ◀ ▶</div>
+  </div>
 
-    <div class="particles" id="particles"></div>
+  <div id="romOverlay" aria-hidden="true"></div>
 
-    <!-- preview modal (only image + close) -->
-    <div class="preview" id="preview" aria-hidden="true">
-      <img id="previewImg" alt="Imagen ampliada">
+  <div id="overlay" role="region" aria-label="Controles">
+    <h3>Sala Romántica — Polaroid</h3>
+    <p>Toque una foto para verla en grande. Desliza para cambiar. Recomendado en móvil.</p>
+    <div class="controls">
+      <button id="pauseBtn" class="btn">Pausa</button>
+      <button id="soundBtn" class="btn ghost" aria-pressed="false">Sonido</button>
+      <button id="returnBtn" class="btn ghost">Regresar</button>
     </div>
   </div>
 
+  <div id="credits" style="position:fixed;right:12px;bottom:12px;z-index:140;padding:8px 10px;border-radius:10px;background:var(--glass);backdrop-filter:blur(6px);font-size:12px">Diseño romántico • Imágenes: picsum.photos</div>
+
+  <div id="previewModal" aria-hidden="true">
+    <div id="previewContent">
+      <button id="previewClose">Cerrar</button>
+      <img id="previewImage" src="" alt="Vista previa de recuerdo">
+    </div>
+  </div>
+
+  <div id="loadingBarContainer" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:250;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="width:140px;height:8px;background:rgba(255,255,255,0.08);border-radius:6px;overflow:hidden"><div id="loadingBar" style="width:0;height:100%;background:linear-gradient(90deg,var(--rose-1),var(--rose-2));transition:width .25s"></div></div>
+    <div id="loadingText" style="color:var(--rose-1);font-size:13px">Cargando...</div>
+  </div>
+
   <script type="module">
-    // === conserva tu configuración Firebase (solo la dejamos como estaba) ===
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
     const firebaseConfig = {
       apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
       authDomain: "tunel-de-recuerdos.firebaseapp.com",
@@ -114,160 +127,140 @@
       appId: "1:630660710506:web:90d34150c9f21f668eca13",
       measurementId: "G-ETFDVEHML1"
     };
+
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // helpers
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 720;
-    const devicePixelRatio = window.devicePixelRatio || 1;
+    // -- utils & elements
+    const polaroidStack = document.getElementById('polaroid-stack');
+    const previewModal = document.getElementById('previewModal');
+    const previewImage = document.getElementById('previewImage');
+    const previewClose = document.getElementById('previewClose');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const returnBtn = document.getElementById('returnBtn');
+    const romOverlay = document.getElementById('romOverlay');
+    const loadingBar = document.getElementById('loadingBar');
+    const loadingText = document.getElementById('loadingText');
+
+    let imageUrls = [];
+    let currentIndex = 0;
+    let autoplay = true;
+    let autoplayInterval = 4200; // suave
+    let autoplayTimer = null;
+    const TOTAL_SLOTS = 7;
 
     async function fetchImages(){
-      // similar a tu lógica: espera un id por querystring
       const urlParams = new URLSearchParams(window.location.search);
       const userId = urlParams.get('id')?.trim();
-      if(!userId){
-        // fallback: ejemplo con picsum para demo
-        return Array.from({length:7}).map((_,i)=>`https://picsum.photos/id/${110 + i}/3840/2160`);
+      if (!userId){
+        loadingText.textContent = 'Falta ID: añade ?id=TU_ID en la URL';
+        return [];
       }
+
       try{
         const snap = await get(ref(database, `usuarios/${userId}`));
-        if(!snap.exists()) return [];
+        if (!snap.exists()){
+          loadingText.textContent = 'ID no encontrado. Verifica tu ID.';
+          return [];
+        }
         const data = snap.val();
         let all = [];
         for(let i=1;i<=5;i++){
           const fotos = data[`puerta${i}Fotos`] || [];
-          all = all.concat(fotos.filter(u=>typeof u==='string'&&u.trim()));
+          all = all.concat(fotos.filter(u=>typeof u==='string' && u.trim()));
         }
-        if(all.length === 0) return [];
-        // ensure at least 5 - expand by repeating if needed
-        while(all.length < 7) all = all.concat(all.slice(0, Math.min(all.length, 7 - all.length)));
-        return all.slice(0,7);
-      }catch(e){
-        console.error(e);
-        return [];
-      }
+        let valid = all.slice(0,TOTAL_SLOTS);
+        if (valid.length===0){ loadingText.textContent='No hay imágenes. Agrega al menos 1.'; return []; }
+        // repeat if less than 7 to always show 7 slots
+        while(valid.length<TOTAL_SLOTS){ valid = valid.concat(valid.slice(0,Math.min(valid.length,TOTAL_SLOTS-valid.length))); }
+        return valid.slice(0,TOTAL_SLOTS);
+      }catch(err){ console.error(err); loadingText.textContent='Error al cargar imágenes.'; return []; }
     }
 
-    (async function init(){
-      const frame = document.getElementById('frame');
-      const dots = document.getElementById('dots');
-      const particles = document.getElementById('particles');
-      const preview = document.getElementById('preview');
-      const previewImg = document.getElementById('previewImg');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
+    function updateLoading(progress, text){ loadingBar.style.width = progress + '%'; loadingText.textContent = text || 'Cargando...'; }
 
-      // show a subtle loader while fetching
-      const slides = [];
-      const urls = await fetchImages();
-      const TOTAL = Math.max(1, Math.min(7, urls.length || 7));
+    function createPolaroid(url, idx){
+      const el = document.createElement('div'); el.className='polaroid'; el.dataset.index = idx; el.dataset.order = idx; // order used for layered transform
+      const img = document.createElement('img'); img.src = url; img.alt = `Recuerdo ${idx+1}`; img.loading='lazy';
+      const cap = document.createElement('div'); cap.className='caption'; cap.textContent = `Recuerdo ${idx+1}`;
+      el.appendChild(img); el.appendChild(cap);
+      polaroidStack.appendChild(el);
 
-      // preload + create slides (with high-res srcset if possible)
-      for(let i=0;i<TOTAL;i++){
-        const u = urls[i % urls.length];
-        const slide = document.createElement('div');
-        slide.className = 'slide';
-        slide.dataset.index = i;
-        const img = document.createElement('img');
-        // attempt to request high-res images; if your URLs accept params adapt as needed
-        if(u.includes('picsum.photos')){
-          img.src = u; // picsum path already 3840x2160
-          img.srcset = `${u} 3840w, ${u.replace('/3840/2160','/1920/1080')} 1920w, ${u.replace('/3840/2160','/800/450')} 800w`;
-        } else {
-          // if firebase url, use it directly but keep lazy loading
-          img.src = u;
-        }
-        img.loading = isMobile ? 'lazy' : 'eager';
-        img.alt = `Recuerdo ${i+1}`;
-        slide.appendChild(img);
-        frame.appendChild(slide);
-        slides.push(slide);
-
-        // prewarm image
-        const pre = new Image(); pre.src = img.src;
-      }
-
-      // dots
-      slides.forEach((s, idx)=>{
-        const d = document.createElement('button'); d.className='dot'; d.setAttribute('aria-label',`Ir a ${idx+1}`);
-        d.addEventListener('click',()=>goTo(idx));
-        dots.appendChild(d);
+      // tilt follow mouse for active card
+      el.addEventListener('pointermove', (ev)=>{
+        if (!el.classList.contains('active')) return;
+        const r = el.getBoundingClientRect();
+        const dx = (ev.clientX - (r.left + r.width/2)) / (r.width/2);
+        const dy = (ev.clientY - (r.top + r.height/2)) / (r.height/2);
+        el.style.transform = `translateY(0) rotateX(${ -dy * 6 }deg) rotateY(${ dx * 8 }deg) scale(1.03)`;
       });
+      el.addEventListener('pointerleave', ()=>{ if (el.classList.contains('active')) el.style.transform='translateY(0) rotate(0) scale(1.02)'; });
 
-      // automatic loop + manual controls
-      let current = 0;
-      let playing = true;
-      const AUTO_MS = isMobile ? 3500 : 4500;
-      function setActive(i){
-        slides.forEach((s,idx)=>{s.classList.toggle('active', idx===i); s.classList.toggle('prev', idx!==i);});
-        const dotButtons = dots.querySelectorAll('.dot'); dotButtons.forEach((db,idx)=>db.classList.toggle('active', idx===i));
-      }
+      img.addEventListener('error', ()=>{ img.src = 'https://picsum.photos/600/800?blur=10'; });
 
-      function goTo(i){ current = (i + slides.length) % slides.length; setActive(current); }
-      function next(){ goTo(current+1); }
-      function prev(){ goTo(current-1); }
+      el.addEventListener('click', ()=>{ if (el.classList.contains('active')) openPreview(url); else focusIndex(parseInt(el.dataset.index)); spawnParticle('heart'); });
+    }
 
-      prevBtn.addEventListener('click',(e)=>{ prev(); spawnParticle(); giveRipple(e.currentTarget, e.clientX, e.clientY); });
-      nextBtn.addEventListener('click',(e)=>{ next(); spawnParticle(); giveRipple(e.currentTarget, e.clientX, e.clientY); });
+    function spawnParticle(type){ const p = document.createElement('div'); p.className='particle '+type; const x = Math.random()*window.innerWidth; p.style.left = (x)+'px'; p.style.bottom = '-20px'; p.style.animationDelay = (Math.random()*1.2)+'s'; romOverlay.appendChild(p); setTimeout(()=>p.remove(),7000);
+    }
 
-      // click slide to open preview (only active slide)
-      frame.addEventListener('click',(e)=>{
-        const s = e.target.closest('.slide.active');
-        if(!s) return;
-        const src = s.querySelector('img').src;
-        previewImg.src = src; preview.classList.add('show'); preview.setAttribute('aria-hidden','false');
-      });
-      preview.addEventListener('click', ()=>{ preview.classList.remove('show'); preview.setAttribute('aria-hidden','true'); previewImg.src=''; });
+    function buildStack(){ polaroidStack.innerHTML=''; for(let i=0;i<TOTAL_SLOTS;i++){ createPolaroid(imageUrls[i%imageUrls.length], i); } applyOrder(); }
 
-      // autoplay loop
-      let autoTimer = setInterval(()=>{ next(); }, AUTO_MS);
-      // pause when interacting
-      [prevBtn,nextBtn,frame].forEach(el=>{ el.addEventListener('pointerdown', ()=>{ clearInterval(autoTimer); autoTimer = setInterval(()=>{ next(); }, AUTO_MS); }); });
+    function applyOrder(){ const nodes = Array.from(polaroidStack.querySelectorAll('.polaroid'));
+      nodes.forEach((n, i)=>{ n.dataset.order = ((i - currentIndex) + TOTAL_SLOTS) % TOTAL_SLOTS; n.classList.remove('active','exiting'); const order = parseInt(n.dataset.order); n.setAttribute('data-order', order); if (order===0) n.classList.add('active'); else if (order>3) n.classList.add('exiting'); });
+    }
 
-      // start
-      setActive(0);
+    function focusIndex(i){ currentIndex = i % TOTAL_SLOTS; applyOrder(); resetAutoplay(); }
 
-      // light weighted particles for romance
-      function spawnParticle(){
-        const el = document.createElement('div'); el.className='petal';
-        el.style.left = Math.random()*100 + '%';
-        el.style.top = (-5 - Math.random()*8) + 'vh';
-        el.style.animationDuration = (5 + Math.random()*4) + 's';
-        el.style.opacity = 1; particles.appendChild(el);
-        setTimeout(()=> el.remove(),8000);
-      }
+    function next(){ currentIndex = (currentIndex+1) % TOTAL_SLOTS; applyOrder(); }
+    function prev(){ currentIndex = (currentIndex-1+TOTAL_SLOTS) % TOTAL_SLOTS; applyOrder(); }
 
-      // create a few at start with different shapes (hearts/petals) using SVG backgrounds
-      function seedParticles(n=6){
-        for(let i=0;i<n;i++){
-          const p = document.createElement('div'); p.className='petal';
-          const left = Math.random()*100; p.style.left = left + '%'; p.style.top = (-10 - Math.random()*20) + 'vh';
-          p.style.animationDelay = (Math.random()*2) + 's'; p.style.animationDuration = (5 + Math.random()*6) + 's';
-          // alternate shapes via clip-path
-          if(i%2===0) p.style.background = 'radial-gradient(circle at 35% 30%, rgba(255,140,180,0.95), transparent 60%)';
-          else p.style.background = 'radial-gradient(circle, rgba(255,200,240,0.95), transparent 70%)';
-          particles.appendChild(p);
-          setTimeout(()=> p.remove(),9000);
-        }
-      }
-      seedParticles(isMobile?4:8);
+    // autoplay
+    function startAutoplay(){ if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = setInterval(()=>{ next(); }, autoplayInterval); pauseBtn.textContent='Pausa'; }
+    function stopAutoplay(){ if (autoplayTimer) clearInterval(autoplayTimer); autoplayTimer = null; pauseBtn.textContent='Reanudar'; }
+    function resetAutoplay(){ if (autoplay) { stopAutoplay(); startAutoplay(); } }
 
-      // small ripple effect for buttons
-      function giveRipple(button, clientX, clientY){
-        const rect = button.getBoundingClientRect(); const x = clientX - rect.left; const y = clientY - rect.top; const r = Math.max(rect.width, rect.height);
-        const el = document.createElement('span'); el.style.position='absolute'; el.style.left=(x - r/2)+'px'; el.style.top=(y - r/2)+'px'; el.style.width=el.style.height=(r)+'px'; el.style.borderRadius='999px'; el.style.opacity='0.18'; el.style.background='white'; el.style.transform='scale(0)'; el.style.transition='transform .5s ease, opacity .5s ease'; el.style.pointerEvents='none'; button.style.position='relative'; button.appendChild(el);
-        requestAnimationFrame(()=>{ el.style.transform='scale(1.8)'; el.style.opacity='0'; });
-        setTimeout(()=> el.remove(),600);
-      }
+    // preview
+    function openPreview(url){ previewImage.src = url; previewModal.style.display='flex'; previewModal.setAttribute('aria-hidden','false'); }
+    function closePreview(){ previewModal.style.display='none'; previewImage.src=''; previewModal.setAttribute('aria-hidden','true'); }
 
-      // keyboard navigation
-      window.addEventListener('keydown', (e)=>{ if(e.key==='ArrowRight') next(); if(e.key==='ArrowLeft') prev(); if(e.key==='Escape') { preview.classList.remove('show'); previewImg.src=''; } });
+    // simple swipe for mobile
+    let touchStartX = 0; let touchStartY = 0; let touchMoved = false;
+    polaroidStack.addEventListener('touchstart',(e)=>{ touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; touchMoved=false;});
+    polaroidStack.addEventListener('touchmove',(e)=>{ touchMoved=true; });
+    polaroidStack.addEventListener('touchend',(e)=>{
+      if (!touchMoved) return;
+      const dx = (e.changedTouches[0].clientX - touchStartX);
+      const dy = (e.changedTouches[0].clientY - touchStartY);
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30){ if (dx < 0) next(); else prev(); resetAutoplay(); }
+    });
 
-      // accessibility: pause animations when user prefers reduced motion
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(prefersReduced){ slides.forEach(s=>s.style.animation='none'); }
+    // keyboard controls
+    window.addEventListener('keydown',(e)=>{ if (e.key==='ArrowRight') { next(); resetAutoplay(); } if (e.key==='ArrowLeft'){ prev(); resetAutoplay(); } if (e.key==='Escape') closePreview(); });
 
+    // preview close
+    previewClose.addEventListener('click', closePreview);
+    previewModal.addEventListener('click',(e)=>{ if (e.target===previewModal) closePreview(); });
+
+    // overlay buttons
+    pauseBtn.addEventListener('click', ()=>{ autoplay = !autoplay; if (autoplay){ startAutoplay(); } else { stopAutoplay(); } });
+    soundBtn.addEventListener('click', ()=>{ /* placeholder: toggle sound — avoid autoplay audio; only change aria state */ soundBtn.setAttribute('aria-pressed', soundBtn.getAttribute('aria-pressed')==='true' ? 'false' : 'true'); spawnParticle('petal'); });
+    returnBtn.addEventListener('click', ()=>{ window.parent.postMessage({type:'doorClosed'}, '*'); spawnParticle('heart'); });
+
+    // particles loop
+    setInterval(()=>{ if (Math.random() < 0.6) spawnParticle('petal'); else spawnParticle('heart'); }, 700);
+
+    // init
+    (async function init(){ imageUrls = await fetchImages(); if (imageUrls.length===0) return; // error shown in UI
+      // preload images and update loading
+      let loaded = 0; const total = imageUrls.length;
+      imageUrls.forEach(u=>{ const im = new Image(); im.src = u; im.onload = im.onerror = ()=>{ loaded++; updateLoading(Math.round((loaded/total)*100), `Cargando... (${loaded}/${total})`); if (loaded>=total){ setTimeout(()=>document.getElementById('loadingBarContainer').style.display='none', 300); buildStack(); startAutoplay(); } }; });
     })();
+
+    // expose for debugging
+    window._romanticScene = { next, prev, focusIndex };
+
   </script>
 </body>
 </html>
