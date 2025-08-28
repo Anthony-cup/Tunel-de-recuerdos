@@ -14,12 +14,16 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-
-    let zoom = 0.002;
+    let zoom = 1; // Start with no zoom
     let centerX, centerY, minDim, maxSpawnRadius;
-    let rotation = 0; // Camera rotation in radians (yaw)
+    let rotation = Math.PI * 1.5; // Start 270 degrees away
     let isDragging = false;
     let prevX = 0;
+    let phase = 'galaxy'; // Phases: 'galaxy', 'rotate', 'zoom', 'fade'
+    let phaseTime = 0;
+    let blackHoleOpacity = 0; // For fade-in
+    let blackHoleX, blackHoleY; // Black hole position
+    let initialBlackHoleX, initialBlackHoleY; // Initial offset
 
     // Updating canvas dimensions
     function updateDimensions() {
@@ -28,63 +32,101 @@
       centerX = canvas.width / 2;
       centerY = canvas.height / 2;
       minDim = Math.min(canvas.width, canvas.height);
-      maxSpawnRadius = Math.max(minDim * 1.5, minDim / 0.5 + 800);
+      maxSpawnRadius = Math.max(minDim * 2, minDim / 0.5 + 1200);
+      initialBlackHoleX = centerX + minDim * 0.8; // Initial offset to the right
+      initialBlackHoleY = centerY;
+      blackHoleX = initialBlackHoleX; // Start at offset
+      blackHoleY = initialBlackHoleY;
     }
-
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
-    const blackHoleRadius = 250;
-
+    const blackHoleRadius = 180;
     const lightCanvas = document.createElement('canvas');
     const lightCtx = lightCanvas.getContext('2d');
     let lightClouds = [];
     let cloudCounter = 0;
-    const maxClouds = 15;
+    const maxClouds = 30;
 
-    // Background stars
+    // Small space stars
     const stars = [];
-    for (let i = 0; i < 10; i++) { // Few stars
+    for (let i = 0; i < 150; i++) {
       stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 1 + 0.5,
-        opacity: Math.random() * 0.3 + 0.2
+        x: Math.random() * canvas.width * 2,
+        y: Math.random() * canvas.height * 2,
+        radius: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.8 + 0.2,
+        twinkle: Math.random() * 0.02 + 0.01,
+        color: Math.random() < 0.7 ? 'white' : 
+               Math.random() < 0.5 ? 'rgba(150,150,255,1)' : 'rgba(255,255,150,1)'
       });
     }
 
-    // Shooting stars (only 2 passes)
+    // Shooting stars (meteors)
     let shootingStars = [];
     let shootingStarPasses = 0;
-    const maxShootingStarPasses = 2;
+    const maxShootingStarPasses = 5;
 
-    // Drawing background stars
+    let starTime = 0;
+    
+    // Drawing small twinkling stars
     function drawStars() {
-      lightCtx.fillStyle = 'white';
-      stars.forEach(star => {
+      starTime += 0.02;
+      stars.forEach((star, index) => {
+        const twinkle = Math.sin(starTime + index * 0.5) * star.twinkle;
+        const currentOpacity = Math.max(0.1, star.opacity + twinkle);
+        
         lightCtx.beginPath();
         lightCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        lightCtx.fillStyle = `rgba(255,255,255,${star.opacity})`;
+        lightCtx.fillStyle = star.color === 'white' ? 
+          `rgba(255,255,255,${currentOpacity})` : 
+          star.color.replace('1)', `${currentOpacity})`);
         lightCtx.fill();
+        
+        // Small glow for brighter stars
+        if (star.radius > 1) {
+          lightCtx.beginPath();
+          lightCtx.arc(star.x, star.y, star.radius * 1.5, 0, Math.PI * 2);
+          lightCtx.fillStyle = star.color === 'white' ? 
+            `rgba(255,255,255,${currentOpacity * 0.3})` : 
+            star.color.replace('1)', `${currentOpacity * 0.3})`);
+          lightCtx.fill();
+        }
       });
     }
 
-    // Drawing cloud-like light formations
+    // Update stars position slowly
+    function updateStars(dt) {
+      stars.forEach(star => {
+        star.x -= 0.2 * dt * 60;
+        star.y -= 0.1 * dt * 60;
+        
+        // Wrap around screen
+        if (star.x < -50) star.x = canvas.width + 50;
+        if (star.y < -50) star.y = canvas.height + 50;
+      });
+    }
+
+    // Drawing nebula-like clouds with aurora effects
     function drawLightClouds() {
       lightCanvas.width = canvas.width;
       lightCanvas.height = canvas.height;
-      lightCtx.fillStyle = 'rgba(0,0,0,0.05)';
+      
+      // Pure black space background
+      lightCtx.fillStyle = 'rgba(0,0,0,1)';
       lightCtx.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
+      
       drawStars();
+
       lightClouds.forEach(cloud => {
-        const segments = 20;
+        const segments = 30;
         lightCtx.beginPath();
         for (let i = 0; i < segments; i++) {
           const t = i / (segments - 1);
           const angle = cloud.angle - t * cloud.length / 100 * cloud.speed * 8;
-          const radius = cloud.radiusDist - t * 50;
-          const x = centerX + radius * Math.cos(angle) + (Math.random() - 0.5) * 20;
-          const y = centerY + radius * Math.sin(angle) + (Math.random() - 0.5) * 20;
+          const radius = cloud.radiusDist - t * 60;
+          const x = blackHoleX + radius * Math.cos(angle) + (Math.random() - 0.5) * 30;
+          const y = blackHoleY + radius * Math.sin(angle) + (Math.random() - 0.5) * 30;
           if (i === 0) {
             lightCtx.moveTo(x, y);
           } else {
@@ -92,24 +134,24 @@
           }
         }
         const gradient = lightCtx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.width * 2);
-        const darkFactor = Math.max(0, 1 - (cloud.radiusDist - blackHoleRadius) / maxSpawnRadius);
-        gradient.addColorStop(0, `rgba(255,255,200,${cloud.opacity * 0.8})`);
-        gradient.addColorStop(0.2, `rgba(255,215,0,${cloud.opacity * 0.7})`);
-        gradient.addColorStop(0.4, `rgba(255,165,0,${cloud.opacity * 0.6})`);
-        gradient.addColorStop(0.6, `rgba(255,69,0,${cloud.opacity * 0.5})`);
-        gradient.addColorStop(0.8, `rgba(139,0,139,${cloud.opacity * 0.3})`);
-        gradient.addColorStop(1, `rgba(75,0,130,0)`);
+        gradient.addColorStop(0, `rgba(100,255,150,${cloud.opacity * 0.6})`);
+        gradient.addColorStop(0.2, `rgba(150,200,255,${cloud.opacity * 0.5})`);
+        gradient.addColorStop(0.4, `rgba(200,100,255,${cloud.opacity * 0.4})`);
+        gradient.addColorStop(0.6, `rgba(255,150,200,${cloud.opacity * 0.3})`);
+        gradient.addColorStop(0.8, `rgba(100,200,255,${cloud.opacity * 0.2})`);
+        gradient.addColorStop(1, `rgba(0,100,200,0)`);
         lightCtx.fillStyle = gradient;
         lightCtx.fill();
       });
 
-      // Drawing shooting stars
+      // Drawing shooting stars (meteors)
       shootingStars.forEach(star => {
         const gradient = lightCtx.createLinearGradient(
           star.x, star.y,
           star.x - star.length * Math.cos(star.angle), star.y - star.length * Math.sin(star.angle)
         );
         gradient.addColorStop(0, `rgba(255,255,255,${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(150,200,255,${star.opacity * 0.7})`);
         gradient.addColorStop(1, `rgba(255,255,255,0)`);
         lightCtx.beginPath();
         lightCtx.moveTo(star.x, star.y);
@@ -124,26 +166,26 @@
     function generateLightCloud() {
       if (cloudCounter >= maxClouds) return;
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * (maxSpawnRadius * 0.6) + maxSpawnRadius * 0.4 + blackHoleRadius;
+      const radius = Math.random() * (maxSpawnRadius * 0.6) + maxSpawnRadius * 0.4 + blackHoleRadius * 2;
       lightClouds.push({
-        x: centerX + radius * Math.cos(angle),
-        y: centerY + radius * Math.sin(angle),
-        width: Math.random() * 30 + 30,
-        length: Math.random() * 200 + 200,
+        x: blackHoleX + radius * Math.cos(angle),
+        y: blackHoleY + radius * Math.sin(angle),
+        width: Math.random() * 60 + 60,
+        length: Math.random() * 500 + 500,
         angle: angle,
         radiusDist: radius,
-        speed: Math.random() * 0.05 + 0.03,
-        linearSpeed: Math.random() * 5 + 5,
+        speed: Math.random() * 0.03 + 0.015,
+        linearSpeed: Math.random() * 3 + 3,
         opacity: 1,
-        life: 400
+        life: 700
       });
       cloudCounter++;
     }
 
-    // Generating a shooting star
+    // Generating a shooting star (meteor)
     function generateShootingStar() {
       if (shootingStarPasses >= maxShootingStarPasses) return;
-      const side = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
+      const side = Math.floor(Math.random() * 4);
       let x, y, angle;
       if (side === 0) { x = Math.random() * canvas.width; y = -50; angle = Math.PI * 0.5 + Math.random() * 0.4 - 0.2; }
       else if (side === 1) { x = canvas.width + 50; y = Math.random() * canvas.height; angle = Math.PI + Math.random() * 0.4 - 0.2; }
@@ -151,35 +193,35 @@
       else { x = -50; y = Math.random() * canvas.height; angle = 0 + Math.random() * 0.4 - 0.2; }
       shootingStars.push({
         x: x, y: y,
-        width: Math.random() * 3 + 2,
-        length: Math.random() * 100 + 100,
+        width: Math.random() * 5 + 4,
+        length: Math.random() * 200 + 180,
         angle: angle,
-        speed: 200,
+        speed: 280,
         opacity: 1,
-        life: 100
+        life: 140
       });
     }
 
-    // Updating light clouds with gentle spiral motion
+    // Updating light clouds
     function updateLightClouds(dt) {
       lightClouds = lightClouds.filter(cloud => cloud.life > 0);
       lightClouds.forEach(cloud => {
         const spiralFactor = blackHoleRadius / Math.max(cloud.radiusDist, blackHoleRadius);
-        cloud.angle += cloud.speed * dt * 60 * spiralFactor * 2;
-        cloud.radiusDist -= 0.5 * dt * 60;
+        cloud.angle += cloud.speed * dt * 60 * spiralFactor * 1.5;
+        cloud.radiusDist -= 0.3 * dt * 60;
         cloud.x += cloud.linearSpeed * Math.cos(cloud.angle + Math.PI / 2) * dt * 60;
         cloud.y += cloud.linearSpeed * Math.sin(cloud.angle + Math.PI / 2) * dt * 60;
         cloud.life -= dt * 60;
-        cloud.opacity = Math.min(1, cloud.life / 200);
-        cloud.width = Math.max(15, cloud.width * (cloud.life / 400));
+        cloud.opacity = Math.min(1, cloud.life / 350);
+        cloud.width = Math.max(30, cloud.width * (cloud.life / 700));
         if (cloud.radiusDist < blackHoleRadius) {
           cloud.life = 0;
         } else {
-          cloud.x = centerX + cloud.radiusDist * Math.cos(cloud.angle);
-          cloud.y = centerY + cloud.radiusDist * Math.sin(cloud.angle);
+          cloud.x = blackHoleX + cloud.radiusDist * Math.cos(cloud.angle);
+          cloud.y = blackHoleY + cloud.radiusDist * Math.sin(cloud.angle);
         }
       });
-      if (Math.random() < 0.08 && cloudCounter < maxClouds) {
+      if (Math.random() < 0.15 && cloudCounter < maxClouds) {
         generateLightCloud();
       }
     }
@@ -191,7 +233,7 @@
         star.x -= star.speed * Math.cos(star.angle) * dt * 60;
         star.y -= star.speed * Math.sin(star.angle) * dt * 60;
         star.life -= dt * 60;
-        star.opacity = star.life / 100;
+        star.opacity = star.life / 140;
         if (star.x < -100 || star.x > canvas.width + 100 || star.y < -100 || star.y > canvas.height + 100) {
           star.life = 0;
           if (shootingStarPasses < maxShootingStarPasses) shootingStarPasses++;
@@ -202,33 +244,37 @@
       }
     }
 
-    // Initialize with multiple clouds and first shooting star
+    // Initialize clouds and shooting star
     for (let i = 0; i < maxClouds; i++) {
       generateLightCloud();
     }
     generateShootingStar();
 
-    // Enhanced 360-degree camera rotation controls
+    // Disable dragging during animation
     canvas.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      prevX = e.clientX;
+      if (phase === 'fade') {
+        isDragging = true;
+        prevX = e.clientX;
+      }
     });
     canvas.addEventListener('mousemove', (e) => {
-      if (isDragging) {
+      if (isDragging && phase === 'fade') {
         const dx = e.clientX - prevX;
-        rotation += dx * 0.002; // Smoother rotation speed
-        rotation = rotation % (Math.PI * 2); // Keep rotation within 0 to 2π
+        rotation += dx * 0.002;
+        rotation = rotation % (Math.PI * 2);
         prevX = e.clientX;
       }
     });
     canvas.addEventListener('mouseup', () => { isDragging = false; });
     canvas.addEventListener('mouseleave', () => { isDragging = false; });
     canvas.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      prevX = e.touches[0].clientX;
+      if (phase === 'fade') {
+        isDragging = true;
+        prevX = e.touches[0].clientX;
+      }
     });
     canvas.addEventListener('touchmove', (e) => {
-      if (isDragging) {
+      if (isDragging && phase === 'fade') {
         const dx = e.touches[0].clientX - prevX;
         rotation += dx * 0.002;
         rotation = rotation % (Math.PI * 2);
@@ -238,43 +284,64 @@
     canvas.addEventListener('touchend', () => { isDragging = false; });
 
     let auroraTime = 0;
-    // Creating glowing aurora background
+    
+    // Space background with aurora clouds
     function drawBackground() {
+      // Pure black space
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       ctx.drawImage(lightCanvas, 0, 0);
-      auroraTime += 0.01;
-      const auroraStart = blackHoleRadius * 4;
-      const gradient = ctx.createRadialGradient(centerX, centerY, auroraStart, centerX, centerY, canvas.width);
-      gradient.addColorStop(0, 'rgba(0,0,0,0)');
-      gradient.addColorStop(0.3, `rgba(138,43,226,${0.3 + Math.sin(auroraTime) * 0.15})`);
-      gradient.addColorStop(0.5, `rgba(75,0,130,${0.2 + Math.cos(auroraTime * 0.8) * 0.1})`);
-      gradient.addColorStop(0.7, `rgba(47,0,79,${0.15 + Math.sin(auroraTime * 1.2) * 0.1})`);
-      gradient.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = gradient;
+      
+      auroraTime += 0.008;
+      
+      // Subtle aurora clouds floating in space
+      for (let i = 0; i < 3; i++) {
+        const cloudX = centerX + Math.sin(auroraTime * 0.3 + i * 2) * canvas.width * 0.3;
+        const cloudY = centerY + Math.cos(auroraTime * 0.2 + i * 1.5) * canvas.height * 0.2;
+        
+        const cloudGradient = ctx.createRadialGradient(
+          cloudX, cloudY, 50,
+          cloudX, cloudY, 300 + i * 100
+        );
+        cloudGradient.addColorStop(0, `rgba(100,255,150,${0.05 + Math.sin(auroraTime + i) * 0.03})`);
+        cloudGradient.addColorStop(0.3, `rgba(150,200,255,${0.04 + Math.cos(auroraTime * 0.8 + i) * 0.02})`);
+        cloudGradient.addColorStop(0.6, `rgba(200,100,255,${0.03 + Math.sin(auroraTime * 0.9 + i) * 0.015})`);
+        cloudGradient.addColorStop(1, 'rgba(255,150,200,0)');
+        ctx.fillStyle = cloudGradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      
+      // Distant aurora ribbons
+      const ribbonGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      ribbonGradient.addColorStop(0, 'rgba(100,255,150,0)');
+      ribbonGradient.addColorStop(0.3, `rgba(150,200,255,${0.02 + Math.sin(auroraTime * 1.2) * 0.01})`);
+      ribbonGradient.addColorStop(0.7, `rgba(200,100,255,${0.02 + Math.cos(auroraTime * 0.9) * 0.01})`);
+      ribbonGradient.addColorStop(1, 'rgba(100,200,255,0)');
+      ctx.fillStyle = ribbonGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Función para dibujar el agujero negro con bordes mejorados
-    function drawBlackHole() {
-      // Horizonte de eventos - borde exterior con efecto de distorsión
+    // Drawing black hole with opacity
+    function drawBlackHole(opacity) {
+      ctx.globalAlpha = opacity;
       const eventHorizonGradient = ctx.createRadialGradient(
-        centerX, centerY, blackHoleRadius - 15,
-        centerX, centerY, blackHoleRadius + 8
+        blackHoleX, blackHoleY, blackHoleRadius - 12,
+        blackHoleX, blackHoleY, blackHoleRadius + 6
       );
       eventHorizonGradient.addColorStop(0, 'rgba(0,0,0,1)');
-      eventHorizonGradient.addColorStop(0.7, 'rgba(40,20,0,0.9)');
-      eventHorizonGradient.addColorStop(0.85, 'rgba(80,40,0,0.7)');
-      eventHorizonGradient.addColorStop(0.95, 'rgba(120,60,0,0.4)');
-      eventHorizonGradient.addColorStop(1, 'rgba(160,80,0,0)');
-      
+      eventHorizonGradient.addColorStop(0.7, 'rgba(30,15,0,0.9)');
+      eventHorizonGradient.addColorStop(0.85, 'rgba(60,30,0,0.7)');
+      eventHorizonGradient.addColorStop(0.95, 'rgba(100,50,0,0.4)');
+      eventHorizonGradient.addColorStop(1, 'rgba(140,70,0,0)');
       ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius + 8, 0, Math.PI * 2);
+      ctx.arc(blackHoleX, blackHoleY, blackHoleRadius + 6, 0, Math.PI * 2);
       ctx.fillStyle = eventHorizonGradient;
       ctx.fill();
 
-      // Anillo de fotones - borde brillante
       const photonRingGradient = ctx.createRadialGradient(
-        centerX, centerY, blackHoleRadius - 3,
-        centerX, centerY, blackHoleRadius + 3
+        blackHoleX, blackHoleY, blackHoleRadius - 2,
+        blackHoleX, blackHoleY, blackHoleRadius + 2
       );
       photonRingGradient.addColorStop(0, 'rgba(0,0,0,1)');
       photonRingGradient.addColorStop(0.4, 'rgba(0,0,0,1)');
@@ -282,85 +349,119 @@
       photonRingGradient.addColorStop(0.85, 'rgba(255,180,0,0.6)');
       photonRingGradient.addColorStop(0.95, 'rgba(255,220,0,0.3)');
       photonRingGradient.addColorStop(1, 'rgba(255,255,0,0)');
-      
       ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius + 3, 0, Math.PI * 2);
+      ctx.arc(blackHoleX, blackHoleY, blackHoleRadius + 2, 0, Math.PI * 2);
       ctx.fillStyle = photonRingGradient;
       ctx.fill();
 
-      // Círculo negro principal con borde definido
       ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius, 0, Math.PI * 2);
+      ctx.arc(blackHoleX, blackHoleY, blackHoleRadius, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.fill();
 
-      // Borde interno con sombra para dar profundidad
       const innerShadowGradient = ctx.createRadialGradient(
-        centerX, centerY, blackHoleRadius - 20,
-        centerX, centerY, blackHoleRadius
+        blackHoleX, blackHoleY, blackHoleRadius - 15,
+        blackHoleX, blackHoleY, blackHoleRadius
       );
       innerShadowGradient.addColorStop(0, 'rgba(0,0,0,1)');
       innerShadowGradient.addColorStop(0.8, 'rgba(0,0,0,1)');
-      innerShadowGradient.addColorStop(0.95, 'rgba(20,10,0,0.8)');
-      innerShadowGradient.addColorStop(1, 'rgba(40,20,0,0.3)');
-      
+      innerShadowGradient.addColorStop(0.95, 'rgba(15,7,0,0.8)');
+      innerShadowGradient.addColorStop(1, 'rgba(30,15,0,0.3)');
       ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius, 0, Math.PI * 2);
+      ctx.arc(blackHoleX, blackHoleY, blackHoleRadius, 0, Math.PI * 2);
       ctx.fillStyle = innerShadowGradient;
       ctx.fill();
 
-      // Efecto de distorsión en el borde con líneas sutiles
-      ctx.strokeStyle = `rgba(255,140,0,${0.3 + Math.sin(auroraTime * 3) * 0.2})`;
+      ctx.strokeStyle = `rgba(255,140,0,${(0.3 + Math.sin(auroraTime * 2.5) * 0.2) * opacity})`;
       ctx.lineWidth = 1;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      ctx.arc(centerX, centerY, blackHoleRadius + 1, 0, Math.PI * 2);
+      ctx.arc(blackHoleX, blackHoleY, blackHoleRadius + 1, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
     }
 
     let lastTime = performance.now();
 
-    // Animating the scene
+    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
       const now = performance.now();
       const dt = (now - lastTime) / 1000;
       lastTime = now;
+      phaseTime += dt;
 
+      // Phase control
+      if (phase === 'galaxy' && phaseTime >= 5) {
+        phase = 'rotate';
+        phaseTime = 0;
+      } else if (phase === 'rotate' && phaseTime >= 4) {
+        phase = 'zoom';
+        phaseTime = 0;
+      } else if (phase === 'zoom' && zoom >= 12) {
+        phase = 'fade';
+        phaseTime = 0;
+      }
+
+      // Update rotation and center black hole during rotate phase
+      if (phase === 'rotate') {
+        rotation += (0 - rotation) * 0.02; // Smooth rotation
+        blackHoleOpacity = Math.min(1, phaseTime / 3);
+        // Move black hole to center during rotation
+        const t = Math.min(1, phaseTime / 4); // Normalize over 4 seconds
+        blackHoleX = initialBlackHoleX + (centerX - initialBlackHoleX) * t;
+        blackHoleY = initialBlackHoleY + (centerY - initialBlackHoleY) * t;
+      } else if (phase !== 'galaxy') {
+        blackHoleOpacity = 1;
+        blackHoleX = centerX; // Ensure centered after rotate
+        blackHoleY = centerY;
+      }
+
+      // Update zoom
+      if (phase === 'zoom') {
+        zoom += 0.03 * dt * 60; // Smooth zoom
+      }
+
+      // Update elements
+      updateStars(dt);
       updateLightClouds(dt);
       updateShootingStars(dt);
+
       drawBackground();
       drawLightClouds();
 
-      const maxZoom = 5;
-      zoom += 0.004 * (1 + zoom / maxZoom);
-      zoom = Math.min(zoom, maxZoom);
-
-      window.parent.postMessage({ type: 'zoomUpdate', zoom: zoom }, '*');
-
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.rotate(rotation); // Apply 360-degree camera rotation
+      ctx.rotate(rotation);
       ctx.scale(zoom, zoom);
       ctx.translate(-centerX, -centerY);
 
-      // Drawing intensified, dynamic black hole glow
-      const glowRadius = blackHoleRadius * 4;
-      const glowGradient = ctx.createRadialGradient(centerX, centerY, blackHoleRadius * 0.3, centerX, centerY, glowRadius);
-      glowGradient.addColorStop(0, `rgba(255,215,0,${0.8 + Math.sin(auroraTime * 2) * 0.1})`);
-      glowGradient.addColorStop(0.4, `rgba(255,165,0,${0.7 + Math.cos(auroraTime * 1.5) * 0.15})`);
-      glowGradient.addColorStop(0.7, `rgba(255,69,0,${0.5 + Math.sin(auroraTime * 1.8) * 0.15})`);
-      glowGradient.addColorStop(1, `rgba(139,0,139,0)`);
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-      ctx.fillStyle = glowGradient;
-      ctx.fill();
-
-      // Dibujar el agujero negro con bordes mejorados
-      drawBlackHole();
+      // Draw black hole
+      if (phase !== 'galaxy') {
+        const glowRadius = blackHoleRadius * 5;
+        ctx.globalAlpha = blackHoleOpacity;
+        const glowGradient = ctx.createRadialGradient(blackHoleX, blackHoleY, blackHoleRadius * 0.3, blackHoleX, blackHoleY, glowRadius);
+        glowGradient.addColorStop(0, `rgba(255,215,0,${0.7 + Math.sin(auroraTime * 1.8) * 0.1})`);
+        glowGradient.addColorStop(0.4, `rgba(255,165,0,${0.6 + Math.cos(auroraTime * 1.3) * 0.15})`);
+        glowGradient.addColorStop(0.7, `rgba(200,100,255,${0.5 + Math.sin(auroraTime * 1.6) * 0.15})`);
+        glowGradient.addColorStop(1, `rgba(100,200,255,0)`);
+        ctx.beginPath();
+        ctx.arc(blackHoleX, blackHoleY, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glowGradient;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        drawBlackHole(blackHoleOpacity);
+      }
 
       ctx.restore();
+
+      // Fade to black
+      if (phase === 'fade') {
+        const fadeOpacity = Math.min(1, phaseTime / 3);
+        ctx.fillStyle = `rgba(0,0,0,${fadeOpacity})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
     }
 
     lastTime = performance.now();
