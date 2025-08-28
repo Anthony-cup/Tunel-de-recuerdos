@@ -13,13 +13,14 @@
       font-family: 'Orbitron', sans-serif;
     }
     canvas {
-      display: block;
+      display: none;
       width: 100vw;
       height: 100vh;
       filter: brightness(1.4) contrast(1.5) saturate(1.7);
       touch-action: none;
     }
     #blackHoleFrame, #doorFrame {
+      display: none;
       position: absolute;
       top: 0;
       left: 0;
@@ -44,6 +45,7 @@
       height: 0;
     }
     #errorMessage {
+      display: none;
       position: fixed;
       top: 50%;
       left: 50%;
@@ -53,7 +55,6 @@
       color: #ff4081;
       text-shadow: 0 0 8px #ff4081, 0 0 16px #ff4081;
       z-index: 10;
-      display: none;
       padding: clamp(8px, 2vw, 12px);
       max-width: 85vw;
       background: rgba(0, 0, 0, 0.7);
@@ -62,12 +63,12 @@
       box-sizing: border-box;
     }
     #gifOverlay {
+      display: none;
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 5;
-      display: none;
       text-align: center;
     }
     #gifOverlay img {
@@ -120,6 +121,35 @@
         height: 100vh !important;
       }
     }
+    #playOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
+      z-index: 100;
+    }
+    #playButton {
+      padding: 20px 40px;
+      font-size: 2rem;
+      font-family: 'Orbitron', sans-serif;
+      color: #ffffff;
+      background: #ff4081;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-shadow: 0 0 10px #ffffff;
+      box-shadow: 0 0 20px #ff4081;
+      transition: transform 0.3s, background 0.3s;
+    }
+    #playButton:hover {
+      transform: scale(1.1);
+      background: #ff80ab;
+    }
   </style>
   <svg>
     <filter id="glitch">
@@ -131,114 +161,135 @@
   </svg>
 </head>
 <body>
+  <div id="playOverlay">
+    <button id="playButton">Play</button>
+  </div>
   <div id="errorMessage">No creaste tu proyecto. Por favor, crea tu ling primero.</div>
   <canvas id="tunnelCanvas"></canvas>
-  <iframe id="blackHoleFrame" src="negro.html"></iframe>
-  <iframe id="doorFrame" src=""></iframe>
+  <iframe id="blackHoleFrame"></iframe>
+  <iframe id="doorFrame"></iframe>
   <div id="gifOverlay">
     <img id="gifImage" src="" alt="Overlay GIF" />
     <div id="gifText"></div>
   </div>
+  <video id="bgMusic" src="mus/1.mp4" style="display: none;" loop></video>
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
-    const firebaseConfig = {
-      apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
-      authDomain: "tunel-de-recuerdos.firebaseapp.com",
-      projectId: "tunel-de-recuerdos",
-      storageBucket: "tunel-de-recuerdos.firebasestorage.app",
-      messagingSenderId: "630660710506",
-      appId: "1:630660710506:web:90d34150c9f21f668eca13",
-      measurementId: "G-ETFDVEHML1"
-    };
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    function generateUniqueId() {
-      return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
-    }
-    async function initializeUser(userId) {
-      try {
-        const userRef = ref(database, `usuarios/${userId}`);
-        const snapshot = await get(userRef);
-        if (!snapshot.exists()) {
-          console.log(`Creando nuevo usuario con ID: ${userId}`);
-          await set(userRef, {
-            puerta1Fotos: [],
-            puerta2Fotos: [],
-            puerta3Fotos: [],
-            puerta4Fotos: [],
-            puerta5Fotos: [],
-            puerta1Anio: "2000",
-            puerta2Anio: "2001",
-            puerta3Anio: "2002",
-            puerta4Anio: "2003",
-            puerta5Anio: "2004",
-            name1: "Antony",
-            name2: "Amigo"
-          });
-          console.log(`Usuario ${userId} inicializado en Firebase.`);
+
+    const playOverlay = document.getElementById('playOverlay');
+    const playButton = document.getElementById('playButton');
+    const bgMusic = document.getElementById('bgMusic');
+    const tunnelCanvas = document.getElementById('tunnelCanvas');
+    const blackHoleFrame = document.getElementById('blackHoleFrame');
+    const doorFrame = document.getElementById('doorFrame');
+    const errorMessage = document.getElementById('errorMessage');
+    const gifOverlay = document.getElementById('gifOverlay');
+
+    playButton.addEventListener('click', () => {
+      playOverlay.style.display = 'none';
+      tunnelCanvas.style.display = 'block';
+      blackHoleFrame.style.display = 'block';
+      blackHoleFrame.src = 'negro.html';
+      doorFrame.style.display = 'none';
+      errorMessage.style.display = 'none';
+      gifOverlay.style.display = 'none';
+      bgMusic.play();
+      init();
+    });
+
+    async function init() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
+        authDomain: "tunel-de-recuerdos.firebaseapp.com",
+        projectId: "tunel-de-recuerdos",
+        storageBucket: "tunel-de-recuerdos.firebasestorage.app",
+        messagingSenderId: "630660710506",
+        appId: "1:630660710506:web:90d34150c9f21f668eca13",
+        measurementId: "G-ETFDVEHML1"
+      };
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+      function generateUniqueId() {
+        return 'id_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+      }
+      async function initializeUser(userId) {
+        try {
+          const userRef = ref(database, `usuarios/${userId}`);
+          const snapshot = await get(userRef);
+          if (!snapshot.exists()) {
+            console.log(`Creando nuevo usuario con ID: ${userId}`);
+            await set(userRef, {
+              puerta1Fotos: [],
+              puerta2Fotos: [],
+              puerta3Fotos: [],
+              puerta4Fotos: [],
+              puerta5Fotos: [],
+              puerta1Anio: "2000",
+              puerta2Anio: "2001",
+              puerta3Anio: "2002",
+              puerta4Anio: "2003",
+              puerta5Anio: "2004",
+              name1: "Antony",
+              name2: "Amigo"
+            });
+            console.log(`Usuario ${userId} inicializado en Firebase.`);
+          }
+          return true;
+        } catch (error) {
+          console.error("Error al inicializar usuario en Firebase:", error);
+          return false;
         }
-        return true;
-      } catch (error) {
-        console.error("Error al inicializar usuario en Firebase:", error);
-        return false;
       }
-    }
-    async function fetchDoorTitlesAndNames() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let userId = urlParams.get('id')?.trim();
-      const errorMessage = document.getElementById('errorMessage');
-      if (!userId) {
-        console.log("No se encontró 'id' en la URL, generando uno nuevo.");
-        userId = generateUniqueId();
-        window.history.replaceState({}, '', `?id=${userId}`);
-      }
-      console.log("ID utilizado:", userId);
-      const initSuccess = await initializeUser(userId);
-      if (!initSuccess) {
-        errorMessage.textContent = 'Error al inicializar el proyecto. Intenta de nuevo.';
-        errorMessage.style.display = 'block';
-        return { userId: null, titles: null, name1: null, name2: null };
-      }
-      try {
-        const snapshot = await get(ref(database, `usuarios/${userId}`));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const titles = [
-            data.puerta1Anio || "2000",
-            data.puerta2Anio || "2001",
-            data.puerta3Anio || "2002",
-            data.puerta4Anio || "2003",
-            data.puerta5Anio || "2004"
-          ];
-          const name1 = data.name1 || "Antony";
-          const name2 = data.name2 || "Amigo";
-          console.log("Datos obtenidos de Firebase:", { titles, name1, name2 });
-          return { userId, titles, name1, name2 };
-        } else {
-          console.error(`No se encontraron datos para el usuario ${userId}.`);
+      async function fetchDoorTitlesAndNames() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let userId = urlParams.get('id')?.trim();
+        if (!userId) {
+          console.log("No se encontró 'id' en la URL, generando uno nuevo.");
+          userId = generateUniqueId();
+          window.history.replaceState({}, '', `?id=${userId}`);
+        }
+        console.log("ID utilizado:", userId);
+        const initSuccess = await initializeUser(userId);
+        if (!initSuccess) {
+          errorMessage.textContent = 'Error al inicializar el proyecto. Intenta de nuevo.';
           errorMessage.style.display = 'block';
           return { userId: null, titles: null, name1: null, name2: null };
         }
-      } catch (error) {
-        console.error("Error al obtener datos de Firebase:", error);
-        errorMessage.textContent = 'Error al cargar los datos. Por favor, intenta de nuevo.';
-        errorMessage.style.display = 'block';
-        return { userId: null, titles: null, name1: null, name2: null };
+        try {
+          const snapshot = await get(ref(database, `usuarios/${userId}`));
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const titles = [
+              data.puerta1Anio || "2000",
+              data.puerta2Anio || "2001",
+              data.puerta3Anio || "2002",
+              data.puerta4Anio || "2003",
+              data.puerta5Anio || "2004"
+            ];
+            const name1 = data.name1 || "Antony";
+            const name2 = data.name2 || "Amigo";
+            console.log("Datos obtenidos de Firebase:", { titles, name1, name2 });
+            return { userId, titles, name1, name2 };
+          } else {
+            console.error(`No se encontraron datos para el usuario ${userId}.`);
+            errorMessage.style.display = 'block';
+            return { userId: null, titles: null, name1: null, name2: null };
+          }
+        } catch (error) {
+          console.error("Error al obtener datos de Firebase:", error);
+          errorMessage.textContent = 'Error al cargar los datos. Por favor, intenta de nuevo.';
+          errorMessage.style.display = 'block';
+          return { userId: null, titles: null, name1: null, name2: null };
+        }
       }
-    }
-    (async function(){
       const result = await fetchDoorTitlesAndNames();
       if (!result.userId || !result.titles) {
         console.error("No se puede continuar sin un ID válido o datos en Firebase.");
         return;
       }
       const { userId, titles: doorTitles, name1, name2 } = result;
-      const tunnelCanvas = document.getElementById('tunnelCanvas');
-      const blackHoleFrame = document.getElementById('blackHoleFrame');
-      const doorFrame = document.getElementById('doorFrame');
-      const gifOverlay = document.getElementById('gifOverlay');
       const gifImage = document.getElementById('gifImage');
       const gifText = document.getElementById('gifText');
       let gifState = 'initial';
@@ -536,8 +587,7 @@
         if (gifState === 'initial' && currentDoorIndex === 0) {
           gifState = 'second';
           gifImage.src = 'https://media.tenor.com/CNJSyzMIkskAAAAj/bubu-dudu-sseeyall.gif';
-         gifText.innerHTML = `Esto te lo dedico para ti ${name2}.<br><br>Aquí va nuestra vida que vivimos.`;
-
+          gifText.innerHTML = `Esto te lo dedico para ti ${name2}.<br><br>Aquí va nuestra vida que vivimos.`;
           console.log('Clic en primer texto, mostrando segundo GIF y texto');
         } else if (gifState === 'second' && currentDoorIndex === 0) {
           gifState = 'done';
@@ -657,7 +707,6 @@
             doors.forEach((door, i) => {
               door.visible = i === currentDoorIndex;
               labelMeshes[i].visible = i === currentDoorIndex;
-              labelMeshes[i].material.opacity = 0.5;
               buttonMeshes[i].visible = i === currentDoorIndex;
               buttonTextMeshes[i].visible = false;
               buttonLights[i].visible = i === currentDoorIndex;
@@ -805,8 +854,7 @@
         renderer.render(scene, camera);
       }
       render();
-    })();
+    }
   </script>
 </body>
 </html>
-
