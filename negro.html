@@ -396,7 +396,7 @@
       if (phase === 'galaxy' && phaseTime >= 5) {
         phase = 'rotate';
         phaseTime = 0;
-      } else if (phase === 'rotate' && phaseTime >= 6) {
+      } else if (phase === 'rotate' && phaseTime >= 4) {
         phase = 'zoom';
         phaseTime = 0;
       } else if (phase === 'zoom' && zoom >= 12) {
@@ -420,7 +420,7 @@
 
       // Update zoom
       if (phase === 'zoom') {
-        zoom += 0.03 * dt * 60; // Smooth zoom
+        zoom += 0.02 * dt * 60; // Reduced zoom speed for smoother, longer zoom
       }
 
       // Update elements
