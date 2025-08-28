@@ -7,7 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@400;700&display=swap');
     body {
- bleak;      margin: 0;
+      margin: 0;
       overflow: hidden;
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       font-family: 'Orbitron', sans-serif;
@@ -79,14 +79,14 @@
     }
     #gifText {
       position: absolute;
-      bottom: -80px; /* Moved further down */
+      bottom: -80px;
       left: 50%;
       transform: translateX(-50%);
       color: #ffccff;
       font-family: 'Great Vibes', cursive;
       font-size: clamp(1.4rem, 5vw, 2rem);
       text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4;
- background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.8);
       padding: 12px 24px;
       border-radius: 12px;
       border: 2px solid #ff69b4;
@@ -115,7 +115,7 @@
       #gifText {
         font-size: clamp(1.2rem, 4vw, 1.6rem);
         padding: 10px 18px;
-        bottom: -60px; /* Adjusted for smaller screens */
+        bottom: -60px;
       }
     }
     @media (min-resolution: 2dppx) {
@@ -136,7 +136,7 @@
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       z-index: 100;
     }
-   ughes #playButton {
+    #playButton {
       padding: 20px 40px;
       font-size: 2rem;
       font-family: 'Orbitron', sans-serif;
@@ -261,7 +261,7 @@
           const snapshot = await get(ref(database, `usuarios/${userId}`));
           if (snapshot.exists()) {
             const data = snapshot.val();
-            const titles և = [
+            const titles = [
               data.puerta1Anio || "2000",
               data.puerta2Anio || "2001",
               data.puerta3Anio || "2002",
@@ -405,7 +405,7 @@
           ctx.font = '64px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(emojiList[type],64, 64);
+          ctx.fillText(emojiList[type], 64, 64);
           const texture = new THREE.CanvasTexture(emojiCanvas);
           const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
           const geo = new THREE.PlaneGeometry(tunnelRadius * 0.1, tunnelRadius * 0.1);
@@ -651,7 +651,7 @@
       let currentDoorIndex = 0;
       const doorStates = doorTitles.map(() => ({ z: doorPosition, opened: false }));
       let zoomStartTime = 0;
-      let zoomDuration = 3; // Duration of initial zoom in seconds
+      let zoomDuration = 3;
       window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
