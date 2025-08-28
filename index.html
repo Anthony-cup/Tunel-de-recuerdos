@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Vórtice de Anillos Giratorios v1</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
       margin: 0;
       overflow: hidden;
@@ -79,25 +79,22 @@
     }
     #gifText {
       position: absolute;
-      bottom: -80px;
+      bottom: -40px;
       left: 50%;
       transform: translateX(-50%);
-      color: #ffccff;
-      font-family: 'Great Vibes', cursive;
-      font-size: clamp(1.4rem, 5vw, 2rem);
-      text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 12px 24px;
-      border-radius: 12px;
-      border: 2px solid #ff69b4;
+      color: #ffffff;
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      text-shadow: 0 0 10px #ff4081, 0 0 20px #ff4081;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 20px;
+      border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+      transition: background 0.3s, transform 0.3s;
     }
     #gifText:hover {
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.9);
       transform: translateX(-50%) scale(1.05);
-      box-shadow: 0 0 15px #ff69b4;
     }
     @media (max-width: 720px) {
       #errorMessage {
@@ -113,9 +110,9 @@
         max-height: 40vh;
       }
       #gifText {
-        font-size: clamp(1.2rem, 4vw, 1.6rem);
-        padding: 10px 18px;
-        bottom: -60px;
+        font-size: clamp(0.8rem, 3vw, 1.2rem);
+        padding: 8px 15px;
+        bottom: -30px;
       }
     }
     @media (min-resolution: 2dppx) {
@@ -180,6 +177,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
     import { getDatabase, ref, get, set } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
     const playOverlay = document.getElementById('playOverlay');
     const playButton = document.getElementById('playButton');
     const bgMusic = document.getElementById('bgMusic');
@@ -188,6 +186,7 @@
     const doorFrame = document.getElementById('doorFrame');
     const errorMessage = document.getElementById('errorMessage');
     const gifOverlay = document.getElementById('gifOverlay');
+
     playButton.addEventListener('click', () => {
       playOverlay.style.display = 'none';
       tunnelCanvas.style.display = 'block';
@@ -199,6 +198,7 @@
       bgMusic.play();
       init();
     });
+
     async function init() {
       const firebaseConfig = {
         apiKey: "AIzaSyBk2SVaP1w4V3MWrpp1r3X5Xk9eH06gBt4",
@@ -299,7 +299,7 @@
       renderer.setClearColor(0x000000, 0);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 20000);
-      camera.position.set(0, 0, 1000); // Start further back for smooth zoom
+      camera.position.set(0, 0, 30);
       const tunnelRadius = 250;
       const tunnelLength = 20000;
       const ringsCount = 200;
@@ -464,8 +464,8 @@
         labelCanvas.height = 512;
         const labelCtx = labelCanvas.getContext('2d');
         labelCtx.clearRect(0, 0, 1024, 512);
-        labelCtx.fillStyle = '#ffccff';
-        labelCtx.font = 'bold 180px Great Vibes';
+        labelCtx.fillStyle = '#ffffff';
+        labelCtx.font = 'bold 150px Orbitron';
         labelCtx.textAlign = 'center';
         labelCtx.textBaseline = 'middle';
         labelCtx.shadowColor = '#' + doorColors[i].toString(16).padStart(6, '0');
@@ -527,8 +527,8 @@
         const btnCtx = buttonTextCanvas.getContext('2d');
         btnCtx.fillStyle = '#' + doorColors[i].toString(16).padStart(6, '0');
         btnCtx.fillRect(0, 0, 256, 128);
-        btnCtx.fillStyle = '#ffccff';
-        btnCtx.font = 'bold 60px Great Vibes';
+        btnCtx.fillStyle = '#ffffff';
+        btnCtx.font = 'bold 48px Orbitron';
         btnCtx.textAlign = 'center';
         btnCtx.textBaseline = 'middle';
         btnCtx.shadowColor = '#ffffff';
@@ -650,8 +650,6 @@
       let resetStartTime = 0;
       let currentDoorIndex = 0;
       const doorStates = doorTitles.map(() => ({ z: doorPosition, opened: false }));
-      let zoomStartTime = 0;
-      let zoomDuration = 3;
       window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -754,11 +752,6 @@
         const dt = (now - last) / 1000;
         last = now;
         timeElapsed += dt;
-        if (!panelHidden && !isResetting && timeElapsed < zoomDuration) {
-          const zoomProgress = timeElapsed / zoomDuration;
-          const easedProgress = 1 - Math.pow(1 - zoomProgress, 3); // Ease-out cubic
-          camera.position.z = 1000 + (doorPosition + 200 - 1000) * easedProgress;
-        }
         if (timeElapsed > 10 && !panelHidden) {
           blackHoleFrame.style.opacity = 0;
           setTimeout(() => {
