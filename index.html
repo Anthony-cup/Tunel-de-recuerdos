@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>Vórtice de Anillos Giratorios v1</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Parisienne&family=Orbitron:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Orbitron:wght@400;700&display=swap');
     body {
-      margin: 0;
+ bleak;      margin: 0;
       overflow: hidden;
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       font-family: 'Orbitron', sans-serif;
@@ -79,14 +79,14 @@
     }
     #gifText {
       position: absolute;
-      bottom: -50px;
+      bottom: -80px; /* Moved further down */
       left: 50%;
       transform: translateX(-50%);
       color: #ffccff;
-      font-family: 'Parisienne', cursive;
-      font-size: clamp(1.2rem, 4.5vw, 1.8rem);
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(1.4rem, 5vw, 2rem);
       text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4;
-      background: rgba(0, 0, 0, 0.8);
+ background: rgba(0, 0, 0, 0.8);
       padding: 12px 24px;
       border-radius: 12px;
       border: 2px solid #ff69b4;
@@ -113,9 +113,9 @@
         max-height: 40vh;
       }
       #gifText {
-        font-size: clamp(1rem, 3.5vw, 1.4rem);
+        font-size: clamp(1.2rem, 4vw, 1.6rem);
         padding: 10px 18px;
-        bottom: -40px;
+        bottom: -60px; /* Adjusted for smaller screens */
       }
     }
     @media (min-resolution: 2dppx) {
@@ -136,7 +136,7 @@
       background: radial-gradient(circle at center, #0f1a2e 0%, #000000 100%);
       z-index: 100;
     }
-    #playButton {
+   ughes #playButton {
       padding: 20px 40px;
       font-size: 2rem;
       font-family: 'Orbitron', sans-serif;
@@ -261,7 +261,7 @@
           const snapshot = await get(ref(database, `usuarios/${userId}`));
           if (snapshot.exists()) {
             const data = snapshot.val();
-            const titles = [
+            const titles և = [
               data.puerta1Anio || "2000",
               data.puerta2Anio || "2001",
               data.puerta3Anio || "2002",
@@ -405,7 +405,7 @@
           ctx.font = '64px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(emojiList[type], 64, 64);
+          ctx.fillText(emojiList[type],64, 64);
           const texture = new THREE.CanvasTexture(emojiCanvas);
           const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
           const geo = new THREE.PlaneGeometry(tunnelRadius * 0.1, tunnelRadius * 0.1);
@@ -465,7 +465,7 @@
         const labelCtx = labelCanvas.getContext('2d');
         labelCtx.clearRect(0, 0, 1024, 512);
         labelCtx.fillStyle = '#ffccff';
-        labelCtx.font = 'bold 150px Parisienne';
+        labelCtx.font = 'bold 180px Great Vibes';
         labelCtx.textAlign = 'center';
         labelCtx.textBaseline = 'middle';
         labelCtx.shadowColor = '#' + doorColors[i].toString(16).padStart(6, '0');
@@ -528,7 +528,7 @@
         btnCtx.fillStyle = '#' + doorColors[i].toString(16).padStart(6, '0');
         btnCtx.fillRect(0, 0, 256, 128);
         btnCtx.fillStyle = '#ffccff';
-        btnCtx.font = 'bold 48px Parisienne';
+        btnCtx.font = 'bold 60px Great Vibes';
         btnCtx.textAlign = 'center';
         btnCtx.textBaseline = 'middle';
         btnCtx.shadowColor = '#ffffff';
